@@ -1,12 +1,24 @@
-FROM node:20.11-alpine3.18 as build
+FROM node:20-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
-RUN npm install -g pnpm
-
-# Move files into the image and install
+FROM base AS builder
 WORKDIR /app
+# Move files into the image and install
 COPY . .
-RUN pnpm install --frozen-lockfile --production
+RUN pnpm i turbo -g
+RUN turbo prune @repo/pds --docker
 
+FROM base AS installer
+WORKDIR /app
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY .gitignore .gitignore
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --production --frozen-lockfile
+
+FROM base AS runner
+WORKDIR /app
 # Uses assets from build stage to reduce build size
 FROM node:20.11-alpine3.18
 
@@ -16,7 +28,8 @@ RUN apk add --update dumb-init
 ENTRYPOINT ["dumb-init", "--"]
 
 WORKDIR /app
-COPY --from=build /app /app
+COPY --from=installer /app .
+COPY --from=installer /app/node_modules ./node_modules
 
 EXPOSE 8080
 ENV PDS_PORT=8080
