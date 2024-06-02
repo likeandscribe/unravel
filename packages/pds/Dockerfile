@@ -1,4 +1,6 @@
-FROM node:20-slim AS base
+FROM node:20.11-alpine3.18 AS base
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -16,16 +18,13 @@ COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY .gitignore .gitignore
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --production --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install sharp@0.32.6 -w --production
+RUN  pnpm rebuild sharp
+
+COPY --from=builder /app/out/full/ .
 
 FROM base AS runner
 WORKDIR /app
-# Uses assets from build stage to reduce build size
-FROM node:20.11-alpine3.18
-
-RUN apk add --update dumb-init
-
-# Avoid zombie processes, handle signal forwarding
-ENTRYPOINT ["dumb-init", "--"]
 
 WORKDIR /app
 COPY --from=installer /app .
