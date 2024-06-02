@@ -36,6 +36,8 @@ ENV NODE_ENV=production
 # potential perf issues w/ io_uring on this version of node
 ENV UV_USE_IO_URING=0
 
+RUN apk add --no-cache libc6-compat
+
 CMD ["node", "--enable-source-maps", "packages/pds/index.js"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/pds
