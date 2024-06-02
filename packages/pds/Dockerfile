@@ -18,8 +18,8 @@ COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY .gitignore .gitignore
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --production --frozen-lockfile
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install sharp@0.32.6 -w --production
-RUN  pnpm rebuild sharp
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install sharp@0.32.6 better-sqlite3@9.6.0 -w --production
+RUN pnpm rebuild sharp better-sqlite3
 
 COPY --from=builder /app/out/full/ .
 
