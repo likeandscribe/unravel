@@ -1,0 +1,13 @@
+{
+  "name": "drainpipe",
+  "private": true,
+  "dependencies": {
+    "@atproto/common": "^0.4.0",
+    "uint8arrays": "^5.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/bun": "^1.1.3"
+  }
+}
