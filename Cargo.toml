@@ -1,0 +1,6 @@
+[workspace]
+members = ["packages-rs/drainpipe"]
+resolver = "2"
+
+[cargo-new]
+vcs = "none"
