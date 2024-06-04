@@ -1,16 +1,7 @@
-#![allow(unused_imports)]
-
-use dotenvy::dotenv;
 use futures::StreamExt as _;
 use rsky_lexicon::com::atproto::sync::SubscribeRepos;
-use serde::Deserialize;
-use std::env;
-use std::io::Cursor;
 use std::{thread, time::Duration};
-use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::protocol::Message;
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
-use url::Url;
 
 // #[derive(Debug, Deserialize)]
 // #[serde(tag = "$type")]
@@ -37,9 +28,7 @@ async fn process(message: Vec<u8>) {
 
 #[tokio::main]
 async fn main() {
-    match dotenvy::dotenv() {
-        _ => (),
-    };
+    let _ = dotenvy::dotenv();
     loop {
         match tokio_tungstenite::connect_async(
             "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos",
