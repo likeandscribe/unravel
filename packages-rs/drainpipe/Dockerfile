@@ -7,7 +7,6 @@ COPY . .
 # TODO: Figure out how to cache compilation artifacts and maybe split fetching into a different layer
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     cargo build --release --package drainpipe
-RUN ls -la target
 
 FROM alpine:3.14
 COPY --from=builder /usr/src/drainpipe/target/release/drainpipe /
