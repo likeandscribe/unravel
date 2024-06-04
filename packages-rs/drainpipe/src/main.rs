@@ -2,8 +2,6 @@
 
 use dotenvy::dotenv;
 use futures::StreamExt as _;
-use rsky_lexicon::app::bsky::feed::{Like, Post};
-use rsky_lexicon::app::bsky::graph::Follow;
 use rsky_lexicon::com::atproto::sync::SubscribeRepos;
 use serde::Deserialize;
 use std::env;
