@@ -4,11 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dotenvy = "0.15.7"
+anyhow = "1.0.86"
+ciborium = "0.2.2"
+dotenv-flow = "0.16.2"
 futures = "0.3.30"
-rsky-firehose = "0.0.1"
+reqwest = { version = "0.12.4", features = ["json"] }
 rsky-lexicon = "0.1.0"
 serde = "1.0.203"
-tokio = "1.38.0"
+serde_ipld_dagcbor = "0.6.1"
+tokio = { version = "1.38.0", features = ["full"] }
 tokio-tungstenite = { version = "0.23.0", features = ["native-tls"] }
 url = "2.5.0"
