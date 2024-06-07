@@ -1,0 +1,34 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'drainpipe'",
+      "sourceLanguages": ["rust"],
+      "cargo": {
+        "args": ["build", "--bin=drainpipe", "--package=drainpipe"],
+        "filter": {
+          "name": "drainpipe",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}/packages-rs/drainpipe"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'drainpipe'",
+      "cargo": {
+        "args": ["test", "--no-run", "--bin=drainpipe", "--package=drainpipe"],
+        "filter": {
+          "name": "drainpipe",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

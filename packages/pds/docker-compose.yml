@@ -1,0 +1,10 @@
+version: "3"
+services:
+  pds:
+    build:
+      dockerfile: ./packages/pds/Dockerfile
+      context: ../../
+    env_file:
+      - ./pds.env
+    volumes:
+      - ./pdsdata:/pds
