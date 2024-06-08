@@ -9,7 +9,8 @@ FROM base AS builder
 WORKDIR /app
 # Move files into the image and install
 COPY . .
-RUN pnpm i turbo -g
+RUN apk add jq
+RUN pnpm i turbo@$(cat package.json | jq -r '.devDependencies.turbo') -g
 RUN turbo prune @repo/pds --docker
 
 FROM base AS installer
