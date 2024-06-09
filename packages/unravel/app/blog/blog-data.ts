@@ -1,8 +1,5 @@
+import { AtpBaseClient } from "@atproto/api";
 import { z } from "zod";
-import { AtpAgent } from "@atproto/api";
-const agent = new AtpAgent({
-  service: "https://hydnum.us-west.host.bsky.network",
-});
 
 // Schemas
 const Blog = z.object({
@@ -16,12 +13,16 @@ const Blog = z.object({
 
 const BlogArray = z.array(Blog);
 
+// Functions
+const serviceUri = "https://hydnum.us-west.host.bsky.network";
+const baseClient = new AtpBaseClient().service(serviceUri);
+
+const atprotoRepo = baseClient.com.atproto.repo;
 const repo = "did:plc:klmr76mpewpv7rtm3xgpzd7x";
 const collection = "com.whtwnd.blog.entry";
 
-// Functions
-export async function listRecords() {
-  const records = await agent.com.atproto.repo.listRecords({
+export async function listBlogs() {
+  const records = await atprotoRepo.listRecords({
     repo: repo,
     collection: collection,
   });
@@ -30,7 +31,7 @@ export async function listRecords() {
 }
 
 export async function getBlog(id: string) {
-  const blog = await agent.com.atproto.repo.getRecord({
+  const blog = await atprotoRepo.getRecord({
     repo: repo,
     collection: collection,
     rkey: id,

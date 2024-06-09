@@ -2,11 +2,11 @@ import { z } from "zod";
 import { getBlog } from "../blog-data";
 
 interface Props {
-  params: { id: string };
+  params: { rkey: string };
 }
 
-export default async function BlogPost({ params: { id } }: Props) {
-  const blog = await getBlog(id);
+export default async function BlogPost({ params: { rkey } }: Props) {
+  const blog = await getBlog(rkey);
 
   return (
     <>
