@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { getBlog } from "../blog-data";
 
 interface Props {
