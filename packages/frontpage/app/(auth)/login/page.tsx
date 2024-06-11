@@ -1,8 +1,4 @@
-import { Label } from "@/lib/components/ui/label";
-import { Input } from "@/lib/components/ui/input";
-import { Button } from "@/lib/components/ui/button";
-import { signIn } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { LoginForm } from "./_lib/form";
 
 export default function Component() {
   return (
@@ -23,40 +19,7 @@ export default function Component() {
             , create an application password, then return here to login.
           </p>
         </div>
-        <form
-          className="space-y-6"
-          action={async (formData) => {
-            "use server";
-            await signIn(formData);
-            redirect("/");
-          }}
-        >
-          <div>
-            <Label htmlFor="identifier">Handle</Label>
-            <Input
-              id="identifier"
-              name="identifier"
-              required
-              placeholder="@example.com"
-            />
-          </div>
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              placeholder="Password"
-            />
-          </div>
-          <div>
-            <Button type="submit" className="w-full">
-              Sign in
-            </Button>
-          </div>
-        </form>
+        <LoginForm />
       </div>
     </div>
   );
