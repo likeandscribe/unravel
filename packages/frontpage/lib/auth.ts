@@ -36,6 +36,8 @@ const auth = NextAuth({
 
         return {
           id: session.did,
+          name: session.handle,
+          email: session.email,
           refreshJwt: session.refreshJwt,
           accessJwt: session.accessJwt,
         };
