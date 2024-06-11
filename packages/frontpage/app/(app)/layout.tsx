@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/auth";
+import { getSession, signOut } from "@/lib/auth";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -9,7 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex place-content-between items-center mb-8">
           <h1 className="text-3xl font-bold">Frontpage</h1>
           <Suspense>
-            <LoginOrAvatar />
+            <LoginOrLogout />
           </Suspense>
         </div>
         {children}
@@ -18,10 +18,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-async function LoginOrAvatar() {
+async function LoginOrLogout() {
   const session = await getSession();
   if (session) {
-    return <div>avatar</div>;
+    return (
+      <form
+        action={async () => {
+          "use server";
+          await signOut();
+        }}
+      >
+        <button>Logout</button>
+      </form>
+    );
   }
 
   return <Link href="/login">Login</Link>;
