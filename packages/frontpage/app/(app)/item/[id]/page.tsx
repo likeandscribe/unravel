@@ -2,11 +2,23 @@ import { Button } from "@/lib/components/ui/button";
 import { Textarea } from "@/lib/components/ui/textarea";
 import { ChevronUpIcon, ChatBubbleIcon } from "@radix-ui/react-icons";
 import { VariantProps, cva } from "class-variance-authority";
+import { PostCard } from "../../_components/post-card";
 
 export default function Component() {
   return (
     <div className="px-4 py-6 md:px-6 md:py-12">
       <div className="mx-auto max-w-4xl space-y-6">
+        <PostCard
+          {...{
+            id: "1",
+            title: "Introducing the new Tailwind CSS v3.0",
+            url: "https://tailwindcss.com",
+            votes: 42,
+            author: "@john.example.com",
+            createdAt: new Date("2024-06-11T07:10:44.335Z"),
+            commentCount: 4,
+          }}
+        />
         <div className="grid gap-6">
           <Comment
             id="1"
