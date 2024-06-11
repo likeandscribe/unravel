@@ -1,3 +1,4 @@
+import "server-only";
 import NextAuth, { DefaultSession, NextAuthResult } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { cache } from "react";
@@ -68,6 +69,8 @@ export const signIn = async (formData: FormData) => {
 export const signOut = async () => {
   await auth.signOut();
 };
+// TODO: Use this in middleware.ts. Wasn't working in next 15 with turbo
+// See https://github.com/vercel/next.js/issues/66162#issuecomment-2135529800
 export const middleware: NextAuthResult["auth"] = auth.auth;
 export const getSession = cache(() => {
   return auth.auth();
