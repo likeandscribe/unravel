@@ -27,8 +27,8 @@ export default function Component() {
           className="space-y-6"
           action={async (formData) => {
             "use server";
+            formData.append("redirectTo", "/");
             await signIn(formData);
-            redirect("/");
           }}
         >
           <div>
