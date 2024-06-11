@@ -3,6 +3,7 @@ import NextAuth, { DefaultSession, NextAuthResult } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { cache } from "react";
 import { z } from "zod";
+import { decodeJwt } from "jose";
 
 declare module "next-auth" {
   /**
@@ -28,11 +29,15 @@ const auth = NextAuth({
         identifier: {},
         password: {},
       },
-      authorize: async (credentials) => {
+      authorize: async (unsafeCredentials) => {
         console.log("authorizing...");
-        const session = await atprotoCreateSession(
-          Credentials.parse(credentials),
-        );
+        const credentials = Credentials.parse(unsafeCredentials);
+        const session = await atprotoCreateSession({
+          password: credentials.password,
+          identifier:
+            // Remove @ from start if it's there
+            credentials.identifier.replace(/^@/, ""),
+        });
 
         return {
           id: session.did,
@@ -50,8 +55,13 @@ const auth = NextAuth({
   callbacks: {
     jwt: async ({ token, user }) => {
       if (user) {
-        // TODO: Refresh session if near expiry or expired
-        token = { ...token, ...user };
+        const refreshJwt = (user as any).refreshJwt;
+        const accessJwt = (user as any).accessJwt;
+        const refresh = decodeJwt(refreshJwt);
+        token.exp = refresh.exp;
+        token.sub = refresh.sub;
+        token.refreshToken = refreshJwt;
+        token.accessToken = accessJwt;
       }
       return token;
     },
