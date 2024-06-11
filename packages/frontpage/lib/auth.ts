@@ -1,6 +1,5 @@
 import NextAuth, { DefaultSession, NextAuthResult } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { redirect } from "next/navigation";
 import { cache } from "react";
 import { z } from "zod";
 
@@ -98,17 +97,3 @@ const atprotoCreateSession = cache(
     );
   },
 );
-
-async function atProtoGetSession(accessJwt: string) {
-  return AtprotoSession.parse(
-    await fetch(
-      "https://public.api.bsky.app/xrpc/com.atproto.server.getSession",
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessJwt}`,
-        },
-      },
-    ).then((res) => res.json()),
-  );
-}
