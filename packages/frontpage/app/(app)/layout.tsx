@@ -28,7 +28,7 @@ async function LoginOrLogout() {
           await signOut();
         }}
       >
-        <button>Logout</button>
+        <button>Logout ({session.user.name})</button>
       </form>
     );
   }
