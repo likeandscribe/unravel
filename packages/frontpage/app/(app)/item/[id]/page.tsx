@@ -19,6 +19,17 @@ export default function Item() {
             commentCount: 4,
           }}
         />
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <Textarea
+              placeholder="Write a comment..."
+              className="resize-none rounded-2xl border border-gray-200 p-3 shadow-sm focus:border-primary focus:ring-primary dark:border-gray-800 dark:bg-gray-950 dark:focus:border-primary"
+            />
+          </div>
+          <Button className="flex flex-row gap-2">
+            <ChatBubbleIcon className="w-4 h-4" /> Post
+          </Button>
+        </div>
         <div className="grid gap-6">
           <Comment
             id="1"
@@ -40,17 +51,6 @@ export default function Item() {
             comment="I'm really excited to see how this service evolves. The ability to curate and discover new content is so valuable in today's information-rich world."
             createdAt={new Date("2024-06-11T08:10:44.335Z")}
           />
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex-1">
-            <Textarea
-              placeholder="Write a comment..."
-              className="resize-none rounded-2xl border border-gray-200 p-3 shadow-sm focus:border-primary focus:ring-primary dark:border-gray-800 dark:bg-gray-950 dark:focus:border-primary"
-            />
-          </div>
-          <Button className="flex flex-row gap-2">
-            <ChatBubbleIcon className="w-4 h-4" /> Post
-          </Button>
         </div>
       </div>
     </div>
