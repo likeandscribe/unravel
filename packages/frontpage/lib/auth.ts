@@ -44,6 +44,23 @@ const auth = NextAuth({
       },
     }),
   ],
+  pages: {
+    signIn: "/login",
+  },
+  callbacks: {
+    jwt: async ({ token, user }) => {
+      if (user) {
+        // TODO: Refresh session if near expiry or expired
+        token = { ...token, ...user };
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
+      session.user.refreshJwt = token.refreshJwt as any;
+      session.user.accessJwt = token.accessJwt as any;
+      return session;
+    },
+  },
 });
 
 export const signIn = async (formData: FormData) => {
