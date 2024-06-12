@@ -1,3 +1,4 @@
+use db::update_seq;
 use diesel::sqlite::SqliteConnection;
 use futures::StreamExt as _;
 use rsky_lexicon::com::atproto::sync::{SubscribeRepos, SubscribeReposCommit};
@@ -9,7 +10,7 @@ mod db;
 mod firehose;
 mod schema;
 
-async fn process(message: Vec<u8>, ctx: &Context) {
+async fn process(message: Vec<u8>, ctx: &mut Context) {
     if let Ok((_header, SubscribeRepos::Commit(commit))) = firehose::read(&message) {
         let frontpage_ops = commit
             .operations
@@ -21,7 +22,9 @@ async fn process(message: Vec<u8>, ctx: &Context) {
         if frontpage_ops.len() > 0 {
             match process_frontpage_ops(frontpage_ops, &commit, &ctx).await {
                 Ok(_) => {
-                    // TODO: Save offset
+                    update_seq(&mut ctx.db_connection, commit.sequence)
+                        .map_err(|_| eprintln!("Failed to update sequence"))
+                        .ok();
                 }
                 Err(e) => {
                     // TODO: Record to dead letter queue
@@ -98,7 +101,7 @@ async fn main() {
         {
             Ok((mut socket, _response)) => {
                 let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
-                let ctx = Context {
+                let mut ctx = Context {
                     frontpage_consumer_secret: std::env::var("FRONTPAGE_CONSUMER_SECRET")
                         .expect("FRONTPAGE_CONSUMER_SECRET not set"),
                     frontpage_consumer_url: std::env::var("FRONTPAGE_CONSUMER_URL")
@@ -118,7 +121,7 @@ async fn main() {
 
                 println!("Connected to bgs.bsky-sandbox.dev.");
                 while let Some(Ok(Message::Binary(message))) = socket.next().await {
-                    metrics_monitor.instrument(process(message, &ctx)).await;
+                    metrics_monitor.instrument(process(message, &mut ctx)).await;
                 }
             }
             Err(error) => {

@@ -5,21 +5,25 @@ pub fn db_connect(database_url: &String) -> anyhow::Result<SqliteConnection> {
     SqliteConnection::establish(&database_url).map_err(Into::into)
 }
 
-pub fn update_seq(conn: &mut SqliteConnection, seq: i32) -> anyhow::Result<()> {
+pub fn update_seq(conn: &mut SqliteConnection, new_seq: i64) -> anyhow::Result<()> {
     use crate::schema::drainpipe::dsl::*;
 
     diesel::insert_into(drainpipe)
-        .values(seq.eq(&seq))
+        .values(seq.eq(&new_seq))
         .execute(conn)?;
 
     Ok(())
 }
 
-pub fn record_dead_letter(conn: &mut SqliteConnection, msg: &str, seq: i32) -> anyhow::Result<()> {
+pub fn record_dead_letter(
+    conn: &mut SqliteConnection,
+    new_msg: &str,
+    new_seq: i64,
+) -> anyhow::Result<()> {
     use crate::schema::dead_letter_queue::dsl::*;
 
     diesel::insert_into(dead_letter_queue)
-        .values((msg.eq(&msg), seq.eq(&seq)))
+        .values((msg.eq(&new_msg), seq.eq(&new_seq)))
         .execute(conn)?;
 
     Ok(())
@@ -29,13 +33,13 @@ pub fn record_dead_letter(conn: &mut SqliteConnection, msg: &str, seq: i32) -> a
 #[diesel(table_name = crate::schema::drainpipe)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct DrainpipeMeta {
-    pub seq: i32,
+    pub seq: i64,
 }
 
 #[derive(Queryable, Selectable, PartialEq, Debug)]
 #[diesel(table_name = crate::schema::dead_letter_queue)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct DeadLetter {
-    pub seq: i32,
+    pub seq: i64,
     pub msg: String,
 }
