@@ -15,12 +15,12 @@ pub fn update_seq(conn: &mut SqliteConnection, seq: i32) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn record_dead_letter(conn: &mut SqliteConnection, msg: &str) -> anyhow::Result<()> {
+pub fn record_dead_letter(conn: &mut SqliteConnection, msg: &str, seq: i32) -> anyhow::Result<()> {
     use crate::schema::dead_letter_queue::dsl::*;
 
     diesel::insert_into(dead_letter_queue)
-        .values(msg.eq(msg))
-        .load(conn)?;
+        .values((msg.eq(&msg), seq.eq(&seq)))
+        .execute(conn)?;
 
     Ok(())
 }
