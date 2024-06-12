@@ -21,8 +21,9 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> anyhow::Result<i64> {
                 .filter(|op| op.path.starts_with("com.tom-sherman.frontpage."))
                 .map(|op| SubscribeReposCommitOperation(&op))
                 .collect::<Vec<_>>();
-
-            process_frontpage_ops(frontpage_ops, &commit, &ctx).await?;
+            if !frontpage_ops.is_empty() {
+                process_frontpage_ops(frontpage_ops, &commit, &ctx).await?;
+            }
             commit.sequence
         }
         SubscribeRepos::Handle(handle) => handle.sequence,
