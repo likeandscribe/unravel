@@ -10,29 +10,26 @@ mod db;
 mod firehose;
 mod schema;
 
-async fn process(message: Vec<u8>, ctx: &mut Context) {
-    if let Ok((_header, SubscribeRepos::Commit(commit))) = firehose::read(&message) {
-        let frontpage_ops = commit
-            .operations
-            .iter()
-            .filter(|op| op.path.starts_with("com.tom-sherman.frontpage."))
-            .map(|op| SubscribeReposCommitOperation(&op))
-            .collect::<Vec<_>>();
+/// Process a message from the firehose. Returns the sequence number of the message or an error.
+async fn process(message: Vec<u8>, ctx: &mut Context) -> anyhow::Result<i64> {
+    let (_header, message) = firehose::read(&message)?;
+    let sequence = match message {
+        SubscribeRepos::Commit(commit) => {
+            let frontpage_ops = commit
+                .operations
+                .iter()
+                .filter(|op| op.path.starts_with("com.tom-sherman.frontpage."))
+                .map(|op| SubscribeReposCommitOperation(&op))
+                .collect::<Vec<_>>();
 
-        if frontpage_ops.len() > 0 {
-            match process_frontpage_ops(frontpage_ops, &commit, &ctx).await {
-                Ok(_) => {
-                    update_seq(&mut ctx.db_connection, commit.sequence)
-                        .map_err(|_| eprintln!("Failed to update sequence"))
-                        .ok();
-                }
-                Err(e) => {
-                    // TODO: Record to dead letter queue
-                    eprintln!("Failed to process frontpage ops: {:?}", e);
-                }
-            }
+            process_frontpage_ops(frontpage_ops, &commit, &ctx).await?;
+            commit.sequence
         }
-    }
+        SubscribeRepos::Handle(handle) => handle.sequence,
+        SubscribeRepos::Tombstone(tombstone) => tombstone.sequence,
+    };
+
+    Ok(sequence)
 }
 
 struct SubscribeReposCommitOperation<'a>(
@@ -121,7 +118,17 @@ async fn main() {
 
                 println!("Connected to bgs.bsky-sandbox.dev.");
                 while let Some(Ok(Message::Binary(message))) = socket.next().await {
-                    metrics_monitor.instrument(process(message, &mut ctx)).await;
+                    match metrics_monitor.instrument(process(message, &mut ctx)).await {
+                        Ok(seq) => {
+                            update_seq(&mut ctx.db_connection, seq)
+                                .map_err(|_| eprintln!("Failed to update sequence"))
+                                .ok();
+                        }
+                        Err(error) => {
+                            // TODO: Record dead letter
+                            eprintln!("Error processing message: {error:?}");
+                        }
+                    }
                 }
             }
             Err(error) => {

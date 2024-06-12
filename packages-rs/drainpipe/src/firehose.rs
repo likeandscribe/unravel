@@ -10,11 +10,29 @@ pub struct Header {
     pub operation: u8,
 }
 
+use std::fmt;
+
 #[derive(Debug)]
 pub enum Error {
     Header(ciborium::de::Error<std::io::Error>),
     Body(serde_ipld_dagcbor::DecodeError<std::io::Error>),
     UnknownTypeError(String),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::Header(e) => write!(f, "Header error: {}", e),
+            Error::Body(e) => write!(f, "Body error: {}", e),
+            Error::UnknownTypeError(s) => write!(f, "Unknown type error: {}", s),
+        }
+    }
+}
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        "Read error"
+    }
 }
 
 impl From<ciborium::de::Error<std::io::Error>> for Error {
