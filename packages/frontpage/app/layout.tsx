@@ -1,6 +1,7 @@
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/lib/components/ui/toaster";
 
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
@@ -21,6 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <body className={cn(sourceSans.variable, sourceSerif.variable)}>
         {children}
+        <Toaster />
       </body>
     </html>
   );
