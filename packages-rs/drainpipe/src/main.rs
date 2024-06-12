@@ -1,42 +1,42 @@
+use diesel::sqlite::SqliteConnection;
 use futures::StreamExt as _;
 use rsky_lexicon::com::atproto::sync::{SubscribeRepos, SubscribeReposCommit};
 use serde::{ser::SerializeStruct, Serialize};
 use std::{path::PathBuf, thread, time::Duration};
 use tokio_tungstenite::tungstenite::protocol::Message;
 
+mod db;
 mod firehose;
+mod schema;
 
-async fn process(message: Vec<u8>, ctx: Context) {
+async fn process(message: Vec<u8>, ctx: &Context) {
     if let Ok((_header, SubscribeRepos::Commit(commit))) = firehose::read(&message) {
         let frontpage_ops = commit
             .operations
             .iter()
             .filter(|op| op.path.starts_with("com.tom-sherman.frontpage."))
-            .map(|op| {
-                SubscribeReposCommitOperation(
-                    rsky_lexicon::com::atproto::sync::SubscribeReposCommitOperation {
-                        path: op.path.clone(),
-                        action: op.action.clone(),
-                        cid: op.cid.clone(),
-                    },
-                )
-            })
+            .map(|op| SubscribeReposCommitOperation(&op))
             .collect::<Vec<_>>();
 
-        // TODO: Save offset, handle failures, etc.
         if frontpage_ops.len() > 0 {
-            process_frontpage_ops(frontpage_ops, &commit, &ctx)
-                .await
-                .expect("Failed to process ops (todo: handle this)");
+            match process_frontpage_ops(frontpage_ops, &commit, &ctx).await {
+                Ok(_) => {
+                    // TODO: Save offset
+                }
+                Err(e) => {
+                    // TODO: Record to dead letter queue
+                    eprintln!("Failed to process frontpage ops: {:?}", e);
+                }
+            }
         }
     }
 }
 
-struct SubscribeReposCommitOperation(
-    rsky_lexicon::com::atproto::sync::SubscribeReposCommitOperation,
+struct SubscribeReposCommitOperation<'a>(
+    &'a rsky_lexicon::com::atproto::sync::SubscribeReposCommitOperation,
 );
 
-impl Serialize for SubscribeReposCommitOperation {
+impl<'a> Serialize for SubscribeReposCommitOperation<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -49,15 +49,14 @@ impl Serialize for SubscribeReposCommitOperation {
     }
 }
 
-async fn process_frontpage_ops(
-    ops: Vec<SubscribeReposCommitOperation>,
-    _commit: &SubscribeReposCommit,
+async fn process_frontpage_ops<'a>(
+    ops: Vec<SubscribeReposCommitOperation<'a>>,
+    _commit: &'a SubscribeReposCommit,
     ctx: &Context,
 ) -> anyhow::Result<()> {
-    // TODO: Send commit
     let client = reqwest::Client::new();
     let response = client
-        .post(&ctx.frontpage_consumer_url) // TODO: Add webhook URL
+        .post(&ctx.frontpage_consumer_url)
         .header(
             "Authorization",
             format!("Bearer {}", ctx.frontpage_consumer_secret),
@@ -75,24 +74,21 @@ async fn process_frontpage_ops(
     Ok(())
 }
 
-#[derive(Clone, Debug)]
 struct Context {
     frontpage_consumer_secret: String,
     frontpage_consumer_url: String,
+    db_connection: SqliteConnection,
 }
 
 #[tokio::main]
 async fn main() {
+    // Load environment variables from .env.local and .env when ran with cargo run
     if let Some(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR").ok() {
-        let env_path: PathBuf = [manifest_dir, ".env.local".to_owned()].iter().collect();
+        let env_path: PathBuf = [&manifest_dir, ".env.local"].iter().collect();
+        dotenv_flow::from_filename(env_path).ok();
+        let env_path: PathBuf = [&manifest_dir, ".env"].iter().collect();
         dotenv_flow::from_filename(env_path).ok();
     }
-    let ctx = Context {
-        frontpage_consumer_secret: std::env::var("FRONTPAGE_CONSUMER_SECRET")
-            .expect("FRONTPAGE_CONSUMER_SECRET not set"),
-        frontpage_consumer_url: std::env::var("FRONTPAGE_CONSUMER_URL")
-            .expect("FRONTPAGE_CONSUMER_URL not set"),
-    };
 
     loop {
         match tokio_tungstenite::connect_async(
@@ -101,12 +97,28 @@ async fn main() {
         .await
         {
             Ok((mut socket, _response)) => {
+                let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
+                let ctx = Context {
+                    frontpage_consumer_secret: std::env::var("FRONTPAGE_CONSUMER_SECRET")
+                        .expect("FRONTPAGE_CONSUMER_SECRET not set"),
+                    frontpage_consumer_url: std::env::var("FRONTPAGE_CONSUMER_URL")
+                        .expect("FRONTPAGE_CONSUMER_URL not set"),
+                    db_connection: db::db_connect(&database_url).expect("Failed to connect to db"),
+                };
+                let metrics_monitor = tokio_metrics::TaskMonitor::new();
+                {
+                    let metrics_monitor = metrics_monitor.clone();
+                    tokio::spawn(async move {
+                        for interval in metrics_monitor.intervals() {
+                            println!("{:?} per second", interval.instrumented_count as f64 / 5.0);
+                            tokio::time::sleep(Duration::from_millis(5000)).await;
+                        }
+                    });
+                }
+
                 println!("Connected to bgs.bsky-sandbox.dev.");
                 while let Some(Ok(Message::Binary(message))) = socket.next().await {
-                    let ctx = ctx.clone();
-                    tokio::spawn(async move {
-                        process(message, ctx).await;
-                    });
+                    metrics_monitor.instrument(process(message, &ctx)).await;
                 }
             }
             Err(error) => {
