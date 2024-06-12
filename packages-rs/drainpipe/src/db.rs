@@ -8,8 +8,8 @@ pub fn db_connect(database_url: &String) -> anyhow::Result<SqliteConnection> {
 pub fn update_seq(conn: &mut SqliteConnection, new_seq: i64) -> anyhow::Result<()> {
     use crate::schema::drainpipe::dsl::*;
 
-    diesel::insert_into(drainpipe)
-        .values(seq.eq(&new_seq))
+    diesel::update(drainpipe.filter(rowid.eq(1)))
+        .set(seq.eq(&new_seq))
         .execute(conn)?;
 
     Ok(())
