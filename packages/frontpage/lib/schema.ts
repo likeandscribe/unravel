@@ -1,4 +1,3 @@
-import "server-only";
 import { text, pgTable, serial, integer, timestamp } from "drizzle-orm/pg-core";
 
 export const Post = pgTable("posts", {
@@ -37,4 +36,10 @@ export const CommentVote = pgTable("comment_votes", {
     .references(() => Comment.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   authorDid: text("author_did").notNull(),
+});
+
+export const BetaUser = pgTable("beta_users", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  did: text("did").notNull().unique(),
 });

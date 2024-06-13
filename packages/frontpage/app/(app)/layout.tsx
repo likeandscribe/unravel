@@ -15,7 +15,7 @@ export default async function Layout({
         <div className="flex place-content-between items-center mb-8">
           <div className="flex">
             <Link href="/">
-              <h1 className="text-2xl font-bold">Frontpage</h1>
+              <span className="font-serif text-2xl font-bold">Frontpage</span>
             </Link>
             {session && (
               <Button className="ml-4" asChild>
