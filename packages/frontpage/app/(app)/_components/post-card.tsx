@@ -22,7 +22,7 @@ export function PostCard({
   createdAt,
   commentCount,
 }: PostProps) {
-  const postHref = `/item/${id}`;
+  const postHref = `/post/${id}`;
   return (
     // TODO: Make article route to postHref via onClick on card except innser links or buttons
     <article className="relative flex items-center gap-4 bg-white dark:bg-gray-950 rounded-lg shadow-sm p-4">
