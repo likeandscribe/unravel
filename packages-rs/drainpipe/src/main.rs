@@ -1,63 +1,54 @@
-use futures::StreamExt as _;
-use rsky_lexicon::com::atproto::sync::{SubscribeRepos, SubscribeReposCommit};
-use serde::{ser::SerializeStruct, Serialize};
+use db::{record_dead_letter, update_seq};
+use diesel::sqlite::SqliteConnection;
+use futures::{StreamExt as _, TryFutureExt};
 use std::{path::PathBuf, thread, time::Duration};
 use tokio_tungstenite::tungstenite::protocol::Message;
 
+mod db;
 mod firehose;
+mod schema;
 
-async fn process(message: Vec<u8>, ctx: Context) {
-    if let Ok((_header, SubscribeRepos::Commit(commit))) = firehose::read(&message) {
-        let frontpage_ops = commit
-            .operations
-            .iter()
-            .filter(|op| op.path.starts_with("com.tom-sherman.frontpage."))
-            .map(|op| {
-                SubscribeReposCommitOperation(
-                    rsky_lexicon::com::atproto::sync::SubscribeReposCommitOperation {
-                        path: op.path.clone(),
-                        action: op.action.clone(),
-                        cid: op.cid.clone(),
-                    },
-                )
-            })
-            .collect::<Vec<_>>();
-
-        // TODO: Save offset, handle failures, etc.
-        if frontpage_ops.len() > 0 {
-            process_frontpage_ops(frontpage_ops, &commit, &ctx)
-                .await
-                .expect("Failed to process ops (todo: handle this)");
-        }
-    }
+#[derive(Debug)]
+enum ProcessError {
+    DecodeError(firehose::Error),
+    ProcessError { seq: i64, error: anyhow::Error },
 }
 
-struct SubscribeReposCommitOperation(
-    rsky_lexicon::com::atproto::sync::SubscribeReposCommitOperation,
-);
+/// Process a message from the firehose. Returns the sequence number of the message or an error.
+async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessError> {
+    let (_header, message) = firehose::read(&message).map_err(|e| ProcessError::DecodeError(e))?;
+    let sequence = match message {
+        firehose::SubscribeRepos::Commit(commit) => {
+            let frontpage_ops = commit
+                .operations
+                .iter()
+                .filter(|op| op.path.starts_with("com.tom-sherman.frontpage."))
+                .collect::<Vec<_>>();
+            if !frontpage_ops.is_empty() {
+                process_frontpage_ops(&frontpage_ops, &commit, &ctx)
+                    .map_err(|e| ProcessError::ProcessError {
+                        seq: commit.sequence,
+                        error: e,
+                    })
+                    .await?;
+            }
+            commit.sequence
+        }
+        firehose::SubscribeRepos::Handle(handle) => handle.sequence,
+        firehose::SubscribeRepos::Tombstone(tombstone) => tombstone.sequence,
+    };
 
-impl Serialize for SubscribeReposCommitOperation {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("SubscribeReposCommitOperation", 2)?;
-        state.serialize_field("path", &self.0.path)?;
-        state.serialize_field("action", &self.0.action)?;
-        state.serialize_field("cid", &self.0.cid)?;
-        state.end()
-    }
+    Ok(sequence)
 }
 
 async fn process_frontpage_ops(
-    ops: Vec<SubscribeReposCommitOperation>,
-    _commit: &SubscribeReposCommit,
+    ops: &Vec<&firehose::SubscribeReposCommitOperation>,
+    _commit: &firehose::SubscribeReposCommit,
     ctx: &Context,
 ) -> anyhow::Result<()> {
-    // TODO: Send commit
     let client = reqwest::Client::new();
     let response = client
-        .post(&ctx.frontpage_consumer_url) // TODO: Add webhook URL
+        .post(&ctx.frontpage_consumer_url)
         .header(
             "Authorization",
             format!("Bearer {}", ctx.frontpage_consumer_secret),
@@ -75,38 +66,75 @@ async fn process_frontpage_ops(
     Ok(())
 }
 
-#[derive(Clone, Debug)]
 struct Context {
     frontpage_consumer_secret: String,
     frontpage_consumer_url: String,
+    db_connection: SqliteConnection,
 }
 
 #[tokio::main]
 async fn main() {
+    // Load environment variables from .env.local and .env when ran with cargo run
     if let Some(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR").ok() {
-        let env_path: PathBuf = [manifest_dir, ".env.local".to_owned()].iter().collect();
+        let env_path: PathBuf = [&manifest_dir, ".env.local"].iter().collect();
+        dotenv_flow::from_filename(env_path).ok();
+        let env_path: PathBuf = [&manifest_dir, ".env"].iter().collect();
         dotenv_flow::from_filename(env_path).ok();
     }
-    let ctx = Context {
-        frontpage_consumer_secret: std::env::var("FRONTPAGE_CONSUMER_SECRET")
-            .expect("FRONTPAGE_CONSUMER_SECRET not set"),
-        frontpage_consumer_url: std::env::var("FRONTPAGE_CONSUMER_URL")
-            .expect("FRONTPAGE_CONSUMER_URL not set"),
-    };
+
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
+    let mut conn = db::db_connect(&database_url).expect("Failed to connect to db");
+    let cursor = db::get_seq(&mut conn).expect("Failed to get sequence");
 
     loop {
-        match tokio_tungstenite::connect_async(
-            "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos",
-        )
+        match tokio_tungstenite::connect_async(format!(
+            "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
+            cursor
+        ))
         .await
         {
             Ok((mut socket, _response)) => {
+                let mut ctx = Context {
+                    frontpage_consumer_secret: std::env::var("FRONTPAGE_CONSUMER_SECRET")
+                        .expect("FRONTPAGE_CONSUMER_SECRET not set"),
+                    frontpage_consumer_url: std::env::var("FRONTPAGE_CONSUMER_URL")
+                        .expect("FRONTPAGE_CONSUMER_URL not set"),
+                    db_connection: db::db_connect(&database_url).expect("Failed to connect to db"),
+                };
+                db::run_migrations(&mut ctx.db_connection).expect("Failed to run migrations");
+                let metrics_monitor = tokio_metrics::TaskMonitor::new();
+                {
+                    let metrics_monitor = metrics_monitor.clone();
+                    tokio::spawn(async move {
+                        for interval in metrics_monitor.intervals() {
+                            println!("{:?} per second", interval.instrumented_count as f64 / 5.0);
+                            tokio::time::sleep(Duration::from_millis(5000)).await;
+                        }
+                    });
+                }
+
                 println!("Connected to bgs.bsky-sandbox.dev.");
                 while let Some(Ok(Message::Binary(message))) = socket.next().await {
-                    let ctx = ctx.clone();
-                    tokio::spawn(async move {
-                        process(message, ctx).await;
-                    });
+                    match metrics_monitor.instrument(process(message, &mut ctx)).await {
+                        Ok(seq) => {
+                            update_seq(&mut ctx.db_connection, seq)
+                                .map_err(|_| eprintln!("Failed to update sequence"))
+                                .ok();
+                        }
+                        Err(error) => {
+                            eprintln!("Error processing message: {error:?}");
+                            if let ProcessError::ProcessError { seq, error } = error {
+                                record_dead_letter(
+                                    &mut ctx.db_connection,
+                                    // TODO: Would be good to include the actual dropped message here but my rust skill issues are preventing me from doing so
+                                    &error.to_string(),
+                                    seq,
+                                )
+                                .map_err(|_| eprintln!("Failed to record dead letter"))
+                                .ok();
+                            }
+                        }
+                    }
                 }
             }
             Err(error) => {

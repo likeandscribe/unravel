@@ -1,0 +1,10 @@
+version: "3"
+services:
+  drainpipe:
+    build:
+      dockerfile: ./packages-rs/drainpipe/Dockerfile
+      context: ../../
+    env_file:
+      - ./.env.local
+    volumes:
+      - ./drainpipedata:/drainpipedata
