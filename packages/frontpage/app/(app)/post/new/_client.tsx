@@ -10,9 +10,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/lib/components/ui/alert";
 export function NewPostForm() {
   const [state, action] = useActionState(newPostAction, null);
   const id = useId();
-
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form
+      action={action}
+      onSubmit={(e) => {
+        e.preventDefault();
+        action(new FormData(e.currentTarget));
+      }}
+      className="flex flex-col gap-3"
+    >
       <div>
         <Label htmlFor={`${id}-title`}>Title</Label>
         <Input name="title" id={`${id}-title`} />
