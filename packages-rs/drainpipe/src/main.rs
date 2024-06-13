@@ -21,7 +21,6 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
         firehose::read(&message).map_err(|e| ProcessError::DecodeError { _e: e })?;
     let sequence = match message {
         firehose::SubscribeRepos::Commit(commit) => {
-            dbg!(&commit.repo);
             let frontpage_ops = commit
                 .operations
                 .iter()
