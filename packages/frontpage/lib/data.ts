@@ -3,6 +3,9 @@ import { cache } from "react";
 import { getSession } from "./auth";
 import { redirect } from "next/navigation";
 import { decodeJwt } from "jose";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { BetaUser } from "./schema";
 
 export const getUser = cache(async () => {
   const session = await getSession();
@@ -39,6 +42,8 @@ export class PdsError extends Error {
 }
 
 export async function createPost({ title, url }: PostInput) {
+  await ensureIsInBeta();
+
   await atprotoCreateRecord({
     record: { title, url, createdAt: new Date().toISOString() },
     collection: "fyi.unravel.frontpage.post",
@@ -73,3 +78,16 @@ async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
     throw new PdsError("Failed to create post", { cause: response });
   }
 }
+
+export const ensureIsInBeta = cache(async () => {
+  const user = await getUser();
+  if (!user.did) throw new Error("Invalid user");
+
+  if (
+    await db.query.BetaUser.findFirst({ where: eq(BetaUser.did, user.did) })
+  ) {
+    return;
+  }
+
+  redirect("/invite-only");
+});
