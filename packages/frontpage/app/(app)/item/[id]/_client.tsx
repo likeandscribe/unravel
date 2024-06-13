@@ -23,6 +23,7 @@ import {
 import { VariantProps, cva } from "class-variance-authority";
 import React, { useRef, useState } from "react";
 import { useToast } from "@/lib/components/ui/use-toast";
+import { formatDistance } from "date-fns";
 
 const commentVariants = cva(undefined, {
   variants: {
@@ -61,7 +62,7 @@ export function Comment({
         <div className="flex items-center gap-2">
           <div className="font-medium">{author}</div>
           <div className="text-gray-500 text-xs dark:text-gray-400">
-            {createdAt.toISOString()}
+            {formatDistance(createdAt, new Date())} ago
           </div>
         </div>
         <div className="prose prose-stone">
