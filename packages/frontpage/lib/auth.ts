@@ -55,13 +55,14 @@ const auth = NextAuth({
   callbacks: {
     jwt: async ({ token, user }) => {
       if (user) {
+        console.log(user);
         const refreshJwt = (user as any).refreshJwt;
         const accessJwt = (user as any).accessJwt;
         const refresh = decodeJwt(refreshJwt);
         token.exp = refresh.exp;
         token.sub = refresh.sub;
-        token.refreshToken = refreshJwt;
-        token.accessToken = accessJwt;
+        token.refreshJwt = refreshJwt;
+        token.accessJwt = accessJwt;
       }
       return token;
     },

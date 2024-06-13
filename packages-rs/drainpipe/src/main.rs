@@ -22,7 +22,7 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
             let frontpage_ops = commit
                 .operations
                 .iter()
-                .filter(|op| op.path.starts_with("com.tom-sherman.frontpage."))
+                .filter(|op| op.path.starts_with("fyi.unravel.frontpage."))
                 .collect::<Vec<_>>();
             if !frontpage_ops.is_empty() {
                 process_frontpage_ops(&frontpage_ops, &commit, &ctx)

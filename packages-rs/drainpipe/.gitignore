@@ -2,3 +2,4 @@
 drainpipe.db
 drainpipe.db-shm
 drainpipe.db-wal
+drainpipe-journal.db
