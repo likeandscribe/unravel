@@ -15,7 +15,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Button className="ml-4" asChild>
               <Link href="/post/new">New</Link>
             </Button>
-            <a href="" className="ml-4"></a>
           </div>
           <Suspense>
             <LoginOrLogout />
