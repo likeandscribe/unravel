@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.86"
-chrono = "0.4.38"
+chrono = { version = "0.4.38", features = ["serde"] }
 ciborium = "0.2.2"
-cid = "0.11.1"
+cid = { version = "0.11.1", features = ["serde-codec"] }
 diesel = { version = "2.2.0", features = ["sqlite"] }
 dotenv-flow = "0.16.2"
 futures = "0.3.30"
