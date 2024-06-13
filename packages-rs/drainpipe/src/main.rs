@@ -1,6 +1,7 @@
 use db::{record_dead_letter, update_seq};
 use diesel::sqlite::SqliteConnection;
 use futures::{StreamExt as _, TryFutureExt};
+use serde::Serialize;
 use std::{path::PathBuf, thread, time::Duration};
 use tokio_tungstenite::tungstenite::protocol::Message;
 
@@ -10,15 +11,17 @@ mod schema;
 
 #[derive(Debug)]
 enum ProcessError {
-    DecodeError(firehose::Error),
+    DecodeError { _e: firehose::Error },
     ProcessError { seq: i64, error: anyhow::Error },
 }
 
 /// Process a message from the firehose. Returns the sequence number of the message or an error.
 async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessError> {
-    let (_header, message) = firehose::read(&message).map_err(|e| ProcessError::DecodeError(e))?;
+    let (_header, message) =
+        firehose::read(&message).map_err(|e| ProcessError::DecodeError { _e: e })?;
     let sequence = match message {
         firehose::SubscribeRepos::Commit(commit) => {
+            dbg!(&commit.repo);
             let frontpage_ops = commit
                 .operations
                 .iter()
@@ -41,9 +44,24 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
     Ok(sequence)
 }
 
+fn i64_serialize<S>(x: &i64, s: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    s.serialize_str(&x.to_string())
+}
+
+#[derive(Serialize, Debug)]
+struct ConsumerBody<'a> {
+    ops: &'a Vec<&'a firehose::SubscribeReposCommitOperation>,
+    repo: &'a str,
+    #[serde(serialize_with = "i64_serialize")]
+    seq: i64,
+}
+
 async fn process_frontpage_ops(
     ops: &Vec<&firehose::SubscribeReposCommitOperation>,
-    _commit: &firehose::SubscribeReposCommit,
+    commit: &firehose::SubscribeReposCommit,
     ctx: &Context,
 ) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
@@ -53,7 +71,11 @@ async fn process_frontpage_ops(
             "Authorization",
             format!("Bearer {}", ctx.frontpage_consumer_secret),
         )
-        .json(&ops)
+        .json(&ConsumerBody {
+            ops,
+            repo: &commit.repo,
+            seq: commit.sequence,
+        })
         .send()
         .await?;
 

@@ -9,7 +9,7 @@ import {
 
 export const Post = pgTable("posts", {
   id: serial("id").primaryKey(),
-  cid: text("cid").notNull(),
+  rkey: text("rkey").notNull().unique(),
   title: text("title").notNull(),
   url: text("url").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -27,7 +27,7 @@ export const PostVote = pgTable("post_votes", {
 
 export const Comment = pgTable("comments", {
   id: serial("id").primaryKey(),
-  cid: text("cid").notNull(),
+  rkey: text("rkey").notNull().unique(),
   postId: integer("post_id")
     .notNull()
     .references(() => Post.id),
