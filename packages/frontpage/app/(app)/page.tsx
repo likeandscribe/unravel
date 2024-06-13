@@ -18,7 +18,7 @@ const tempPosts = {
     url: "https://tailwindcss.com",
     votes: 42,
     author: "@john.example.com",
-    createdAt: new Date("2024-06-11T07:10:44.335Z"),
+    createdAt: new Date("2024-06-13T15:10:44.335Z"),
     commentCount: 4,
   },
   "2": {

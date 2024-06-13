@@ -22,6 +22,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.31.2",
+    "date-fns": "^3.6.0",
     "jose": "^5.4.0",
     "next": "15.0.0-rc.0",
     "next-auth": "5.0.0-beta.19",
