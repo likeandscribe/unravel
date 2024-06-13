@@ -1,5 +1,6 @@
-use rsky_lexicon::com::atproto::sync::SubscribeRepos;
-use serde::Deserialize;
+use chrono::{DateTime, Utc};
+use cid::Cid;
+use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 
 #[derive(Debug, Deserialize)]
@@ -43,6 +44,53 @@ impl From<serde_ipld_dagcbor::DecodeError<std::io::Error>> for Error {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SubscribeReposCommitOperation {
+    pub path: String,
+    pub action: String,
+    pub cid: Option<Cid>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SubscribeReposCommit {
+    #[serde(with = "serde_bytes")]
+    pub blocks: Vec<u8>,
+    pub commit: Cid,
+    #[serde(rename(deserialize = "ops"))]
+    pub operations: Vec<SubscribeReposCommitOperation>,
+    pub prev: Option<Cid>,
+    pub rebase: bool,
+    pub repo: String,
+    #[serde(rename(deserialize = "seq"))]
+    pub sequence: i64,
+    pub time: DateTime<Utc>,
+    #[serde(rename(deserialize = "tooBig"))]
+    pub too_big: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SubscribeReposHandle {
+    pub did: String,
+    pub handle: String,
+    #[serde(rename(deserialize = "seq"))]
+    pub sequence: i64,
+    pub time: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SubscribeReposTombstone {
+    pub did: String,
+    #[serde(rename(deserialize = "seq"))]
+    pub sequence: i64,
+    pub time: DateTime<Utc>,
+}
+
+pub enum SubscribeRepos {
+    Commit(SubscribeReposCommit),
+    Handle(SubscribeReposHandle),
+    Tombstone(SubscribeReposTombstone),
+}
+
 pub fn read(data: &[u8]) -> Result<(Header, SubscribeRepos), Error> {
     let mut reader = Cursor::new(data);
 
@@ -50,7 +98,7 @@ pub fn read(data: &[u8]) -> Result<(Header, SubscribeRepos), Error> {
     let body = match header.type_.as_str() {
         "#commit" => SubscribeRepos::Commit(serde_ipld_dagcbor::from_reader(&mut reader)?),
         "#handle" => SubscribeRepos::Handle(serde_ipld_dagcbor::from_reader(&mut reader)?),
-        "#tombstone" => SubscribeRepos::Handle(serde_ipld_dagcbor::from_reader(&mut reader)?),
+        "#tombstone" => SubscribeRepos::Tombstone(serde_ipld_dagcbor::from_reader(&mut reader)?),
         _ => {
             return Err(Error::UnknownTypeError(header.type_));
         }

@@ -1,8 +1,6 @@
 use db::{record_dead_letter, update_seq};
 use diesel::sqlite::SqliteConnection;
 use futures::{StreamExt as _, TryFutureExt};
-use rsky_lexicon::com::atproto::sync::{SubscribeRepos, SubscribeReposCommit};
-use serde::{ser::SerializeStruct, Serialize};
 use std::{path::PathBuf, thread, time::Duration};
 use tokio_tungstenite::tungstenite::protocol::Message;
 
@@ -20,12 +18,11 @@ enum ProcessError {
 async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessError> {
     let (_header, message) = firehose::read(&message).map_err(|e| ProcessError::DecodeError(e))?;
     let sequence = match message {
-        SubscribeRepos::Commit(commit) => {
+        firehose::SubscribeRepos::Commit(commit) => {
             let frontpage_ops = commit
                 .operations
                 .iter()
                 .filter(|op| op.path.starts_with("com.tom-sherman.frontpage."))
-                .map(|op| SubscribeReposCommitOperation(&op))
                 .collect::<Vec<_>>();
             if !frontpage_ops.is_empty() {
                 process_frontpage_ops(&frontpage_ops, &commit, &ctx)
@@ -37,34 +34,16 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
             }
             commit.sequence
         }
-        SubscribeRepos::Handle(handle) => handle.sequence,
-        SubscribeRepos::Tombstone(tombstone) => tombstone.sequence,
+        firehose::SubscribeRepos::Handle(handle) => handle.sequence,
+        firehose::SubscribeRepos::Tombstone(tombstone) => tombstone.sequence,
     };
 
     Ok(sequence)
 }
 
-#[derive(Debug)]
-struct SubscribeReposCommitOperation<'a>(
-    &'a rsky_lexicon::com::atproto::sync::SubscribeReposCommitOperation,
-);
-
-impl<'a> Serialize for SubscribeReposCommitOperation<'a> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("SubscribeReposCommitOperation", 2)?;
-        state.serialize_field("path", &self.0.path)?;
-        state.serialize_field("action", &self.0.action)?;
-        state.serialize_field("cid", &self.0.cid)?;
-        state.end()
-    }
-}
-
-async fn process_frontpage_ops<'a>(
-    ops: &Vec<SubscribeReposCommitOperation<'a>>,
-    _commit: &'a SubscribeReposCommit,
+async fn process_frontpage_ops(
+    ops: &Vec<&firehose::SubscribeReposCommitOperation>,
+    _commit: &firehose::SubscribeReposCommit,
     ctx: &Context,
 ) -> anyhow::Result<()> {
     let client = reqwest::Client::new();

@@ -500,13 +500,16 @@ name = "drainpipe"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "ciborium",
+ "cid 0.11.1",
  "diesel",
  "dotenv-flow",
  "futures",
  "reqwest",
  "rsky-lexicon",
  "serde",
+ "serde_bytes",
  "serde_ipld_dagcbor",
  "tokio",
  "tokio-metrics",
