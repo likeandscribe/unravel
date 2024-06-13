@@ -82,14 +82,18 @@ async fn main() {
         dotenv_flow::from_filename(env_path).ok();
     }
 
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
+    let mut conn = db::db_connect(&database_url).expect("Failed to connect to db");
+    let cursor = db::get_seq(&mut conn).expect("Failed to get sequence");
+
     loop {
-        match tokio_tungstenite::connect_async(
-            "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos",
-        )
+        match tokio_tungstenite::connect_async(format!(
+            "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
+            cursor
+        ))
         .await
         {
             Ok((mut socket, _response)) => {
-                let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
                 let mut ctx = Context {
                     frontpage_consumer_secret: std::env::var("FRONTPAGE_CONSUMER_SECRET")
                         .expect("FRONTPAGE_CONSUMER_SECRET not set"),

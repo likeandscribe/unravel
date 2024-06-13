@@ -39,6 +39,14 @@ pub fn record_dead_letter(
     Ok(())
 }
 
+pub fn get_seq(conn: &mut SqliteConnection) -> anyhow::Result<i64> {
+    use crate::schema::drainpipe::dsl::*;
+
+    let row = drainpipe.select(seq).first::<i64>(conn)?;
+
+    Ok(row)
+}
+
 #[derive(Queryable, Selectable, PartialEq, Debug)]
 #[diesel(table_name = crate::schema::drainpipe)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
