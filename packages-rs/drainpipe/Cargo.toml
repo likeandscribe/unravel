@@ -12,7 +12,6 @@ diesel = { version = "2.2.0", features = ["sqlite"] }
 dotenv-flow = "0.16.2"
 futures = "0.3.30"
 reqwest = { version = "0.12.4", features = ["json"] }
-rsky-lexicon = "0.1.0"
 serde = "1.0.203"
 serde_bytes = "0.11.14"
 serde_ipld_dagcbor = "0.6.1"
