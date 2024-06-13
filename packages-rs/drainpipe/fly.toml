@@ -8,6 +8,10 @@ primary_region = 'ams'
 
 [build]
 
+[[mounts]]
+source = 'drainpipedata'
+destination = '/drainpipedata'
+
 [http_service]
 internal_port = 8080
 force_https = true

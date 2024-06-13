@@ -9,6 +9,7 @@ chrono = { version = "0.4.38", features = ["serde"] }
 ciborium = "0.2.2"
 cid = { version = "0.11.1", features = ["serde-codec"] }
 diesel = { version = "2.2.0", features = ["sqlite"] }
+diesel_migrations = "2.2.0"
 dotenv-flow = "0.16.2"
 futures = "0.3.30"
 reqwest = { version = "0.12.4", features = ["json"] }
@@ -19,3 +20,7 @@ tokio = { version = "1.38.0", features = ["full"] }
 tokio-metrics = "0.3.1"
 tokio-tungstenite = { version = "0.23.0", features = ["native-tls"] }
 url = "2.5.0"
+
+[dependencies.libsqlite3-sys]
+version = "0.28"
+features = ["bundled"]

@@ -1,6 +1,6 @@
 FROM rust:1.78-alpine as builder
 
-RUN apk add libressl-dev musl-dev
+RUN apk add libressl-dev musl-dev sqlite-dev
 
 WORKDIR /usr/src/drainpipe
 COPY . .
@@ -10,4 +10,8 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 FROM alpine:3.14
 COPY --from=builder /usr/src/drainpipe/target/release/drainpipe /
+
+ENV DATABASE_URL="/drainpipedata/drainpipe.db"
+ENV FRONTPAGE_CONSUMER_URL="http://localhost:3000/api/receive_hook"
+
 ENTRYPOINT ["/drainpipe"]

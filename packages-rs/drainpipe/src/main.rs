@@ -97,6 +97,7 @@ async fn main() {
                         .expect("FRONTPAGE_CONSUMER_URL not set"),
                     db_connection: db::db_connect(&database_url).expect("Failed to connect to db"),
                 };
+                db::run_migrations(&mut ctx.db_connection).expect("Failed to run migrations");
                 let metrics_monitor = tokio_metrics::TaskMonitor::new();
                 {
                     let metrics_monitor = metrics_monitor.clone();

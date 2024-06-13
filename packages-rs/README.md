@@ -17,3 +17,17 @@
    ```
    diesel migration run
    ```
+
+## Building dockerfile locally
+
+From the root of the monorepo
+
+```
+docker build -f ./packages-rs/drainpipe/Dockerfile .
+```
+
+## Deploying to fly.io
+
+```
+fly deploy . -c ./packages-rs/drainpipe/fly.toml --dockerfile ./packages-rs/drainpipe/Dockerfile
+```

@@ -1,8 +1,18 @@
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
 pub fn db_connect(database_url: &String) -> anyhow::Result<SqliteConnection> {
     SqliteConnection::establish(&database_url).map_err(Into::into)
+}
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
+pub fn run_migrations(
+    conn: &mut SqliteConnection,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+    conn.run_pending_migrations(MIGRATIONS)?;
+
+    Ok(())
 }
 
 pub fn update_seq(conn: &mut SqliteConnection, new_seq: i64) -> anyhow::Result<()> {
