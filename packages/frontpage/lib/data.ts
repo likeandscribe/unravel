@@ -42,6 +42,8 @@ export class PdsError extends Error {
 }
 
 export async function createPost({ title, url }: PostInput) {
+  await ensureIsInBeta();
+
   await atprotoCreateRecord({
     record: { title, url, createdAt: new Date().toISOString() },
     collection: "fyi.unravel.frontpage.post",
@@ -77,11 +79,15 @@ async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
   }
 }
 
-export const isBetaUser = cache(async () => {
+export const ensureIsInBeta = cache(async () => {
   const user = await getUser();
   if (!user.did) throw new Error("Invalid user");
 
-  return Boolean(
-    await db.query.BetaUser.findFirst({ where: eq(BetaUser.did, user.did) }),
-  );
+  if (
+    await db.query.BetaUser.findFirst({ where: eq(BetaUser.did, user.did) })
+  ) {
+    return;
+  }
+
+  redirect("/invite-only");
 });
