@@ -70,6 +70,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -85,9 +86,5 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-source_serif), serif;
-}
-
-.font-serif {
   font-family: var(--font-source_serif), serif;
 }
