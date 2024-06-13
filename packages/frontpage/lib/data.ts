@@ -40,7 +40,7 @@ export class PdsError extends Error {
 
 export async function createPost({ title, url }: PostInput) {
   await atprotoCreateRecord({
-    record: { title, url },
+    record: { title, url, createdAt: new Date().toISOString() },
     collection: "fyi.unravel.frontpage.post",
   });
 }
