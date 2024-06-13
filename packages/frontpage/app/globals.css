@@ -87,3 +87,7 @@ h5,
 h6 {
   font-family: var(--font-source_serif), serif;
 }
+
+.font-serif {
+  font-family: var(--font-source_serif), serif;
+}

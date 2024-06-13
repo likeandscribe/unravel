@@ -3,6 +3,9 @@ import { cache } from "react";
 import { getSession } from "./auth";
 import { redirect } from "next/navigation";
 import { decodeJwt } from "jose";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { BetaUser } from "./schema";
 
 export const getUser = cache(async () => {
   const session = await getSession();
@@ -73,3 +76,12 @@ async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
     throw new PdsError("Failed to create post", { cause: response });
   }
 }
+
+export const isBetaUser = cache(async () => {
+  const user = await getUser();
+  if (!user.did) throw new Error("Invalid user");
+
+  return Boolean(
+    await db.query.BetaUser.findFirst({ where: eq(BetaUser.did, user.did) }),
+  );
+});
