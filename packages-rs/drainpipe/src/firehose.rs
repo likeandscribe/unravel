@@ -29,11 +29,7 @@ impl fmt::Display for Error {
     }
 }
 
-impl std::error::Error for Error {
-    fn description(&self) -> &str {
-        "Read error"
-    }
-}
+impl std::error::Error for Error {}
 
 impl From<ciborium::de::Error<std::io::Error>> for Error {
     fn from(e: ciborium::de::Error<std::io::Error>) -> Self {
