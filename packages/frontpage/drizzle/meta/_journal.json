@@ -15,6 +15,13 @@
       "when": 1718312518825,
       "tag": "0001_nice_magma",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1718316283733,
+      "tag": "0002_dizzy_juggernaut",
+      "breakpoints": true
     }
   ]
 }

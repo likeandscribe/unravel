@@ -1,4 +1,11 @@
-import { text, pgTable, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import {
+  text,
+  pgTable,
+  serial,
+  integer,
+  timestamp,
+  bigint,
+} from "drizzle-orm/pg-core";
 
 export const Post = pgTable("posts", {
   id: serial("id").primaryKey(),
@@ -42,4 +49,10 @@ export const BetaUser = pgTable("beta_users", {
   id: serial("id").primaryKey(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   did: text("did").notNull().unique(),
+});
+
+export const ConsumedOffset = pgTable("consumed_offsets", {
+  offset: bigint("offset", {
+    mode: "bigint",
+  }).primaryKey(),
 });
