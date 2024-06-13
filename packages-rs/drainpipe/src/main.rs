@@ -1,6 +1,6 @@
-use db::update_seq;
+use db::{record_dead_letter, update_seq};
 use diesel::sqlite::SqliteConnection;
-use futures::StreamExt as _;
+use futures::{StreamExt as _, TryFutureExt};
 use rsky_lexicon::com::atproto::sync::{SubscribeRepos, SubscribeReposCommit};
 use serde::{ser::SerializeStruct, Serialize};
 use std::{path::PathBuf, thread, time::Duration};
@@ -10,9 +10,15 @@ mod db;
 mod firehose;
 mod schema;
 
+#[derive(Debug)]
+enum ProcessError {
+    DecodeError(firehose::Error),
+    ProcessError { seq: i64, error: anyhow::Error },
+}
+
 /// Process a message from the firehose. Returns the sequence number of the message or an error.
-async fn process(message: Vec<u8>, ctx: &mut Context) -> anyhow::Result<i64> {
-    let (_header, message) = firehose::read(&message)?;
+async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessError> {
+    let (_header, message) = firehose::read(&message).map_err(|e| ProcessError::DecodeError(e))?;
     let sequence = match message {
         SubscribeRepos::Commit(commit) => {
             let frontpage_ops = commit
@@ -22,7 +28,12 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> anyhow::Result<i64> {
                 .map(|op| SubscribeReposCommitOperation(&op))
                 .collect::<Vec<_>>();
             if !frontpage_ops.is_empty() {
-                process_frontpage_ops(frontpage_ops, &commit, &ctx).await?;
+                process_frontpage_ops(&frontpage_ops, &commit, &ctx)
+                    .map_err(|e| ProcessError::ProcessError {
+                        seq: commit.sequence,
+                        error: e,
+                    })
+                    .await?;
             }
             commit.sequence
         }
@@ -33,6 +44,7 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> anyhow::Result<i64> {
     Ok(sequence)
 }
 
+#[derive(Debug)]
 struct SubscribeReposCommitOperation<'a>(
     &'a rsky_lexicon::com::atproto::sync::SubscribeReposCommitOperation,
 );
@@ -51,7 +63,7 @@ impl<'a> Serialize for SubscribeReposCommitOperation<'a> {
 }
 
 async fn process_frontpage_ops<'a>(
-    ops: Vec<SubscribeReposCommitOperation<'a>>,
+    ops: &Vec<SubscribeReposCommitOperation<'a>>,
     _commit: &'a SubscribeReposCommit,
     ctx: &Context,
 ) -> anyhow::Result<()> {
@@ -126,8 +138,17 @@ async fn main() {
                                 .ok();
                         }
                         Err(error) => {
-                            // TODO: Record dead letter
                             eprintln!("Error processing message: {error:?}");
+                            if let ProcessError::ProcessError { seq, error } = error {
+                                record_dead_letter(
+                                    &mut ctx.db_connection,
+                                    // TODO: Would be good to include the actual dropped message here but my rust skill issues are preventing me from doing so
+                                    &error.to_string(),
+                                    seq,
+                                )
+                                .map_err(|_| eprintln!("Failed to record dead letter"))
+                                .ok();
+                            }
                         }
                     }
                 }
