@@ -1,19 +1,19 @@
 ## Setup
 
-1. Declare the database URL
+1. Install diesel cli
 
    ```
-   export DATABASE_URL="sqlite://${PWD}/drainpipe.db"
+   cargo install diesel_cli --no-default-features --features sqlite
    ```
 
 2. Create the database.
 
    ```
-   cargo xtask sqlx db create
+   diesel setup
    ```
 
 3. Run sql migrations
 
    ```
-   cargo xtask sqlx migrate run
+   diesel migration run
    ```
