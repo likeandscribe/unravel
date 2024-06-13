@@ -7,7 +7,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="container mx-auto px-4 md:px-6 py-12">
       <div className="max-w-3xl mx-auto">
         <div className="flex place-content-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Frontpage</h1>
+          <Link href="/">
+            <h1 className="text-2xl font-bold">Frontpage</h1>
+          </Link>
           <Suspense>
             <LoginOrLogout />
           </Suspense>

@@ -37,12 +37,12 @@ export function PostCard({
         <span className="font-medium">{votes}</span>
       </div>
       <div className="flex-1">
-        <h2 className="text-lg font-medium">
+        <h2 className="text-xl font-medium mb-1">
           <a href={url} className="hover:underline">
             {title}
           </a>
         </h2>
-        <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+        <div className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
           <span>{new URL(url).host}</span>
           <span aria-hidden>•</span>
           <span>by {author}</span>
