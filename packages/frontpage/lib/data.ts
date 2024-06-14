@@ -4,7 +4,7 @@ import { getSession } from "./auth";
 import { redirect } from "next/navigation";
 import { decodeJwt } from "jose";
 import { db } from "./db";
-import { eq, and, sql, count } from "drizzle-orm";
+import { eq, and, sql, count, desc, asc } from "drizzle-orm";
 import * as schema from "./schema";
 import { z } from "zod";
 
@@ -166,8 +166,33 @@ export const getFrontpagePosts = cache(async () => {
     .groupBy(schema.PostVote.postId)
     .as("vote");
 
-  const result = await db
-    .select()
+  const rank = sql`
+    coalesce(${votes.voteCount} / (
+    -- Age
+      (
+        EXTRACT(
+          EPOCH
+          FROM
+            (CURRENT_TIMESTAMP - ${schema.Post.createdAt})
+        ) / 3600
+      ) + 2
+    ) ^ 1.8, 0)
+  `.as("rank");
+
+  const rows = await db
+    .select({
+      id: schema.Post.id,
+      rkey: schema.Post.rkey,
+      cid: schema.Post.cid,
+      title: schema.Post.title,
+      url: schema.Post.url,
+      createdAt: schema.Post.createdAt,
+      authorDid: schema.Post.authorDid,
+      voteCount: votes.voteCount,
+      userVoteId: schema.PostVote.id,
+      commentCount: comments.commentCount,
+      rank: rank,
+    })
     .from(schema.Post)
     .leftJoin(
       schema.PostVote,
@@ -179,12 +204,19 @@ export const getFrontpagePosts = cache(async () => {
         : sql`false`,
     )
     .leftJoin(comments, eq(comments.postId, schema.Post.id))
-    .leftJoin(votes, eq(votes.postId, schema.Post.id));
+    .leftJoin(votes, eq(votes.postId, schema.Post.id))
+    .orderBy(desc(rank));
 
-  return result.map((join) => ({
-    ...join.posts,
-    hasVoted: !!join.post_votes,
-    commentCount: join.comment?.commentCount ?? 0,
-    voteCount: join.vote?.voteCount ?? 0,
+  return rows.map((row) => ({
+    id: row.id,
+    rkey: row.rkey,
+    cid: row.cid,
+    title: row.title,
+    url: row.url,
+    createdAt: row.createdAt,
+    authorDid: row.authorDid,
+    voteCount: row.voteCount,
+    hasVoted: !!row.userVoteId,
+    commentCount: row.commentCount,
   }));
 });
