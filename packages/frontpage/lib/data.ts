@@ -157,6 +157,15 @@ export const getFrontpagePosts = cache(async () => {
     .groupBy(schema.Comment.postId)
     .as("comment");
 
+  const votes = db
+    .select({
+      postId: schema.PostVote.postId,
+      voteCount: count(schema.PostVote.id).as("voteCount"),
+    })
+    .from(schema.PostVote)
+    .groupBy(schema.PostVote.postId)
+    .as("vote");
+
   const result = await db
     .select()
     .from(schema.Post)
@@ -169,11 +178,13 @@ export const getFrontpagePosts = cache(async () => {
           )
         : sql`false`,
     )
-    .leftJoin(comments, eq(comments.postId, schema.Post.id));
+    .leftJoin(comments, eq(comments.postId, schema.Post.id))
+    .leftJoin(votes, eq(votes.postId, schema.Post.id));
 
   return result.map((join) => ({
     ...join.posts,
     hasVoted: !!join.post_votes,
     commentCount: join.comment?.commentCount ?? 0,
+    voteCount: join.vote?.voteCount ?? 0,
   }));
 });

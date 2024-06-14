@@ -13,8 +13,8 @@ export default async function Home() {
           id={post.rkey}
           title={post.title}
           url={post.url}
-          votes={0}
-          commentCount={0}
+          votes={post.voteCount}
+          commentCount={post.commentCount}
         />
       ))}
     </div>
