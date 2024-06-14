@@ -12,6 +12,6 @@ FROM alpine:3.14
 COPY --from=builder /usr/src/drainpipe/target/release/drainpipe /
 
 ENV DATABASE_URL="/drainpipedata/drainpipe.db"
-ENV FRONTPAGE_CONSUMER_URL="http://localhost:3000/api/receive_hook"
+ENV FRONTPAGE_CONSUMER_URL="https://frontpage.unravel.fyi/api/receive_hook"
 
 ENTRYPOINT ["/drainpipe"]
