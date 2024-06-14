@@ -2,6 +2,7 @@ import { getSession, signOut } from "@/lib/auth";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/lib/components/ui/button";
+import { isBetaUser } from "@/lib/data";
 
 export default async function Layout({
   children,
@@ -9,6 +10,7 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
+  const isInBeta = await isBetaUser();
   return (
     <div className="container mx-auto px-4 md:px-6 py-12">
       <div className="max-w-3xl mx-auto">
@@ -27,6 +29,14 @@ export default async function Layout({
             <LoginOrLogout />
           </Suspense>
         </div>
+        {session && !isInBeta && (
+          <div className="flex justify-between items-center bg-yellow-100 p-4 mb-4">
+            <span>You&apos;re not currently part of the beta</span>
+            <Button asChild variant="ghost">
+              <Link href="/invite-only">Learn more</Link>
+            </Button>
+          </div>
+        )}
         {children}
       </div>
     </div>
