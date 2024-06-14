@@ -1,7 +1,7 @@
 import { Button } from "@/lib/components/ui/button";
-import { formatDistance } from "date-fns";
 import { ChevronUpIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
+import { TimeAgo } from "@/lib/components/time-ago";
 
 type PostProps = {
   id: string;
@@ -47,7 +47,7 @@ export function PostCard({
           <span aria-hidden>•</span>
           <span>by {author}</span>
           <span aria-hidden>•</span>
-          <span>{formatDistance(createdAt, new Date())} ago</span>
+          <TimeAgo createdAt={createdAt} side="bottom" />
           <span aria-hidden>•</span>
           <Link href={postHref} className="hover:underline">
             {commentCount} comments
