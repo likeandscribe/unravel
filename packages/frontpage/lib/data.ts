@@ -148,13 +148,14 @@ export const getPdsUrl = cache(async (did: string) => {
 export const getFrontpagePosts = cache(async () => {
   const user = await getUser();
 
-  // const comments = db
-  //   .select({
-  //     commentCount: sql`COUNT(*)`.as("commentCount"),
-  //   })
-  //   .from(schema.Comment)
-  //   .groupBy(schema.Comment.postId)
-  //   .as("comment");
+  const comments = db
+    .select({
+      postId: schema.Comment.postId,
+      commentCount: count(schema.Comment.id).as("commentCount"),
+    })
+    .from(schema.Comment)
+    .groupBy(schema.Comment.postId)
+    .as("comment");
 
   const result = await db
     .select()
@@ -167,12 +168,12 @@ export const getFrontpagePosts = cache(async () => {
             eq(schema.PostVote.authorDid, user.did),
           )
         : sql`false`,
-    );
-  // .leftJoin(comments, eq(schema.Comment.postId, schema.Post.id));
+    )
+    .leftJoin(comments, eq(comments.postId, schema.Post.id));
 
   return result.map((join) => ({
     ...join.posts,
     hasVoted: !!join.post_votes,
-    commentCount: join.comment?.commentCount,
+    commentCount: join.comment?.commentCount ?? 0,
   }));
 });
