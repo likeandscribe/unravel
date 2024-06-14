@@ -215,8 +215,8 @@ export const getFrontpagePosts = cache(async () => {
     url: row.url,
     createdAt: row.createdAt,
     authorDid: row.authorDid,
-    voteCount: row.voteCount,
+    voteCount: row.voteCount ?? 0,
     hasVoted: !!row.userVoteId,
-    commentCount: row.commentCount,
+    commentCount: row.commentCount ?? 0,
   }));
 });

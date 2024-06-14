@@ -10,7 +10,7 @@ export default function Item() {
           title: "React 18 is here! What's new?",
           url: "https://react.dev",
           votes: 23,
-          author: "@tim.example.com",
+          author: "did:plc:2xau7wbgdq4phuou2ypwuen7",
           createdAt: new Date("2024-06-11T07:10:44.335Z"),
           commentCount: 4,
         }}
