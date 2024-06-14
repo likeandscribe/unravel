@@ -44,10 +44,29 @@ impl From<serde_ipld_dagcbor::DecodeError<std::io::Error>> for Error {
     }
 }
 
+fn cid_serialize<S>(x: &Option<Cid>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    match x {
+        Some(cid) => s.serialize_str(&cid.to_string()),
+        None => s.serialize_none(),
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SubscribeReposCommitOperationAction {
+    Create,
+    Update,
+    Delete,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SubscribeReposCommitOperation {
     pub path: String,
-    pub action: String,
+    pub action: SubscribeReposCommitOperationAction,
+    #[serde(serialize_with = "cid_serialize")]
     pub cid: Option<Cid>,
 }
 
@@ -85,6 +104,7 @@ pub struct SubscribeReposTombstone {
     pub time: DateTime<Utc>,
 }
 
+#[derive(Debug)]
 pub enum SubscribeRepos {
     Commit(SubscribeReposCommit),
     Handle(SubscribeReposHandle),

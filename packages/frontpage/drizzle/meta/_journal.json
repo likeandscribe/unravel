@@ -22,6 +22,20 @@
       "when": 1718316283733,
       "tag": "0002_dizzy_juggernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1718358344831,
+      "tag": "0003_nervous_violations",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1718358380881,
+      "tag": "0004_demonic_the_spike",
+      "breakpoints": true
     }
   ]
 }
