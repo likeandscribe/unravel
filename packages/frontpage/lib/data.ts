@@ -4,14 +4,17 @@ import { getSession } from "./auth";
 import { redirect } from "next/navigation";
 import { decodeJwt } from "jose";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
-import { BetaUser } from "./schema";
+import { eq, and, sql, count } from "drizzle-orm";
+import * as schema from "./schema";
 import { z } from "zod";
 
+/**
+ * Returns null when not logged in. If you want to ensure that the user is logged in, use `ensureUser` instead.
+ */
 export const getUser = cache(async () => {
   const session = await getSession();
   if (!session) {
-    redirect("/login");
+    return null;
   }
 
   if (!session.user) {
@@ -36,6 +39,15 @@ export const getUser = cache(async () => {
     accessJwt: session.user.accessJwt,
   };
 });
+
+export async function ensureUser() {
+  const user = await getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
+}
 
 type PostInput = {
   title: string;
@@ -63,7 +75,7 @@ type CreateRecordInput = {
 };
 
 async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
-  const user = await getUser();
+  const user = await ensureUser();
   const pdsUrl = new URL(user.pdsUrl);
   pdsUrl.pathname = "/xrpc/com.atproto.repo.createRecord";
 
@@ -87,11 +99,12 @@ async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
 }
 
 export const ensureIsInBeta = cache(async () => {
-  const user = await getUser();
-  if (!user.did) throw new Error("Invalid user");
+  const user = await ensureUser();
 
   if (
-    await db.query.BetaUser.findFirst({ where: eq(BetaUser.did, user.did) })
+    await db.query.BetaUser.findFirst({
+      where: eq(schema.BetaUser.did, user.did),
+    })
   ) {
     return;
   }
@@ -113,6 +126,7 @@ export const getPlcDoc = cache(async (did: string) => {
 
 const PlcDocument = z.object({
   id: z.string(),
+  alsoKnownAs: z.array(z.string()),
   service: z.array(
     z.object({
       id: z.string(),
@@ -129,4 +143,36 @@ export const getPdsUrl = cache(async (did: string) => {
     plc.service.find((s) => s.type === "AtprotoPersonalDataServer")
       ?.serviceEndpoint ?? null
   );
+});
+
+export const getFrontpagePosts = cache(async () => {
+  const user = await getUser();
+
+  // const comments = db
+  //   .select({
+  //     commentCount: sql`COUNT(*)`.as("commentCount"),
+  //   })
+  //   .from(schema.Comment)
+  //   .groupBy(schema.Comment.postId)
+  //   .as("comment");
+
+  const result = await db
+    .select()
+    .from(schema.Post)
+    .leftJoin(
+      schema.PostVote,
+      user
+        ? and(
+            eq(schema.PostVote.postId, schema.Post.id),
+            eq(schema.PostVote.authorDid, user.did),
+          )
+        : sql`false`,
+    );
+  // .leftJoin(comments, eq(schema.Comment.postId, schema.Post.id));
+
+  return result.map((join) => ({
+    ...join.posts,
+    hasVoted: !!join.post_votes,
+    commentCount: join.comment?.commentCount,
+  }));
 });

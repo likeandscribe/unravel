@@ -1,12 +1,22 @@
+import { getFrontpagePosts } from "@/lib/data";
 import { PostCard } from "./_components/post-card";
 
-export default function Home() {
+export default async function Home() {
+  const posts = await getFrontpagePosts();
   return (
     <div className="space-y-6">
-      <PostCard {...tempPosts["1" as keyof typeof tempPosts]} />
-      <PostCard {...tempPosts["2" as keyof typeof tempPosts]} />
-      <PostCard {...tempPosts["3" as keyof typeof tempPosts]} />
-      <PostCard {...tempPosts["4" as keyof typeof tempPosts]} />
+      {posts.map((post) => (
+        <PostCard
+          key={post.id}
+          author={post.authorDid}
+          createdAt={post.createdAt}
+          id={post.rkey}
+          title={post.title}
+          url={post.url}
+          votes={0}
+          commentCount={0}
+        />
+      ))}
     </div>
   );
 }
