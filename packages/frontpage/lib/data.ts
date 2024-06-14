@@ -166,6 +166,8 @@ export const getFrontpagePosts = cache(async () => {
     .groupBy(schema.PostVote.postId)
     .as("vote");
 
+  // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
+  // We should closely monitor this and consider alternatives if it gets slow over time
   const rank = sql`
     coalesce(${votes.voteCount} / (
     -- Age
