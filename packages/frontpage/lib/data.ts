@@ -6,6 +6,7 @@ import { decodeJwt } from "jose";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { BetaUser } from "./schema";
+import { z } from "zod";
 
 export const getUser = cache(async () => {
   const session = await getSession();
@@ -18,13 +19,19 @@ export const getUser = cache(async () => {
   }
 
   const token = decodeJwt(session.user.accessJwt);
-  if (typeof token.aud !== "string") {
-    throw new Error("Invalid token");
+
+  if (!token.sub) {
+    throw new Error("Invalid token. Missing sub");
+  }
+
+  const pdsUrl = await getPdsUrl(token.sub);
+  if (!pdsUrl) {
+    throw new Error("No AtprotoPersonalDataServer service found");
   }
 
   return {
     handle: session.user.name,
-    pdsUrl: `https://${token.aud.replace(/^did:web:/, "")}`,
+    pdsUrl,
     did: token.sub,
     accessJwt: session.user.accessJwt,
   };
@@ -90,4 +97,36 @@ export const ensureIsInBeta = cache(async () => {
   }
 
   redirect("/invite-only");
+});
+
+export const getPlcDoc = cache(async (did: string) => {
+  const response = await fetch(`https://plc.directory/${did}`, {
+    next: {
+      // TODO: Also revalidate this when we receive an identity change event
+      // That would allow us to extend the revalidation time to 1 day
+      revalidate: 60 * 60, // 1 hour
+    },
+  });
+
+  return PlcDocument.parse(await response.json());
+});
+
+const PlcDocument = z.object({
+  id: z.string(),
+  service: z.array(
+    z.object({
+      id: z.string(),
+      type: z.string(),
+      serviceEndpoint: z.string(),
+    }),
+  ),
+});
+
+export const getPdsUrl = cache(async (did: string) => {
+  const plc = await getPlcDoc(did);
+
+  return (
+    plc.service.find((s) => s.type === "AtprotoPersonalDataServer")
+      ?.serviceEndpoint ?? null
+  );
 });

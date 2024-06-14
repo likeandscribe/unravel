@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import * as schema from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { getPdsUrl } from "@/lib/data";
 
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
@@ -15,10 +16,7 @@ export async function POST(request: Request) {
   }
 
   const { ops, repo, seq } = parsed.data;
-  const plc = await getPlcDoc(repo);
-  const service = plc.service.find(
-    (s) => s.type === "AtprotoPersonalDataServer",
-  )?.serviceEndpoint;
+  const service = await getPdsUrl(repo);
   if (!service) {
     throw new Error("No AtprotoPersonalDataServer service found");
   }
@@ -103,29 +101,6 @@ async function atprotoGetRecord({
 
   return AtProtoRecord.parse(json);
 }
-
-async function getPlcDoc(did: string) {
-  const response = await fetch(`https://plc.directory/${did}`, {
-    next: {
-      // TODO: Also revalidate this when we receive an identity change event
-      // That would allow us to extend the revalidation time to 1 day
-      revalidate: 60 * 60, // 1 hour
-    },
-  });
-
-  return PlcDocument.parse(await response.json());
-}
-
-const PlcDocument = z.object({
-  id: z.string(),
-  service: z.array(
-    z.object({
-      id: z.string(),
-      type: z.string(),
-      serviceEndpoint: z.string(),
-    }),
-  ),
-});
 
 const Message = z.object({
   ops: z.array(
