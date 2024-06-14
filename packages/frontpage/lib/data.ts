@@ -189,10 +189,7 @@ export const getPdsUrl = cache(async (did: string) => {
 const votesSubQuery = db
   .select({
     postId: schema.PostVote.postId,
-    // +1 to include the author's vote
-    voteCount: sql`${count(schema.PostVote.id)} + 1`
-      .mapWith(Number)
-      .as("voteCount") as SQL.Aliased<number | null>, // Requires explicit type widerning, this is probably a bug in drizzle
+    voteCount: count(schema.PostVote.id).as("voteCount"),
   })
   .from(schema.PostVote)
   .groupBy(schema.PostVote.postId)
@@ -232,7 +229,10 @@ export const getFrontpagePosts = cache(async () => {
       url: schema.Post.url,
       createdAt: schema.Post.createdAt,
       authorDid: schema.Post.authorDid,
-      voteCount: votesSubQuery.voteCount,
+      // +1 to include the author's vote
+      voteCount: sql`coalesce(${votesSubQuery.voteCount}, 0) + 1`.as(
+        "voteCount",
+      ),
       commentCount: comments.commentCount,
       rank: rank,
     })
@@ -278,7 +278,8 @@ export const getPost = cache(async (rkey: string) => {
   return {
     ...row.posts,
     commentCount: row.comment?.commentCount ?? 0,
-    voteCount: row.vote?.voteCount ?? 0,
+    // +1 to include the author's vote
+    voteCount: (row.vote?.voteCount ?? 0) + 1,
   };
 });
 
