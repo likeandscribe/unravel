@@ -4,14 +4,17 @@ import { getSession } from "./auth";
 import { redirect } from "next/navigation";
 import { decodeJwt } from "jose";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
-import { BetaUser } from "./schema";
+import { eq, and, sql, count, desc, asc } from "drizzle-orm";
+import * as schema from "./schema";
 import { z } from "zod";
 
+/**
+ * Returns null when not logged in. If you want to ensure that the user is logged in, use `ensureUser` instead.
+ */
 export const getUser = cache(async () => {
   const session = await getSession();
   if (!session) {
-    redirect("/login");
+    return null;
   }
 
   if (!session.user) {
@@ -36,6 +39,15 @@ export const getUser = cache(async () => {
     accessJwt: session.user.accessJwt,
   };
 });
+
+export async function ensureUser() {
+  const user = await getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
+}
 
 type PostInput = {
   title: string;
@@ -63,7 +75,7 @@ type CreateRecordInput = {
 };
 
 async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
-  const user = await getUser();
+  const user = await ensureUser();
   const pdsUrl = new URL(user.pdsUrl);
   pdsUrl.pathname = "/xrpc/com.atproto.repo.createRecord";
 
@@ -87,11 +99,12 @@ async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
 }
 
 export const ensureIsInBeta = cache(async () => {
-  const user = await getUser();
-  if (!user.did) throw new Error("Invalid user");
+  const user = await ensureUser();
 
   if (
-    await db.query.BetaUser.findFirst({ where: eq(BetaUser.did, user.did) })
+    await db.query.BetaUser.findFirst({
+      where: eq(schema.BetaUser.did, user.did),
+    })
   ) {
     return;
   }
@@ -113,6 +126,7 @@ export const getPlcDoc = cache(async (did: string) => {
 
 const PlcDocument = z.object({
   id: z.string(),
+  alsoKnownAs: z.array(z.string()),
   service: z.array(
     z.object({
       id: z.string(),
@@ -129,4 +143,70 @@ export const getPdsUrl = cache(async (did: string) => {
     plc.service.find((s) => s.type === "AtprotoPersonalDataServer")
       ?.serviceEndpoint ?? null
   );
+});
+
+export const getFrontpagePosts = cache(async () => {
+  const comments = db
+    .select({
+      postId: schema.Comment.postId,
+      commentCount: count(schema.Comment.id).as("commentCount"),
+    })
+    .from(schema.Comment)
+    .groupBy(schema.Comment.postId)
+    .as("comment");
+
+  const votes = db
+    .select({
+      postId: schema.PostVote.postId,
+      voteCount: count(schema.PostVote.id).as("voteCount"),
+    })
+    .from(schema.PostVote)
+    .groupBy(schema.PostVote.postId)
+    .as("vote");
+
+  // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
+  // We should closely monitor this and consider alternatives if it gets slow over time
+  const rank = sql`
+    coalesce(${votes.voteCount} / (
+    -- Age
+      (
+        EXTRACT(
+          EPOCH
+          FROM
+            (CURRENT_TIMESTAMP - ${schema.Post.createdAt})
+        ) / 3600
+      ) + 2
+    ) ^ 1.8, 0)
+  `.as("rank");
+
+  const rows = await db
+    .select({
+      id: schema.Post.id,
+      rkey: schema.Post.rkey,
+      cid: schema.Post.cid,
+      title: schema.Post.title,
+      url: schema.Post.url,
+      createdAt: schema.Post.createdAt,
+      authorDid: schema.Post.authorDid,
+      voteCount: votes.voteCount,
+      commentCount: comments.commentCount,
+      rank: rank,
+    })
+    .from(schema.Post)
+    .leftJoin(comments, eq(comments.postId, schema.Post.id))
+    .leftJoin(votes, eq(votes.postId, schema.Post.id))
+    .orderBy(desc(rank));
+
+  return rows.map((row) => ({
+    id: row.id,
+    rkey: row.rkey,
+    cid: row.cid,
+    title: row.title,
+    url: row.url,
+    createdAt: row.createdAt,
+    authorDid: row.authorDid,
+    // +1 for the current author's vote
+    voteCount: (row.voteCount ?? 0) + 1,
+    commentCount: row.commentCount ?? 0,
+  }));
 });
