@@ -11,7 +11,7 @@ const Tooltip = TooltipPrimitive.Root;
 
 const TooltipTrigger = TooltipPrimitive.Trigger;
 
-type TooltipContentProps = React.ComponentPropsWithoutRef<
+export type TooltipContentProps = React.ComponentPropsWithoutRef<
   typeof TooltipPrimitive.Content
 >;
 
