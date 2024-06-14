@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
   if (auth !== `Bearer ${process.env.DRAINPIPE_CONSUMER_SECRET}`) {
-    console.log("Unauthorized request");
+    console.error("Unauthorized request");
     return new Response("Unauthorized", { status: 401 });
   }
   const parsed = Message.safeParse(await request.json());
@@ -33,21 +33,21 @@ export async function POST(request: Request) {
     if (collection === "fyi.unravel.frontpage.post") {
       await db.transaction(async (tx) => {
         if (op.action === "create") {
-          const record = PostRecord.parse(
-            await atprotoGetRecord({
-              serviceEndpoint: service,
-              did: repo,
-              collection,
-              rkey,
-            }),
-          );
+          const record = await atprotoGetRecord({
+            serviceEndpoint: service,
+            repo,
+            collection,
+            rkey,
+          });
+          const postRecord = PostRecord.parse(record.value);
 
           await tx.insert(schema.Post).values({
             rkey,
-            title: record.title,
-            url: record.url,
+            cid: record.cid,
+            title: postRecord.title,
+            url: postRecord.url,
             authorDid: repo,
-            createdAt: new Date(record.createdAt),
+            createdAt: new Date(postRecord.createdAt),
           });
         } else if (op.action === "delete") {
           await tx.delete(schema.Post).where(eq(schema.Post.rkey, rkey));
@@ -69,31 +69,43 @@ const PostRecord = z.object({
   createdAt: z.string(),
 });
 
+const AtProtoRecord = z.object({
+  value: z.custom<unknown>(
+    (value) => typeof value === "object" && value != null,
+  ),
+  cid: z.string(),
+});
+
 type GetRecordInput = {
   serviceEndpoint: string;
-  did: string;
+  repo: string;
   collection: string;
   rkey: string;
 };
 
 async function atprotoGetRecord({
   serviceEndpoint,
-  did,
+  repo,
   collection,
   rkey,
 }: GetRecordInput) {
   const url = new URL(`${serviceEndpoint}/xrpc/com.atproto.repo.getRecord`);
-  url.searchParams.append("did", did);
+  url.searchParams.append("repo", repo);
   url.searchParams.append("collection", collection);
   url.searchParams.append("rkey", rkey);
 
   const response = await fetch(url.toString(), {
     headers: {
-      Accept: "application/json",
+      "Content-Type": "application/json",
     },
   });
 
-  return response.json() as Promise<unknown>;
+  if (!response.ok)
+    throw new Error("Failed to fetch record", { cause: response });
+
+  const json = await response.json();
+
+  return AtProtoRecord.parse(json);
 }
 
 async function getPlcDoc(did: string) {
