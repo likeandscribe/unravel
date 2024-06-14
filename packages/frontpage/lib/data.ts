@@ -146,8 +146,6 @@ export const getPdsUrl = cache(async (did: string) => {
 });
 
 export const getFrontpagePosts = cache(async () => {
-  const user = await getUser();
-
   const comments = db
     .select({
       postId: schema.Comment.postId,
@@ -191,20 +189,10 @@ export const getFrontpagePosts = cache(async () => {
       createdAt: schema.Post.createdAt,
       authorDid: schema.Post.authorDid,
       voteCount: votes.voteCount,
-      userVoteId: schema.PostVote.id,
       commentCount: comments.commentCount,
       rank: rank,
     })
     .from(schema.Post)
-    .leftJoin(
-      schema.PostVote,
-      user
-        ? and(
-            eq(schema.PostVote.postId, schema.Post.id),
-            eq(schema.PostVote.authorDid, user.did),
-          )
-        : sql`false`,
-    )
     .leftJoin(comments, eq(comments.postId, schema.Post.id))
     .leftJoin(votes, eq(votes.postId, schema.Post.id))
     .orderBy(desc(rank));
@@ -217,8 +205,8 @@ export const getFrontpagePosts = cache(async () => {
     url: row.url,
     createdAt: row.createdAt,
     authorDid: row.authorDid,
-    voteCount: row.voteCount ?? 0,
-    hasVoted: !!row.userVoteId,
+    // +1 for the current author's vote
+    voteCount: (row.voteCount ?? 0) + 1,
     commentCount: row.commentCount ?? 0,
   }));
 });

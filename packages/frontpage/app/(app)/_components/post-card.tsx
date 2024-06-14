@@ -1,7 +1,7 @@
 import { Button } from "@/lib/components/ui/button";
 import { ChevronUpIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
-import { getPlcDoc } from "@/lib/data";
+import { getPlcDoc, getUser } from "@/lib/data";
 import { TimeAgo } from "@/lib/components/time-ago";
 
 type PostProps = {
@@ -28,6 +28,9 @@ export async function PostCard({
   const handle = plc.alsoKnownAs
     .find((handle) => handle.startsWith("at://"))
     ?.replace("at://", "");
+
+  const isAuthoredByCurrentUser = (await getUser())?.did === author;
+
   return (
     // TODO: Make article route to postHref via onClick on card except innser links or buttons
     <article className="relative flex items-center gap-4 bg-white dark:bg-gray-950 rounded-lg shadow-sm p-4">
@@ -36,6 +39,7 @@ export async function PostCard({
           variant="ghost"
           size="icon"
           className="hover:bg-gray-100 dark:hover:bg-gray-800 z-10 relative"
+          disabled={isAuthoredByCurrentUser}
         >
           <ChevronUpIcon className="w-5 h-5" />
         </Button>
