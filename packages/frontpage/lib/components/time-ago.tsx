@@ -13,7 +13,7 @@ export function TimeAgo({
 }) {
   return (
     <SimpleTooltip
-      content={format(createdAt, "EEEE do MMMM Y,  pp")}
+      content={format(createdAt, "EEEE do MMMM y,  pp")}
       side={side}
     >
       <span>{formatDistance(createdAt, new Date())} ago</span>
