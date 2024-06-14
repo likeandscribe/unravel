@@ -24,11 +24,7 @@ export async function POST(request: Request) {
   }
 
   const promises = ops.map(async (op) => {
-    const collection = op.path.split("/")[0];
-    const rkey = op.path.split("/")[1];
-    if (!collection || !rkey) {
-      throw new Error(`Invalid path: ${op.path}`);
-    }
+    const { collection, rkey } = op.path;
 
     if (collection === "fyi.unravel.frontpage.post") {
       await db.transaction(async (tx) => {
@@ -135,7 +131,24 @@ const Message = z.object({
   ops: z.array(
     z.object({
       cid: z.string(),
-      path: z.string(),
+      path: z.string().transform((p, ctx) => {
+        const collection = p.split("/")[0];
+        const rkey = p.split("/")[1];
+        if (!collection || !rkey) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Invalid path: ${p}`,
+          });
+
+          return z.NEVER;
+        }
+
+        return {
+          collection,
+          rkey,
+          full: p,
+        };
+      }),
       action: z.union([
         z.literal("create"),
         z.literal("update"),
