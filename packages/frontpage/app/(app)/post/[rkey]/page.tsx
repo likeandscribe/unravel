@@ -1,20 +1,36 @@
 import { PostCard } from "../../_components/post-card";
-import { NewComment, Comment } from "./_client";
+import { NewComment, Comment } from "./_comment";
+import { DeletePostButton } from "./_delete-post-button";
+import { getPost, getUser } from "@/lib/data";
+import { notFound } from "next/navigation";
 
-export default function Item() {
+type Params = {
+  rkey: string;
+};
+
+export default async function Item({ params }: { params: Params }) {
+  const post = await getPost(params.rkey);
+  getUser(); // Prefetch user
+  if (!post) {
+    notFound();
+  }
+  const user = await getUser();
   return (
     <main className="mx-auto max-w-4xl space-y-6">
       <PostCard
-        {...{
-          id: "1",
-          title: "React 18 is here! What's new?",
-          url: "https://react.dev",
-          votes: 23,
-          author: "did:plc:2xau7wbgdq4phuou2ypwuen7",
-          createdAt: new Date("2024-06-11T07:10:44.335Z"),
-          commentCount: 4,
-        }}
+        author={post.authorDid}
+        createdAt={post.createdAt}
+        id={post.rkey}
+        commentCount={post.commentCount}
+        title={post.title}
+        url={post.url}
+        votes={post.voteCount}
       />
+      {user?.did === post.authorDid && (
+        <div className="flex justify-end">
+          <DeletePostButton rkey={params.rkey} />
+        </div>
+      )}
       <NewComment />
       <div className="grid gap-6">
         <Comment

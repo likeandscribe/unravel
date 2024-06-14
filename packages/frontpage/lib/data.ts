@@ -4,7 +4,7 @@ import { getSession } from "./auth";
 import { redirect } from "next/navigation";
 import { decodeJwt } from "jose";
 import { db } from "./db";
-import { eq, and, sql, count, desc, asc } from "drizzle-orm";
+import { eq, sql, count, desc, SQL } from "drizzle-orm";
 import * as schema from "./schema";
 import { z } from "zod";
 
@@ -98,6 +98,34 @@ async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
   }
 }
 
+type DeleteRecordInput = {
+  collection: string;
+  rkey: string;
+};
+
+async function atprotoDeleteRecord({ collection, rkey }: DeleteRecordInput) {
+  const user = await ensureUser();
+  const pdsUrl = new URL(user.pdsUrl);
+  pdsUrl.pathname = "/xrpc/com.atproto.repo.deleteRecord";
+
+  const response = await fetch(pdsUrl.toString(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${user.accessJwt}`,
+    },
+    body: JSON.stringify({
+      repo: user.did,
+      collection,
+      rkey,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new PdsError("Failed to create post", { cause: response });
+  }
+}
+
 export const ensureIsInBeta = cache(async () => {
   const user = await ensureUser();
 
@@ -145,6 +173,18 @@ export const getPdsUrl = cache(async (did: string) => {
   );
 });
 
+const votesSubQuery = db
+  .select({
+    postId: schema.PostVote.postId,
+    // +1 to include the author's vote
+    voteCount: sql`${count(schema.PostVote.id)} + 1`
+      .mapWith(Number)
+      .as("voteCount") as SQL.Aliased<number | null>, // Requires explicit type widerning, this is probably a bug in drizzle
+  })
+  .from(schema.PostVote)
+  .groupBy(schema.PostVote.postId)
+  .as("vote");
+
 export const getFrontpagePosts = cache(async () => {
   const comments = db
     .select({
@@ -155,19 +195,10 @@ export const getFrontpagePosts = cache(async () => {
     .groupBy(schema.Comment.postId)
     .as("comment");
 
-  const votes = db
-    .select({
-      postId: schema.PostVote.postId,
-      voteCount: count(schema.PostVote.id).as("voteCount"),
-    })
-    .from(schema.PostVote)
-    .groupBy(schema.PostVote.postId)
-    .as("vote");
-
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
   // We should closely monitor this and consider alternatives if it gets slow over time
   const rank = sql`
-    coalesce(${votes.voteCount} / (
+    coalesce(${votesSubQuery.voteCount} / (
     -- Age
       (
         EXTRACT(
@@ -188,13 +219,13 @@ export const getFrontpagePosts = cache(async () => {
       url: schema.Post.url,
       createdAt: schema.Post.createdAt,
       authorDid: schema.Post.authorDid,
-      voteCount: votes.voteCount,
+      voteCount: votesSubQuery.voteCount,
       commentCount: comments.commentCount,
       rank: rank,
     })
     .from(schema.Post)
     .leftJoin(comments, eq(comments.postId, schema.Post.id))
-    .leftJoin(votes, eq(votes.postId, schema.Post.id))
+    .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
     .orderBy(desc(rank));
 
   return rows.map((row) => ({
@@ -205,8 +236,44 @@ export const getFrontpagePosts = cache(async () => {
     url: row.url,
     createdAt: row.createdAt,
     authorDid: row.authorDid,
-    // +1 for the current author's vote
-    voteCount: (row.voteCount ?? 0) + 1,
+    voteCount: row.voteCount ?? 0,
     commentCount: row.commentCount ?? 0,
   }));
 });
+
+export const getPost = cache(async (rkey: string) => {
+  const comments = db
+    .select({
+      postId: schema.Comment.postId,
+      commentCount: count(schema.Comment.id).as("commentCount"),
+    })
+    .from(schema.Comment)
+    .groupBy(schema.Comment.postId)
+    .as("comment");
+
+  const rows = await db
+    .select()
+    .from(schema.Post)
+    .where(eq(schema.Post.rkey, rkey))
+    .leftJoin(comments, eq(comments.postId, schema.Post.id))
+    .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) return null;
+
+  return {
+    ...row.posts,
+    commentCount: row.comment?.commentCount ?? 0,
+    voteCount: row.vote?.voteCount ?? 0,
+  };
+});
+
+export async function deletePost(rkey: string) {
+  await ensureIsInBeta();
+
+  await atprotoDeleteRecord({
+    rkey,
+    collection: "fyi.unravel.frontpage.post",
+  });
+}
