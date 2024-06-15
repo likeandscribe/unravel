@@ -345,7 +345,6 @@ type CommentInput = {
 export async function createComment({ subjectRkey, content }: CommentInput) {
   await ensureIsInBeta();
   const user = await ensureUser();
-  console.log(subjectRkey);
   const post = await getPost(subjectRkey);
 
   if (!post) {

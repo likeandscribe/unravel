@@ -104,11 +104,37 @@ pub struct SubscribeReposTombstone {
     pub time: DateTime<Utc>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct SubscribeReposAccount {
+    #[serde(rename(deserialize = "seq"))]
+    pub sequence: i64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SubscribeReposIdentity {
+    #[serde(rename(deserialize = "seq"))]
+    pub sequence: i64,
+}
+
 #[derive(Debug)]
 pub enum SubscribeRepos {
     Commit(SubscribeReposCommit),
     Handle(SubscribeReposHandle),
     Tombstone(SubscribeReposTombstone),
+    Account(SubscribeReposAccount),
+    Identity(SubscribeReposIdentity),
+}
+
+impl SubscribeRepos {
+    pub fn sequence(&self) -> i64 {
+        match self {
+            SubscribeRepos::Commit(commit) => commit.sequence,
+            SubscribeRepos::Handle(handle) => handle.sequence,
+            SubscribeRepos::Tombstone(tombstone) => tombstone.sequence,
+            SubscribeRepos::Account(account) => account.sequence,
+            SubscribeRepos::Identity(identity) => identity.sequence,
+        }
+    }
 }
 
 pub fn read(data: &[u8]) -> Result<(Header, SubscribeRepos), Error> {
@@ -119,6 +145,8 @@ pub fn read(data: &[u8]) -> Result<(Header, SubscribeRepos), Error> {
         "#commit" => SubscribeRepos::Commit(serde_ipld_dagcbor::from_reader(&mut reader)?),
         "#handle" => SubscribeRepos::Handle(serde_ipld_dagcbor::from_reader(&mut reader)?),
         "#tombstone" => SubscribeRepos::Tombstone(serde_ipld_dagcbor::from_reader(&mut reader)?),
+        "#account" => SubscribeRepos::Account(serde_ipld_dagcbor::from_reader(&mut reader)?),
+        "#identity" => SubscribeRepos::Identity(serde_ipld_dagcbor::from_reader(&mut reader)?),
         _ => {
             return Err(Error::UnknownTypeError(header.type_));
         }
