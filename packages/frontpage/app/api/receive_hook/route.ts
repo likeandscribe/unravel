@@ -149,14 +149,27 @@ async function atprotoGetRecord({
   return AtProtoRecord.parse(json);
 }
 
+const Collection = z.union([
+  z.literal("fyi.unravel.frontpage.post"),
+  z.literal("fyi.unravel.frontpage.comment"),
+]);
+
 const Message = z.object({
   ops: z.array(
     z.object({
       cid: z.string(),
       path: z.string().transform((p, ctx) => {
-        const collection = p.split("/")[0];
+        const collectionResult = Collection.safeParse(p.split("/")[0]);
+        if (!collectionResult.success) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Invalid collection: "${p.split("/")[0]}". Expected one of ${Collection.options
+              .map((c) => c.value)
+              .join(", ")}`,
+          });
+        }
         const rkey = p.split("/")[1];
-        if (!collection || !rkey) {
+        if (!rkey) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: `Invalid path: ${p}`,
@@ -166,7 +179,7 @@ const Message = z.object({
         }
 
         return {
-          collection,
+          collection: collectionResult.data,
           rkey,
           full: p,
         };
