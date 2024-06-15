@@ -36,8 +36,7 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
             }
             commit.sequence
         }
-        firehose::SubscribeRepos::Handle(handle) => handle.sequence,
-        firehose::SubscribeRepos::Tombstone(tombstone) => tombstone.sequence,
+        msg => msg.sequence(),
     };
 
     Ok(sequence)
