@@ -12,6 +12,7 @@ export async function POST(request: Request) {
   }
   const parsed = Message.safeParse(await request.json());
   if (!parsed.success) {
+    console.error("Could not parse message from drainpipe", parsed.error);
     return new Response("Invalid request", { status: 400 });
   }
 
@@ -154,43 +155,47 @@ const Collection = z.union([
   z.literal("fyi.unravel.frontpage.comment"),
 ]);
 
+const Path = z.string().transform((p, ctx) => {
+  const collectionResult = Collection.safeParse(p.split("/")[0]);
+  if (!collectionResult.success) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Invalid collection: "${p.split("/")[0]}". Expected one of ${Collection.options
+        .map((c) => c.value)
+        .join(", ")}`,
+    });
+  }
+  const rkey = p.split("/")[1];
+  if (!rkey) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Invalid path: ${p}`,
+    });
+
+    return z.NEVER;
+  }
+
+  return {
+    collection: collectionResult.data,
+    rkey,
+    full: p,
+  };
+});
+
+const Operation = z.union([
+  z.object({
+    action: z.union([z.literal("create"), z.literal("update")]),
+    path: Path,
+    cid: z.string(),
+  }),
+  z.object({
+    action: z.literal("delete"),
+    path: Path,
+  }),
+]);
+
 const Message = z.object({
-  ops: z.array(
-    z.object({
-      cid: z.string(),
-      path: z.string().transform((p, ctx) => {
-        const collectionResult = Collection.safeParse(p.split("/")[0]);
-        if (!collectionResult.success) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Invalid collection: "${p.split("/")[0]}". Expected one of ${Collection.options
-              .map((c) => c.value)
-              .join(", ")}`,
-          });
-        }
-        const rkey = p.split("/")[1];
-        if (!rkey) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Invalid path: ${p}`,
-          });
-
-          return z.NEVER;
-        }
-
-        return {
-          collection: collectionResult.data,
-          rkey,
-          full: p,
-        };
-      }),
-      action: z.union([
-        z.literal("create"),
-        z.literal("update"),
-        z.literal("delete"),
-      ]),
-    }),
-  ),
+  ops: z.array(Operation),
   repo: z.string(),
   seq: z.string().transform((x, ctx) => {
     try {
