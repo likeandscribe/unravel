@@ -1,7 +1,8 @@
 import { PostCard } from "../../_components/post-card";
-import { NewComment, Comment } from "./_comment";
+import { NewComment, CommentClient } from "./_comment";
+import { Comment } from "./_commentServer";
 import { DeletePostButton } from "./_delete-post-button";
-import { getPost, getUser } from "@/lib/data";
+import { getCommentsForPost, getPost, getUser } from "@/lib/data";
 import { notFound } from "next/navigation";
 
 type Params = {
@@ -9,12 +10,14 @@ type Params = {
 };
 
 export default async function Item({ params }: { params: Params }) {
-  const post = await getPost(params.rkey);
   getUser(); // Prefetch user
+  const post = await getPost(params.rkey);
   if (!post) {
     notFound();
   }
   const user = await getUser();
+  const comments = await getCommentsForPost(post.id);
+
   return (
     <main className="mx-auto max-w-4xl space-y-6">
       <PostCard
@@ -31,28 +34,18 @@ export default async function Item({ params }: { params: Params }) {
           <DeletePostButton rkey={params.rkey} />
         </div>
       )}
-      <NewComment />
+      <NewComment parentRkey={post.rkey} />
       <div className="grid gap-6">
-        <Comment
-          id="1"
-          author="@john.example.com"
-          comment="This is a really interesting article! I learned a lot about the history of link aggregation services. Can't wait to see what the comments have to say."
-          createdAt={new Date("2024-06-11T08:10:44.335Z")}
-        />
-        <Comment
-          id="2"
-          level={1}
-          author="@jane.example.com"
-          comment="I agree, this is a really well-written article. The author did a great job of explaining the evolution of link aggregation services and the challenges they face."
-          createdAt={new Date("2024-06-11T08:10:44.335Z")}
-        />
-        <Comment
-          id="2"
-          level={1}
-          author="@tim.example.com"
-          comment="I'm really excited to see how this service evolves. The ability to curate and discover new content is so valuable in today's information-rich world."
-          createdAt={new Date("2024-06-11T08:10:44.335Z")}
-        />
+        {comments.map((comment) => (
+          <Comment
+            key={comment.id}
+            rkey={comment.rkey}
+            author={comment.authorDid}
+            createdAt={comment.createdAt}
+            id={comment.rkey}
+            comment={comment.body}
+          />
+        ))}
       </div>
     </main>
   );

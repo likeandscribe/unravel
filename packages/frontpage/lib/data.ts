@@ -230,9 +230,9 @@ export const getFrontpagePosts = cache(async () => {
       createdAt: schema.Post.createdAt,
       authorDid: schema.Post.authorDid,
       // +1 to include the author's vote
-      voteCount: sql`coalesce(${votesSubQuery.voteCount}, 0) + 1`.as(
-        "voteCount",
-      ),
+      voteCount: sql`coalesce(${votesSubQuery.voteCount}, 0) + 1`
+        .mapWith(Number)
+        .as("voteCount"),
       commentCount: comments.commentCount,
       rank: rank,
     })
@@ -283,11 +283,84 @@ export const getPost = cache(async (rkey: string) => {
   };
 });
 
+export const getCommentsForPost = cache(async (postId: number) => {
+  const votes = db
+    .select({
+      commentId: schema.CommentVote.commentId,
+      voteCount: count(schema.CommentVote.id).as("voteCount"),
+    })
+    .from(schema.CommentVote)
+    .groupBy(schema.CommentVote.commentId)
+    .as("vote");
+
+  const commentRank = sql`
+    coalesce(${votes.voteCount} / (
+    -- Age
+      (
+        EXTRACT(
+          EPOCH
+          FROM
+            (CURRENT_TIMESTAMP - ${schema.Comment.createdAt})
+        ) / 3600
+      ) + 2
+    ) ^ 1.8, 0)
+  `.as("rank");
+
+  const rows = await db
+    .select({
+      id: schema.Comment.id,
+      rkey: schema.Comment.rkey,
+      cid: schema.Comment.cid,
+      postId: schema.Comment.postId,
+      body: schema.Comment.body,
+      createdAt: schema.Comment.createdAt,
+      authorDid: schema.Comment.authorDid,
+      voteCount: sql`coalesce(${votes.voteCount}, 0) + 1`
+        .mapWith(Number)
+        .as("voteCount"),
+      rank: commentRank,
+    })
+    .from(schema.Comment)
+    .where(eq(schema.Comment.postId, postId))
+    .leftJoin(votes, eq(votes.commentId, schema.Comment.id))
+    .orderBy(desc(commentRank));
+
+  return rows;
+});
+
 export async function deletePost(rkey: string) {
   await ensureIsInBeta();
 
   await atprotoDeleteRecord({
     rkey,
     collection: "fyi.unravel.frontpage.post",
+  });
+}
+
+type CommentInput = {
+  content: string;
+  subjectRkey: string;
+};
+
+export async function createComment({ subjectRkey, content }: CommentInput) {
+  await ensureIsInBeta();
+  const user = await ensureUser();
+  console.log(subjectRkey);
+  const post = await getPost(subjectRkey);
+
+  if (!post) {
+    throw new Error("Post not found");
+  }
+
+  await atprotoCreateRecord({
+    record: {
+      content,
+      subject: {
+        cid: post.cid,
+        uri: `at://${user.did}/fyi.unravel.frontpage.post/${subjectRkey}`,
+      },
+      createdAt: new Date().toISOString(),
+    },
+    collection: "fyi.unravel.frontpage.comment",
   });
 }
