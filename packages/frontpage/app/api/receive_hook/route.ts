@@ -50,6 +50,44 @@ export async function POST(request: Request) {
         await tx.insert(schema.ConsumedOffset).values({ offset: seq });
       });
     }
+
+    if (collection === "fyi.unravel.frontpage.comment") {
+      await db.transaction(async (tx) => {
+        if (op.action === "create") {
+          const record = await atprotoGetRecord({
+            serviceEndpoint: service,
+            repo,
+            collection,
+            rkey,
+          });
+          const commentRecord = CommentRecord.parse(record.value);
+
+          const postRecord = (
+            await tx
+              .select()
+              .from(schema.Post)
+              .where(eq(schema.Post.cid, commentRecord.subject.cid))
+          )[0];
+
+          if (!postRecord) {
+            throw new Error("Post not found");
+          }
+
+          await tx.insert(schema.Comment).values({
+            cid: record.cid,
+            rkey,
+            body: commentRecord.content,
+            postId: postRecord.id,
+            authorDid: repo,
+            createdAt: new Date(commentRecord.createdAt),
+          });
+        } else if (op.action === "delete") {
+          await tx.delete(schema.Comment).where(eq(schema.Comment.rkey, rkey));
+        }
+
+        await tx.insert(schema.ConsumedOffset).values({ offset: seq });
+      });
+    }
   });
 
   await Promise.all(promises);
@@ -60,6 +98,15 @@ export async function POST(request: Request) {
 const PostRecord = z.object({
   title: z.string(),
   url: z.string(),
+  createdAt: z.string(),
+});
+
+const CommentRecord = z.object({
+  content: z.string(),
+  subject: z.object({
+    cid: z.string(),
+    uri: z.string(),
+  }),
   createdAt: z.string(),
 });
 
