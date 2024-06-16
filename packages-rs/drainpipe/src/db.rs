@@ -2,6 +2,8 @@ use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
+use crate::ProcessErrorKind;
+
 pub fn db_connect(database_url: &String) -> anyhow::Result<SqliteConnection> {
     SqliteConnection::establish(&database_url).map_err(Into::into)
 }
@@ -27,13 +29,20 @@ pub fn update_seq(conn: &mut SqliteConnection, new_seq: i64) -> anyhow::Result<(
 
 pub fn record_dead_letter(
     conn: &mut SqliteConnection,
+    kind: ProcessErrorKind,
     new_msg: &str,
     new_seq: i64,
+    message: &str,
 ) -> anyhow::Result<()> {
     use crate::schema::dead_letter_queue::dsl::*;
 
     diesel::insert_into(dead_letter_queue)
-        .values((msg.eq(&new_msg), seq.eq(&new_seq)))
+        .values((
+            err_kind.eq(kind as i32),
+            err_msg.eq(&new_msg),
+            seq.eq(&new_seq),
+            source.eq(&message),
+        ))
         .execute(conn)?;
 
     Ok(())
@@ -59,5 +68,7 @@ pub struct DrainpipeMeta {
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct DeadLetter {
     pub seq: i64,
-    pub msg: String,
+    pub err_kind: i32,
+    pub err_msg: String,
+    pub source: String,
 }
