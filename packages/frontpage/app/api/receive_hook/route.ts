@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import * as schema from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { getPdsUrl } from "@/lib/data";
+import { PostRecord, atprotoGetRecord, getPdsUrl } from "@/lib/data";
 
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
@@ -96,12 +96,6 @@ export async function POST(request: Request) {
   return new Response("OK");
 }
 
-const PostRecord = z.object({
-  title: z.string(),
-  url: z.string(),
-  createdAt: z.string(),
-});
-
 const CommentRecord = z.object({
   content: z.string(),
   subject: z.object({
@@ -110,45 +104,6 @@ const CommentRecord = z.object({
   }),
   createdAt: z.string(),
 });
-
-const AtProtoRecord = z.object({
-  value: z.custom<unknown>(
-    (value) => typeof value === "object" && value != null,
-  ),
-  cid: z.string(),
-});
-
-type GetRecordInput = {
-  serviceEndpoint: string;
-  repo: string;
-  collection: string;
-  rkey: string;
-};
-
-async function atprotoGetRecord({
-  serviceEndpoint,
-  repo,
-  collection,
-  rkey,
-}: GetRecordInput) {
-  const url = new URL(`${serviceEndpoint}/xrpc/com.atproto.repo.getRecord`);
-  url.searchParams.append("repo", repo);
-  url.searchParams.append("collection", collection);
-  url.searchParams.append("rkey", rkey);
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok)
-    throw new Error("Failed to fetch record", { cause: response });
-
-  const json = await response.json();
-
-  return AtProtoRecord.parse(json);
-}
 
 const Collection = z.union([
   z.literal("fyi.unravel.frontpage.post"),

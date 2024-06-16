@@ -25,7 +25,6 @@ export async function newPostAction(_prevState: unknown, formData: FormData) {
     const { rkey } = await createPost({ title, url });
     redirect(`/post/${rkey}`);
   } catch (error) {
-    console.error(error);
     if (!(error instanceof CreatePostError)) throw error;
     return { error: "Failed to create post" };
   }

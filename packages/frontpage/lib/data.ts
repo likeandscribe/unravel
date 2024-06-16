@@ -69,38 +69,27 @@ export async function createPost({ title, url }: PostInput) {
   });
 
   const uri = parseAtUri(result.uri);
-  if (!uri.success) {
-    throw new CreatePostError(
-      `Failed to parse AtUri: "${result.uri}". ${uri.error}`,
-    );
+  if (!uri) {
+    throw new CreatePostError(`Failed to parse AtUri: "${result.uri}"`);
   }
   return {
     rkey: uri.rkey,
   };
 }
 
-const AT_URI_PATHNAME_REGEX =
-  /^\/\/(?<authority>[^/]+)\/(?<collection>[^/]+)\/(?<rkey>[^/]+)$/;
-
-export function parseAtUri(
-  uri: string,
-):
-  | { success: false; error: string }
-  | { success: true; authority: string; collection: string; rkey: string } {
-  if (!URL.canParse(uri)) return { success: false, error: "Invalid URL" };
-  const url = new URL(uri);
-  // Now we have "//<authority>/<collection>/<rkey>" at url.pathname
-  const parsed = AT_URI_PATHNAME_REGEX.exec(url.pathname);
-  if (!parsed || !parsed.groups)
-    return { success: false, error: "Didn't match regex" };
-  const { authority, collection, rkey } = parsed.groups;
-  if (!authority || !collection || !rkey)
-    return { success: false, error: "Missing parts" };
+export function parseAtUri(uri: string): {
+  authority: string;
+  collection: string | null;
+  rkey: string | null;
+} | null {
+  const match = uri.match(/^at:\/\/(.+?)(\/.+?)?(\/.+?)?$/);
+  if (!match) return null;
+  const [, authority, collection, rkey] = match;
+  if (!authority || !collection || !rkey) return null;
   return {
-    success: true,
     authority,
-    collection,
-    rkey,
+    collection: collection.replace("/", ""),
+    rkey: rkey.replace("/", ""),
   };
 }
 
@@ -325,6 +314,43 @@ export const getPost = cache(async (rkey: string) => {
   };
 });
 
+export async function uncached_doesPostExist(rkey: string) {
+  const row = await db
+    .select({ id: schema.Post.id })
+    .from(schema.Post)
+    .where(eq(schema.Post.rkey, rkey))
+    .limit(1);
+
+  return Boolean(row[0]);
+}
+
+export const PostRecord = z.object({
+  title: z.string(),
+  url: z.string(),
+  createdAt: z.string(),
+});
+
+/**
+ * Returns null if there is no logged in user or the record isn't found
+ */
+export const getPostFromUserPds = cache(async (rkey: string) => {
+  const user = await getUser();
+  if (!user) return null;
+  const pdsUrl = await getPdsUrl(user.did);
+  if (!pdsUrl) {
+    return null;
+  }
+
+  const record = await atprotoGetRecord({
+    serviceEndpoint: pdsUrl,
+    repo: user.did,
+    collection: "fyi.unravel.frontpage.post",
+    rkey,
+  });
+
+  return PostRecord.parse(record.value);
+});
+
 export const getCommentsForPost = cache(async (postId: number) => {
   const votes = db
     .select({
@@ -404,4 +430,43 @@ export async function createComment({ subjectRkey, content }: CommentInput) {
     },
     collection: "fyi.unravel.frontpage.comment",
   });
+}
+
+const AtProtoRecord = z.object({
+  value: z.custom<unknown>(
+    (value) => typeof value === "object" && value != null,
+  ),
+  cid: z.string(),
+});
+
+type GetRecordInput = {
+  serviceEndpoint: string;
+  repo: string;
+  collection: string;
+  rkey: string;
+};
+
+export async function atprotoGetRecord({
+  serviceEndpoint,
+  repo,
+  collection,
+  rkey,
+}: GetRecordInput) {
+  const url = new URL(`${serviceEndpoint}/xrpc/com.atproto.repo.getRecord`);
+  url.searchParams.append("repo", repo);
+  url.searchParams.append("collection", collection);
+  url.searchParams.append("rkey", rkey);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok)
+    throw new Error("Failed to fetch record", { cause: response });
+
+  const json = await response.json();
+
+  return AtProtoRecord.parse(json);
 }
