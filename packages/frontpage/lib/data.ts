@@ -54,7 +54,7 @@ type PostInput = {
   url: string;
 };
 
-export class PdsError extends Error {
+export class CreatePostError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
   }
@@ -63,11 +63,51 @@ export class PdsError extends Error {
 export async function createPost({ title, url }: PostInput) {
   await ensureIsInBeta();
 
-  await atprotoCreateRecord({
+  const result = await atprotoCreateRecord({
     record: { title, url, createdAt: new Date().toISOString() },
     collection: "fyi.unravel.frontpage.post",
   });
+
+  const uri = parseAtUri(result.uri);
+  if (!uri.success) {
+    throw new CreatePostError(
+      `Failed to parse AtUri: "${result.uri}". ${uri.error}`,
+    );
+  }
+  return {
+    rkey: uri.rkey,
+  };
 }
+
+const AT_URI_PATHNAME_REGEX =
+  /^\/\/(?<authority>[^/]+)\/(?<collection>[^/]+)\/(?<rkey>[^/]+)$/;
+
+export function parseAtUri(
+  uri: string,
+):
+  | { success: false; error: string }
+  | { success: true; authority: string; collection: string; rkey: string } {
+  if (!URL.canParse(uri)) return { success: false, error: "Invalid URL" };
+  const url = new URL(uri);
+  // Now we have "//<authority>/<collection>/<rkey>" at url.pathname
+  const parsed = AT_URI_PATHNAME_REGEX.exec(url.pathname);
+  if (!parsed || !parsed.groups)
+    return { success: false, error: "Didn't match regex" };
+  const { authority, collection, rkey } = parsed.groups;
+  if (!authority || !collection || !rkey)
+    return { success: false, error: "Missing parts" };
+  return {
+    success: true,
+    authority,
+    collection,
+    rkey,
+  };
+}
+
+const CreateRecordResponse = z.object({
+  uri: z.string(),
+  cid: z.string(),
+});
 
 type CreateRecordInput = {
   record: unknown;
@@ -94,8 +134,10 @@ async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
   });
 
   if (!response.ok) {
-    throw new PdsError("Failed to create post", { cause: response });
+    throw new CreatePostError("Failed to create post", { cause: response });
   }
+
+  return CreateRecordResponse.parse(await response.json());
 }
 
 type DeleteRecordInput = {
@@ -122,7 +164,7 @@ async function atprotoDeleteRecord({ collection, rkey }: DeleteRecordInput) {
   });
 
   if (!response.ok) {
-    throw new PdsError("Failed to create post", { cause: response });
+    throw new CreatePostError("Failed to create post", { cause: response });
   }
 }
 

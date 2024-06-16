@@ -1,9 +1,11 @@
 "use server";
 
-import { PdsError, createPost } from "@/lib/data";
+import { CreatePostError, createPost, ensureUser } from "@/lib/data";
+import { redirect } from "next/navigation";
 
 export async function newPostAction(_prevState: unknown, formData: FormData) {
   "use server";
+  await ensureUser();
   const title = formData.get("title");
   const url = formData.get("url");
 
@@ -20,9 +22,11 @@ export async function newPostAction(_prevState: unknown, formData: FormData) {
   }
 
   try {
-    await createPost({ title, url });
+    const { rkey } = await createPost({ title, url });
+    redirect(`/post/${rkey}`);
   } catch (error) {
-    if (!(error instanceof PdsError)) throw error;
+    console.error(error);
+    if (!(error instanceof CreatePostError)) throw error;
     return { error: "Failed to create post" };
   }
 }
