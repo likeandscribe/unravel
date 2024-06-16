@@ -6,9 +6,10 @@ import { Label } from "@/lib/components/ui/label";
 import { Input } from "@/lib/components/ui/input";
 import { Button } from "@/lib/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/lib/components/ui/alert";
+import { Spinner } from "@/lib/components/ui/spinner";
 
 export function NewPostForm() {
-  const [state, action] = useActionState(newPostAction, null);
+  const [state, action, isPending] = useActionState(newPostAction, null);
   const id = useId();
   return (
     <form
@@ -27,7 +28,9 @@ export function NewPostForm() {
         <Label htmlFor={`${id}-url`}>URL</Label>
         <Input name="url" id={`${id}-url`} type="url" />
       </div>
-      <Button type="submit">Submit</Button>
+      <Button type="submit" disabled={isPending}>
+        {isPending && <Spinner className="mr-2" />} Submit
+      </Button>
       {state?.error && (
         <Alert>
           <AlertTitle>Error</AlertTitle>
