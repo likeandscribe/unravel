@@ -3,9 +3,9 @@
 diesel::table! {
     dead_letter_queue (rowid) {
         rowid -> Integer,
+        seq -> BigInt,
         err_kind -> Integer,
         err_msg -> Text,
-        seq -> BigInt,
         source -> Text,
     }
 }
@@ -17,4 +17,7 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(dead_letter_queue, drainpipe,);
+diesel::allow_tables_to_appear_in_same_query!(
+    dead_letter_queue,
+    drainpipe,
+);
