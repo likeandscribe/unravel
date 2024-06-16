@@ -10,16 +10,28 @@ mod firehose;
 mod schema;
 
 #[derive(Debug)]
-enum ProcessError {
-    DecodeError { _e: firehose::Error },
-    ProcessError { seq: i64, error: anyhow::Error },
+enum ProcessErrorKind {
+    DecodeError,
+    ProcessError,
+}
+
+#[derive(Debug)]
+struct ProcessError {
+    seq: i64,
+    inner: anyhow::Error,
+    msg: Vec<u8>,
+    kind: ProcessErrorKind,
 }
 
 /// Process a message from the firehose. Returns the sequence number of the message or an error.
 async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessError> {
-    let (_header, message) =
-        firehose::read(&message).map_err(|e| ProcessError::DecodeError { _e: e })?;
-    let sequence = match message {
+    let (_header, data) = firehose::read(&message).map_err(|e| ProcessError {
+        inner: e.into(),
+        seq: -1,
+        msg: message.clone(),
+        kind: ProcessErrorKind::DecodeError,
+    })?;
+    let sequence = match data {
         firehose::SubscribeRepos::Commit(commit) => {
             let frontpage_ops = commit
                 .operations
@@ -28,9 +40,11 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
                 .collect::<Vec<_>>();
             if !frontpage_ops.is_empty() {
                 process_frontpage_ops(&frontpage_ops, &commit, &ctx)
-                    .map_err(|e| ProcessError::ProcessError {
+                    .map_err(|e| ProcessError {
                         seq: commit.sequence,
-                        error: e,
+                        inner: e,
+                        msg: message.clone(),
+                        kind: ProcessErrorKind::ProcessError,
                     })
                     .await?;
             }
@@ -143,16 +157,16 @@ async fn main() {
                         }
                         Err(error) => {
                             eprintln!("Error processing message: {error:?}");
-                            if let ProcessError::ProcessError { seq, error } = error {
-                                record_dead_letter(
-                                    &mut ctx.db_connection,
-                                    // TODO: Would be good to include the actual dropped message here but my rust skill issues are preventing me from doing so
-                                    &error.to_string(),
-                                    seq,
-                                )
-                                .map_err(|_| eprintln!("Failed to record dead letter"))
-                                .ok();
-                            }
+                            record_dead_letter(
+                                &mut ctx.db_connection,
+                                error.kind,
+                                &error.inner.to_string(),
+                                error.seq,
+                                &String::from_utf8(error.msg)
+                                    .unwrap_or("Unable to decode message".to_string()),
+                            )
+                            .map_err(|_| eprintln!("Failed to record dead letter"))
+                            .ok();
                         }
                     }
                 }
