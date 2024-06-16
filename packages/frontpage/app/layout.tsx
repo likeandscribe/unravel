@@ -2,6 +2,8 @@ import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/lib/components/ui/toaster";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
 
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
@@ -23,6 +25,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <body className={cn(sourceSans.variable, sourceSerif.variable)}>
         {children}
         <Toaster />
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
