@@ -14,7 +14,8 @@
         }
       },
       "args": [],
-      "cwd": "${workspaceFolder}/packages-rs/drainpipe"
+      "cwd": "${workspaceFolder}/packages-rs/drainpipe",
+      "envFile": "${workspaceFolder}/packages-rs/drainpipe/.env" 
     },
     {
       "type": "lldb",
