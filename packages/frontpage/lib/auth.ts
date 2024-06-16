@@ -15,6 +15,11 @@ declare module "next-auth" {
       accessJwt: string;
     } & DefaultSession["user"];
   }
+
+  interface User {
+    refreshJwt: string;
+    accessJwt: string;
+  }
 }
 
 const Credentials = z.object({
@@ -53,17 +58,38 @@ const auth = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    jwt: async ({ token, user }) => {
-      if (user) {
-        const refreshJwt = (user as any).refreshJwt;
-        const accessJwt = (user as any).accessJwt;
-        const refresh = decodeJwt(refreshJwt);
-        token.exp = refresh.exp;
-        token.sub = refresh.sub;
-        token.refreshJwt = refreshJwt;
-        token.accessJwt = accessJwt;
+    jwt: async ({ token, user: authorizedInfo }) => {
+      if (authorizedInfo) {
+        //first login/sign up
+        const accessTokenDecoded = decodeJwt(authorizedInfo.accessJwt);
+
+        return {
+          ...token,
+          accessJwt: authorizedInfo.accessJwt,
+          expiresAt: accessTokenDecoded.exp! * 1000,
+          refreshJwt: authorizedInfo.refreshJwt,
+          sub: authorizedInfo.id,
+        };
+      } else if (Date.now() + 500 < (token.expiresAt as any as number)) {
+        return token;
       }
-      return token;
+
+      if (!token.refreshJwt) throw new Error("No refresh token");
+
+      console.log("here");
+      //do some refreshing
+      try {
+        const session = await atprotoRefreshSession(token.refreshJwt as string);
+        return {
+          ...token,
+          accessJwt: session.accessJwt,
+          expiresAt: decodeJwt(session.accessJwt).exp! * 1000,
+          refreshJwt: session.refreshJwt,
+        };
+      } catch (e) {
+        console.error("Error refreshing token", e);
+        return null;
+      }
     },
     session: async ({ session, token }) => {
       session.user.refreshJwt = token.refreshJwt as any;
@@ -91,22 +117,37 @@ const AtprotoSession = z.object({
   refreshJwt: z.string(),
   handle: z.string(),
   did: z.string(),
+  //email only exists on createSession but no refreshSession
   email: z.string().optional(),
 });
 
-const atprotoCreateSession = cache(
-  async ({ identifier, password }: z.infer<typeof Credentials>) => {
-    return AtprotoSession.parse(
-      await fetch("https://bsky.social/xrpc/com.atproto.server.createSession", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          identifier: identifier,
-          password: password,
-        }),
-      }).then((res) => res.json()),
-    );
-  },
-);
+const atprotoCreateSession = async ({
+  identifier,
+  password,
+}: z.infer<typeof Credentials>) => {
+  return AtprotoSession.parse(
+    await fetch("https://bsky.social/xrpc/com.atproto.server.createSession", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        identifier: identifier,
+        password: password,
+      }),
+    }).then((res) => res.json()),
+  );
+};
+
+const atprotoRefreshSession = async (refreshJwt: string) => {
+  console.log("refreshing...");
+  return AtprotoSession.parse(
+    await fetch("https://bsky.social/xrpc/com.atproto.server.refreshSession", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshJwt}`,
+      },
+    }).then((res) => res.json()),
+  );
+};
