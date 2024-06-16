@@ -15,6 +15,7 @@ import {
 import { notFound } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/lib/components/ui/alert";
 import { Spinner } from "@/lib/components/ui/spinner";
+import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 
 type Params = {
   rkey: string;
@@ -42,7 +43,22 @@ async function PollPost({ rkey }: { rkey: string }) {
   let polls = 0;
   while (!exists) {
     if (polls >= MAX_POLLS) {
-      return notFound();
+      console.error(`Post not found after polling: ${rkey}`);
+      return (
+        <Alert variant="destructive">
+          <AlertTitle>Post not found</AlertTitle>
+          <AlertDescription>
+            This shouldn&apos;t have happened. Please try again later and let us
+            know at{" "}
+            <a
+              href="https://bsky.app/profile/unravel.fyi"
+              className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              @unravel.fyi <OpenInNewWindowIcon className="inline" />
+            </a>
+          </AlertDescription>
+        </Alert>
+      );
     }
     polls++;
     await new Promise((resolve) => setTimeout(resolve, 250));
