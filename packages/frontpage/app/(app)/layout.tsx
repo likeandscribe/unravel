@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/lib/components/ui/button";
 import { isBetaUser } from "@/lib/data";
+import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 
 export default async function Layout({
   children,
@@ -29,14 +30,32 @@ export default async function Layout({
             <LoginOrLogout />
           </Suspense>
         </div>
-        {session && !isInBeta && (
-          <div className="flex justify-between items-center bg-yellow-100 p-4 mb-4">
-            <span>You&apos;re not currently part of the beta</span>
+
+        {session && (
+          <div className="flex justify-between items-center bg-yellow-100 p-4 mb-4 gap-2">
+            <span>
+              {isInBeta ? (
+                <>
+                  Thanks for joining the beta! There will be bugs! Please the
+                  report them to{" "}
+                  <a
+                    href="https://bsky.app/profile/unravel.fyi"
+                    className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  >
+                    @unravel.fyi <OpenInNewWindowIcon className="inline" />
+                  </a>
+                  !
+                </>
+              ) : (
+                <>You&apos;re not currently part of the beta</>
+              )}
+            </span>
             <Button asChild variant="ghost">
               <Link href="/invite-only">Learn more</Link>
             </Button>
           </div>
         )}
+
         {children}
       </div>
     </div>
