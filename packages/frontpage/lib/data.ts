@@ -239,7 +239,7 @@ export const getFrontpagePosts = cache(async () => {
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
   // We should closely monitor this and consider alternatives if it gets slow over time
   const rank = sql`
-    coalesce(${votesSubQuery.voteCount} / (
+    coalesce(${votesSubQuery.voteCount}, 1) / (
     -- Age
       (
         EXTRACT(
@@ -248,7 +248,7 @@ export const getFrontpagePosts = cache(async () => {
             (CURRENT_TIMESTAMP - ${schema.Post.createdAt})
         ) / 3600
       ) + 2
-    ) ^ 1.8, 0)
+    ) ^ 1.8
   `.as("rank");
 
   const rows = await db
@@ -335,7 +335,7 @@ export const getCommentsForPost = cache(async (postId: number) => {
     .as("vote");
 
   const commentRank = sql`
-    coalesce(${votes.voteCount} / (
+    coalesce(${votes.voteCount}, 1) / (
     -- Age
       (
         EXTRACT(
@@ -344,7 +344,7 @@ export const getCommentsForPost = cache(async (postId: number) => {
             (CURRENT_TIMESTAMP - ${schema.Comment.createdAt})
         ) / 3600
       ) + 2
-    ) ^ 1.8, 0)
+    ) ^ 1.8
   `.as("rank");
 
   const rows = await db
