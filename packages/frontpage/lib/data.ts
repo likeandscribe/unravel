@@ -324,33 +324,6 @@ export async function uncached_doesPostExist(rkey: string) {
   return Boolean(row[0]);
 }
 
-export const PostRecord = z.object({
-  title: z.string(),
-  url: z.string(),
-  createdAt: z.string(),
-});
-
-/**
- * Returns null if there is no logged in user or the record isn't found
- */
-export const getPostFromUserPds = cache(async (rkey: string) => {
-  const user = await getUser();
-  if (!user) return null;
-  const pdsUrl = await getPdsUrl(user.did);
-  if (!pdsUrl) {
-    return null;
-  }
-
-  const record = await atprotoGetRecord({
-    serviceEndpoint: pdsUrl,
-    repo: user.did,
-    collection: "fyi.unravel.frontpage.post",
-    rkey,
-  });
-
-  return PostRecord.parse(record.value);
-});
-
 export const getCommentsForPost = cache(async (postId: number) => {
   const votes = db
     .select({

@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import * as schema from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { PostRecord, atprotoGetRecord, getPdsUrl } from "@/lib/data";
+import { atprotoGetRecord, getPdsUrl } from "@/lib/data";
 
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
@@ -95,6 +95,12 @@ export async function POST(request: Request) {
 
   return new Response("OK");
 }
+
+const PostRecord = z.object({
+  title: z.string(),
+  url: z.string(),
+  createdAt: z.string(),
+});
 
 const CommentRecord = z.object({
   content: z.string(),
