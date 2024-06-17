@@ -129,6 +129,10 @@ export async function POST(request: Request) {
             );
           }
 
+          if (subject.authorDid === repo) {
+            throw new Error(`[naughty] Cannot vote on own content ${repo}`);
+          }
+
           if (subjectCollection === "fyi.unravel.frontpage.post") {
             await tx.insert(schema.PostVote).values({
               postId: subject.id,
