@@ -69,7 +69,7 @@ export async function createPost({ title, url }: PostInput) {
   });
 
   const uri = parseAtUri(result.uri);
-  if (!uri) {
+  if (!uri || !uri.rkey) {
     throw new CreatePostError(`Failed to parse AtUri: "${result.uri}"`);
   }
   return {
