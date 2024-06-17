@@ -24,6 +24,7 @@ export const PostVote = pgTable("post_votes", {
     .references(() => Post.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   authorDid: text("author_did").notNull(),
+  cid: text("cid").notNull().unique(),
 });
 
 export const Comment = pgTable("comments", {
@@ -45,6 +46,7 @@ export const CommentVote = pgTable("comment_votes", {
     .references(() => Comment.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   authorDid: text("author_did").notNull(),
+  cid: text("cid").notNull().unique(),
 });
 
 export const BetaUser = pgTable("beta_users", {

@@ -4,7 +4,7 @@ import { getSession } from "./auth";
 import { redirect } from "next/navigation";
 import { decodeJwt } from "jose";
 import { db } from "./db";
-import { eq, sql, count, desc, SQL } from "drizzle-orm";
+import { eq, sql, count, desc, SQL, and } from "drizzle-orm";
 import * as schema from "./schema";
 import { z } from "zod";
 
@@ -77,11 +77,7 @@ export async function createPost({ title, url }: PostInput) {
   };
 }
 
-export function parseAtUri(uri: string): {
-  authority: string;
-  collection: string | null;
-  rkey: string | null;
-} | null {
+export function parseAtUri(uri: string) {
   const match = uri.match(/^at:\/\/(.+?)(\/.+?)?(\/.+?)?$/);
   if (!match) return null;
   const [, authority, collection, rkey] = match;
@@ -220,11 +216,23 @@ export const getPdsUrl = cache(async (did: string) => {
 const votesSubQuery = db
   .select({
     postId: schema.PostVote.postId,
-    voteCount: count(schema.PostVote.id).as("voteCount"),
+    voteCount: sql`coalesce(${count(schema.PostVote.id)}, 1)`
+      .mapWith(Number)
+      .as("voteCount"),
   })
   .from(schema.PostVote)
   .groupBy(schema.PostVote.postId)
   .as("vote");
+
+const buildUserHasVotedQuery = cache(async () => {
+  const user = await getUser();
+
+  return db
+    .select({ postId: schema.PostVote.postId })
+    .from(schema.PostVote)
+    .where(user ? eq(schema.PostVote.authorDid, user.did) : sql`false`)
+    .as("hasVoted");
+});
 
 export const getFrontpagePosts = cache(async () => {
   const comments = db
@@ -251,6 +259,8 @@ export const getFrontpagePosts = cache(async () => {
     ) ^ 1.8
   `.as("rank");
 
+  const userHasVoted = await buildUserHasVotedQuery();
+
   const rows = await db
     .select({
       id: schema.Post.id,
@@ -260,16 +270,15 @@ export const getFrontpagePosts = cache(async () => {
       url: schema.Post.url,
       createdAt: schema.Post.createdAt,
       authorDid: schema.Post.authorDid,
-      // +1 to include the author's vote
-      voteCount: sql`coalesce(${votesSubQuery.voteCount}, 0) + 1`
-        .mapWith(Number)
-        .as("voteCount"),
+      voteCount: votesSubQuery.voteCount,
       commentCount: comments.commentCount,
       rank: rank,
+      userHasVoted: userHasVoted.postId,
     })
     .from(schema.Post)
     .leftJoin(comments, eq(comments.postId, schema.Post.id))
     .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
+    .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
     .orderBy(desc(rank));
 
   return rows.map((row) => ({
@@ -280,8 +289,9 @@ export const getFrontpagePosts = cache(async () => {
     url: row.url,
     createdAt: row.createdAt,
     authorDid: row.authorDid,
-    voteCount: row.voteCount ?? 0,
+    voteCount: row.voteCount ?? 1,
     commentCount: row.commentCount ?? 0,
+    userHasVoted: Boolean(row.userHasVoted),
   }));
 });
 
@@ -295,12 +305,15 @@ export const getPost = cache(async (rkey: string) => {
     .groupBy(schema.Comment.postId)
     .as("comment");
 
+  const userHasVoted = await buildUserHasVotedQuery();
+
   const rows = await db
     .select()
     .from(schema.Post)
     .where(eq(schema.Post.rkey, rkey))
     .leftJoin(comments, eq(comments.postId, schema.Post.id))
     .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
+    .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
     .limit(1);
 
   const row = rows[0];
@@ -309,8 +322,8 @@ export const getPost = cache(async (rkey: string) => {
   return {
     ...row.posts,
     commentCount: row.comment?.commentCount ?? 0,
-    // +1 to include the author's vote
-    voteCount: (row.vote?.voteCount ?? 0) + 1,
+    voteCount: row.vote?.voteCount ?? 1,
+    userHasVoted: Boolean(row.hasVoted),
   };
 });
 
@@ -379,25 +392,27 @@ export async function deletePost(rkey: string) {
 }
 
 type CommentInput = {
-  content: string;
   subjectRkey: string;
+  subjectCid: string;
+  subjectCollection: string;
+  content: string;
 };
 
-export async function createComment({ subjectRkey, content }: CommentInput) {
+export async function createComment({
+  subjectRkey,
+  subjectCid,
+  subjectCollection,
+  content,
+}: CommentInput) {
   await ensureIsInBeta();
   const user = await ensureUser();
-  const post = await getPost(subjectRkey);
-
-  if (!post) {
-    throw new Error("Post not found");
-  }
 
   await atprotoCreateRecord({
     record: {
       content,
       subject: {
-        cid: post.cid,
-        uri: `at://${user.did}/fyi.unravel.frontpage.post/${subjectRkey}`,
+        cid: subjectCid,
+        uri: `at://${user.did}/${subjectCollection}/${subjectRkey}`,
       },
       createdAt: new Date().toISOString(),
     },
@@ -442,4 +457,59 @@ export async function atprotoGetRecord({
   const json = await response.json();
 
   return AtProtoRecord.parse(json);
+}
+
+type VoteInput = {
+  subjectRkey: string;
+  subjectCid: string;
+  subjectCollection: string;
+};
+
+export async function createVote({
+  subjectRkey,
+  subjectCid,
+  subjectCollection,
+}: VoteInput) {
+  const user = await ensureUser();
+  await ensureIsInBeta();
+  const uri = `at://${user.did}/${subjectCollection}/${subjectRkey}`;
+
+  await atprotoCreateRecord({
+    collection: "fyi.unravel.frontpage.vote",
+    record: {
+      createdAt: new Date().toISOString(),
+      subject: {
+        cid: subjectCid,
+        uri,
+      },
+    },
+  });
+}
+
+export async function deleteVote(rkey: string) {
+  await ensureUser();
+  await ensureIsInBeta();
+
+  await atprotoDeleteRecord({
+    collection: "fyi.unravel.frontpage.vote",
+    rkey,
+  });
+}
+
+export async function getVoteForPost(postId: number) {
+  const user = await getUser();
+  if (!user) return null;
+
+  const rows = await db
+    .select()
+    .from(schema.PostVote)
+    .where(
+      and(
+        eq(schema.PostVote.authorDid, user.did),
+        eq(schema.PostVote.postId, postId),
+      ),
+    )
+    .limit(1);
+
+  return rows[0] ?? null;
 }

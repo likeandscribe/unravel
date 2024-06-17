@@ -23,11 +23,14 @@ export default async function Item({ params }: { params: Params }) {
       <PostCard
         author={post.authorDid}
         createdAt={post.createdAt}
-        id={post.rkey}
+        id={post.id}
         commentCount={post.commentCount}
         title={post.title}
         url={post.url}
         votes={post.voteCount}
+        rkey={post.rkey}
+        cid={post.cid}
+        isUpvoted={post.userHasVoted}
       />
       {user?.did === post.authorDid && (
         <div className="flex justify-end">
