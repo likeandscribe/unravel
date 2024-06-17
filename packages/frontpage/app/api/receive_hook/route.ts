@@ -91,25 +91,26 @@ export async function POST(request: Request) {
     }
 
     if (collection === "fyi.unravel.frontpage.vote") {
-      const hydratedRecord = await atprotoGetRecord({
-        serviceEndpoint: service,
-        repo,
-        collection,
-        rkey,
-      });
-      const hydratedVoteRecordValue = VoteRecord.parse(hydratedRecord.value);
-      const subjectUri = parseAtUri(hydratedVoteRecordValue.subject.uri);
-      if (!subjectUri) {
-        throw new Error(
-          `Invalid subject uri: ${hydratedVoteRecordValue.subject.uri}`,
-        );
-      }
-      const subjectCollection = VoteSubjectCollection.parse(
-        subjectUri.collection,
-      );
-
       await db.transaction(async (tx) => {
         if (op.action === "create") {
+          const hydratedRecord = await atprotoGetRecord({
+            serviceEndpoint: service,
+            repo,
+            collection,
+            rkey,
+          });
+          const hydratedVoteRecordValue = VoteRecord.parse(
+            hydratedRecord.value,
+          );
+          const subjectUri = parseAtUri(hydratedVoteRecordValue.subject.uri);
+          if (!subjectUri) {
+            throw new Error(
+              `Invalid subject uri: ${hydratedVoteRecordValue.subject.uri}`,
+            );
+          }
+          const subjectCollection = VoteSubjectCollection.parse(
+            subjectUri.collection,
+          );
           const subjectTable = {
             "fyi.unravel.frontpage.post": schema.Post,
             "fyi.unravel.frontpage.comment": schema.Comment,
@@ -134,6 +135,7 @@ export async function POST(request: Request) {
               authorDid: repo,
               createdAt: new Date(hydratedVoteRecordValue.createdAt),
               cid: hydratedRecord.cid,
+              rkey,
             });
           } else if (subjectCollection === "fyi.unravel.frontpage.comment") {
             await tx.insert(schema.CommentVote).values({
@@ -141,16 +143,18 @@ export async function POST(request: Request) {
               authorDid: repo,
               createdAt: new Date(hydratedVoteRecordValue.createdAt),
               cid: hydratedRecord.cid,
+              rkey,
             });
           }
         } else if (op.action === "delete") {
-          const voteTable = {
-            "fyi.unravel.frontpage.post": schema.PostVote,
-            "fyi.unravel.frontpage.comment": schema.CommentVote,
-          }[subjectCollection];
+          // Try deleting from both tables. In reality only one will have a record.
+          // Relies on postgres not throwing an error if the record doesn't exist.
           await tx
-            .delete(voteTable)
-            .where(eq(voteTable.cid, hydratedRecord.cid));
+            .delete(schema.CommentVote)
+            .where(eq(schema.CommentVote.rkey, rkey));
+          await tx
+            .delete(schema.PostVote)
+            .where(eq(schema.PostVote.rkey, rkey));
         }
 
         await tx.insert(schema.ConsumedOffset).values({ offset: seq });
@@ -207,6 +211,7 @@ const Path = z.string().transform((p, ctx) => {
         .map((c) => c.value)
         .join(", ")}`,
     });
+    return z.NEVER;
   }
   const rkey = p.split("/")[1];
   if (!rkey) {

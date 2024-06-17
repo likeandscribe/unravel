@@ -25,6 +25,7 @@ export const PostVote = pgTable("post_votes", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   authorDid: text("author_did").notNull(),
   cid: text("cid").notNull().unique(),
+  rkey: text("rkey").notNull().unique(),
 });
 
 export const Comment = pgTable("comments", {
@@ -47,6 +48,7 @@ export const CommentVote = pgTable("comment_votes", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   authorDid: text("author_did").notNull(),
   cid: text("cid").notNull().unique(),
+  rkey: text("rkey").notNull().unique(),
 });
 
 export const BetaUser = pgTable("beta_users", {

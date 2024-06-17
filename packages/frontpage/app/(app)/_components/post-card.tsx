@@ -58,8 +58,13 @@ export async function PostCard({
           unvoteAction={async () => {
             "use server";
             await ensureUser();
-            // const vote = await getVoteForPost(id)
-            // await deleteVote(vote.rkey)
+            const vote = await getVoteForPost(id);
+            if (!vote) {
+              // TODO: Show error notification
+              console.error("Vote not found for post", id);
+              return;
+            }
+            await deleteVote(vote.rkey);
           }}
           initialState={
             (await getUser())?.did === author
