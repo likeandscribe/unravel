@@ -33,8 +33,8 @@ export async function PostCard({
 
   return (
     // TODO: Make article route to postHref via onClick on card except innser links or buttons
-    <article className="relative flex items-center gap-4 bg-white dark:bg-gray-950 rounded-lg shadow-sm p-4">
-      <div className="flex flex-col items-center gap-2">
+    <article className="flex items-center gap-4 shadow-sm rounded-lg p-4">
+      <div className="flex flex-col items-center">
         <Button
           variant="ghost"
           size="icon"
@@ -45,22 +45,37 @@ export async function PostCard({
         </Button>
         <span className="font-medium">{votes}</span>
       </div>
-      <div className="flex-1">
-        <h2 className="text-xl font-medium mb-1">
-          <a href={url} className="hover:underline">
-            {title}
+      <div className="w-full">
+        <h2 className="mb-1 text-xl">
+          <a
+            href={url}
+            className="hover:underline flex flex-wrap items-center gap-x-2"
+          >
+            {title}{" "}
+            <span className="text-gray-500 dark:text-gray-400 font-normal text-sm md:text-base">
+              ({new URL(url).host})
+            </span>
           </a>
         </h2>
-        <div className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-          <span>{new URL(url).host}</span>
-          <span aria-hidden>•</span>
-          <span>by {handle}</span>
-          <span aria-hidden>•</span>
-          <TimeAgo createdAt={createdAt} side="bottom" />
-          <span aria-hidden>•</span>
-          <Link href={postHref} className="hover:underline">
-            {commentCount} comments
-          </Link>
+        <div className="flex flex-wrap text-gray-500 dark:text-gray-400 sm:gap-4">
+          <div className="flex gap-2 flex-wrap md:flex-nowrap">
+            <div className="flex gap-2">
+              <span aria-hidden>•</span>
+              <span>by {handle}</span>
+            </div>
+          </div>
+          <div className="w-full flex items-center justify-between gap-2 md:gap-4 sm:w-auto">
+            <div className="flex gap-2">
+              <span aria-hidden>•</span>
+              <TimeAgo createdAt={createdAt} side="bottom" />
+            </div>
+            <div className="flex gap-2">
+              <span aria-hidden>•</span>
+              <Link href={postHref} className="hover:underline">
+                {commentCount} comments
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </article>
