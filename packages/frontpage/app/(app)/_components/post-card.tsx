@@ -33,8 +33,8 @@ export async function PostCard({
 
   return (
     // TODO: Make article route to postHref via onClick on card except innser links or buttons
-    <article className="relative flex items-center gap-4 bg-white dark:bg-gray-950 rounded-lg shadow-sm p-4">
-      <div className="flex flex-col items-center gap-2">
+    <article className="pb-6 flex items-center gap-4 bg-white dark:bg-gray-950 border-b border-gray-300">
+      <div className="flex flex-col items-center">
         <Button
           variant="ghost"
           size="icon"
@@ -45,22 +45,32 @@ export async function PostCard({
         </Button>
         <span className="font-medium">{votes}</span>
       </div>
-      <div className="flex-1">
-        <h2 className="text-xl font-medium mb-1">
+      <div className="w-full">
+        <h2 className="font-bold mb-1 sm:text-xl">
           <a href={url} className="hover:underline">
             {title}
           </a>
         </h2>
-        <div className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-          <span>{new URL(url).host}</span>
-          <span aria-hidden>•</span>
-          <span>by {handle}</span>
-          <span aria-hidden>•</span>
-          <TimeAgo createdAt={createdAt} side="bottom" />
-          <span aria-hidden>•</span>
-          <Link href={postHref} className="hover:underline">
-            {commentCount} comments
-          </Link>
+        <div className="flex flex-col gap-2 md:flex-row md:gap-4 text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-between md:gap-4">
+            <span>{new URL(url).host}</span>
+            <div className="flex gap-2">
+              <span aria-hidden>•</span>
+              <span>by {handle}</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2 md:gap-4">
+            <div className="flex gap-2">
+              <span aria-hidden>•</span>
+              <TimeAgo createdAt={createdAt} side="bottom" />
+            </div>
+            <div className="flex gap-2">
+              <span aria-hidden>•</span>
+              <Link href={postHref} className="hover:underline">
+                {commentCount} comments
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </article>
