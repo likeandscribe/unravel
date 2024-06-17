@@ -33,7 +33,7 @@ export async function PostCard({
 
   return (
     // TODO: Make article route to postHref via onClick on card except innser links or buttons
-    <article className="pb-6 flex items-center gap-4 bg-white dark:bg-gray-950 border-b border-gray-300">
+    <article className="p-3.5 flex items-center gap-4 bg-white dark:bg-gray-950 shadow-md rounded-lg">
       <div className="flex flex-col items-center">
         <Button
           variant="ghost"
@@ -47,19 +47,24 @@ export async function PostCard({
       </div>
       <div className="w-full">
         <h2 className="font-bold mb-1 sm:text-xl">
-          <a href={url} className="hover:underline">
-            {title}
+          <a
+            href={url}
+            className="hover:underline flex flex-wrap items-center gap-x-2"
+          >
+            {title}{" "}
+            <span className="text-gray-500 dark:text-gray-400 font-normal text-sm md:text-base">
+              ({new URL(url).host})
+            </span>
           </a>
         </h2>
-        <div className="flex flex-col gap-2 md:flex-row md:gap-4 text-gray-500 dark:text-gray-400">
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-between md:gap-4">
-            <span>{new URL(url).host}</span>
+        <div className="flex flex-wrap text-gray-500 dark:text-gray-400 sm:gap-4">
+          <div className="flex gap-2 flex-wrap md:flex-nowrap">
             <div className="flex gap-2">
               <span aria-hidden>•</span>
               <span>by {handle}</span>
             </div>
           </div>
-          <div className="flex items-center justify-between gap-2 md:gap-4">
+          <div className="w-full flex items-center justify-between gap-2 md:gap-4 sm:w-auto">
             <div className="flex gap-2">
               <span aria-hidden>•</span>
               <TimeAgo createdAt={createdAt} side="bottom" />
