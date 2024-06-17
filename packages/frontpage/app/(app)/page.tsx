@@ -12,11 +12,14 @@ export default async function Home() {
           key={post.id}
           author={post.authorDid}
           createdAt={post.createdAt}
-          id={post.rkey}
+          id={post.id}
           title={post.title}
           url={post.url}
           votes={post.voteCount}
           commentCount={post.commentCount}
+          cid={post.cid}
+          rkey={post.rkey}
+          isUpvoted={post.userHasVoted}
         />
       ))}
     </div>

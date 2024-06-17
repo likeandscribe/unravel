@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import * as schema from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { atprotoGetRecord, getPdsUrl } from "@/lib/data";
+import { atprotoGetRecord, getPdsUrl, parseAtUri } from "@/lib/data";
 
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
@@ -89,6 +89,81 @@ export async function POST(request: Request) {
         await tx.insert(schema.ConsumedOffset).values({ offset: seq });
       });
     }
+
+    if (collection === "fyi.unravel.frontpage.vote") {
+      await db.transaction(async (tx) => {
+        if (op.action === "create") {
+          const hydratedRecord = await atprotoGetRecord({
+            serviceEndpoint: service,
+            repo,
+            collection,
+            rkey,
+          });
+          const hydratedVoteRecordValue = VoteRecord.parse(
+            hydratedRecord.value,
+          );
+          const subjectUri = parseAtUri(hydratedVoteRecordValue.subject.uri);
+          if (!subjectUri) {
+            throw new Error(
+              `Invalid subject uri: ${hydratedVoteRecordValue.subject.uri}`,
+            );
+          }
+          const subjectCollection = VoteSubjectCollection.parse(
+            subjectUri.collection,
+          );
+          const subjectTable = {
+            "fyi.unravel.frontpage.post": schema.Post,
+            "fyi.unravel.frontpage.comment": schema.Comment,
+          }[subjectCollection];
+
+          const subject = (
+            await tx
+              .select()
+              .from(subjectTable)
+              .where(eq(subjectTable.rkey, subjectUri.rkey))
+          )[0];
+
+          if (!subject) {
+            throw new Error(
+              `Subject not found with uri: ${hydratedVoteRecordValue.subject.uri}`,
+            );
+          }
+
+          if (subject.authorDid === repo) {
+            throw new Error(`[naughty] Cannot vote on own content ${repo}`);
+          }
+
+          if (subjectCollection === "fyi.unravel.frontpage.post") {
+            await tx.insert(schema.PostVote).values({
+              postId: subject.id,
+              authorDid: repo,
+              createdAt: new Date(hydratedVoteRecordValue.createdAt),
+              cid: hydratedRecord.cid,
+              rkey,
+            });
+          } else if (subjectCollection === "fyi.unravel.frontpage.comment") {
+            await tx.insert(schema.CommentVote).values({
+              commentId: subject.id,
+              authorDid: repo,
+              createdAt: new Date(hydratedVoteRecordValue.createdAt),
+              cid: hydratedRecord.cid,
+              rkey,
+            });
+          }
+        } else if (op.action === "delete") {
+          // Try deleting from both tables. In reality only one will have a record.
+          // Relies on postgres not throwing an error if the record doesn't exist.
+          await tx
+            .delete(schema.CommentVote)
+            .where(eq(schema.CommentVote.rkey, rkey));
+          await tx
+            .delete(schema.PostVote)
+            .where(eq(schema.PostVote.rkey, rkey));
+        }
+
+        await tx.insert(schema.ConsumedOffset).values({ offset: seq });
+      });
+    }
   });
 
   await Promise.all(promises);
@@ -111,9 +186,24 @@ const CommentRecord = z.object({
   createdAt: z.string(),
 });
 
-const Collection = z.union([
+const VoteRecord = z.object({
+  createdAt: z.string(),
+  subject: z.object({
+    cid: z.string(),
+    uri: z.string(),
+  }),
+});
+
+const voteSubjectCollectionMembers = [
   z.literal("fyi.unravel.frontpage.post"),
   z.literal("fyi.unravel.frontpage.comment"),
+] as const;
+
+const VoteSubjectCollection = z.union(voteSubjectCollectionMembers);
+
+const Collection = z.union([
+  ...voteSubjectCollectionMembers,
+  z.literal("fyi.unravel.frontpage.vote"),
 ]);
 
 const Path = z.string().transform((p, ctx) => {
@@ -125,6 +215,7 @@ const Path = z.string().transform((p, ctx) => {
         .map((c) => c.value)
         .join(", ")}`,
     });
+    return z.NEVER;
   }
   const rkey = p.split("/")[1];
   if (!rkey) {

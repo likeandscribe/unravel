@@ -16,13 +16,10 @@ import { Textarea } from "@/lib/components/ui/textarea";
 import { SimpleTooltip } from "@/lib/components/ui/tooltip";
 import { useToast } from "@/lib/components/ui/use-toast";
 import { createCommentAction } from "./_actions";
-import {
-  ChatBubbleIcon,
-  ChevronUpIcon,
-  TrashIcon,
-} from "@radix-ui/react-icons";
+import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { VariantProps, cva } from "class-variance-authority";
 import React, { useRef, useState } from "react";
+import { VoteButton, VoteButtonState } from "../../_components/vote-button";
 
 const commentVariants = cva(undefined, {
   variants: {
@@ -38,20 +35,24 @@ const commentVariants = cva(undefined, {
 });
 
 export type CommentProps = VariantProps<typeof commentVariants> & {
-  id: string;
   rkey: string;
   author: string;
   comment: string;
   createdAt: Date;
+  voteAction: () => Promise<void>;
+  unvoteAction: () => Promise<void>;
+  initialVoteState: VoteButtonState;
 };
 
 export function CommentClient({
-  id,
   rkey,
   author,
   comment,
   level,
   createdAt,
+  voteAction,
+  unvoteAction,
+  initialVoteState,
 }: CommentProps) {
   const [showNewComment, setShowNewComment] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
@@ -71,9 +72,11 @@ export function CommentClient({
         </div>
         <div className="flex items-center gap-4">
           <SimpleTooltip content="Vote" side="bottom">
-            <Button variant="ghost" size="icon">
-              <ChevronUpIcon className="w-4 h-4" />
-            </Button>
+            <VoteButton
+              initialState={initialVoteState}
+              voteAction={voteAction}
+              unvoteAction={unvoteAction}
+            />
           </SimpleTooltip>
           <SimpleTooltip content="Comment" side="bottom">
             <Button
