@@ -42,7 +42,7 @@ async function waitForPost(rkey: string) {
   let polls = 0;
   while (!exists && polls < MAX_POLLS) {
     exists = await uncached_doesPostExist(rkey);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 250));
     polls++;
   }
 }
