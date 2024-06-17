@@ -1,5 +1,5 @@
 import { PostCard } from "../../_components/post-card";
-import { NewComment, CommentClient } from "./_comment";
+import { NewComment } from "./_comment";
 import { Comment } from "./_commentServer";
 import { DeletePostButton } from "./_delete-post-button";
 import { getCommentsForPost, getPost, getUser } from "@/lib/data";
@@ -41,11 +41,13 @@ export default async function Item({ params }: { params: Params }) {
       <div className="grid gap-6">
         {comments.map((comment) => (
           <Comment
+            isUpvoted={comment.userHasVoted}
             key={comment.id}
+            cid={comment.cid}
             rkey={comment.rkey}
             author={comment.authorDid}
             createdAt={comment.createdAt}
-            id={comment.rkey}
+            id={comment.id}
             comment={comment.body}
           />
         ))}

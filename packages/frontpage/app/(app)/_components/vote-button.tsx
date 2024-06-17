@@ -5,10 +5,12 @@ import { cn } from "@/lib/utils";
 import { ChevronUpIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 
+export type VoteButtonState = "voted" | "unvoted" | "authored";
+
 type VoteButtonProps = {
   voteAction: () => Promise<void>;
   unvoteAction: () => Promise<void>;
-  initialState: "voted" | "unvoted" | "authored";
+  initialState: VoteButtonState;
   votes?: number;
 };
 

@@ -360,6 +360,14 @@ export const getCommentsForPost = cache(async (postId: number) => {
     ) ^ 1.8
   `.as("rank");
 
+  const user = await getUser();
+
+  const hasVoted = db
+    .select({ commentId: schema.CommentVote.commentId })
+    .from(schema.CommentVote)
+    .where(user ? eq(schema.CommentVote.authorDid, user.did) : sql`false`)
+    .as("hasVoted");
+
   const rows = await db
     .select({
       id: schema.Comment.id,
@@ -373,13 +381,18 @@ export const getCommentsForPost = cache(async (postId: number) => {
         .mapWith(Number)
         .as("voteCount"),
       rank: commentRank,
+      userHasVoted: hasVoted.commentId,
     })
     .from(schema.Comment)
     .where(eq(schema.Comment.postId, postId))
     .leftJoin(votes, eq(votes.commentId, schema.Comment.id))
+    .leftJoin(hasVoted, eq(hasVoted.commentId, schema.Comment.id))
     .orderBy(desc(commentRank));
 
-  return rows;
+  return rows.map((row) => ({
+    ...row,
+    userHasVoted: row.userHasVoted !== null,
+  }));
 });
 
 export async function deletePost(rkey: string) {
@@ -507,6 +520,24 @@ export async function getVoteForPost(postId: number) {
       and(
         eq(schema.PostVote.authorDid, user.did),
         eq(schema.PostVote.postId, postId),
+      ),
+    )
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
+export async function getVoteForComment(commentId: number) {
+  const user = await getUser();
+  if (!user) return null;
+
+  const rows = await db
+    .select()
+    .from(schema.CommentVote)
+    .where(
+      and(
+        eq(schema.CommentVote.authorDid, user.did),
+        eq(schema.CommentVote.commentId, commentId),
       ),
     )
     .limit(1);
