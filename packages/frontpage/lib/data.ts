@@ -54,7 +54,7 @@ type PostInput = {
   url: string;
 };
 
-export class PdsError extends Error {
+export class CreatePostError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
   }
@@ -63,11 +63,40 @@ export class PdsError extends Error {
 export async function createPost({ title, url }: PostInput) {
   await ensureIsInBeta();
 
-  await atprotoCreateRecord({
+  const result = await atprotoCreateRecord({
     record: { title, url, createdAt: new Date().toISOString() },
     collection: "fyi.unravel.frontpage.post",
   });
+
+  const uri = parseAtUri(result.uri);
+  if (!uri || !uri.rkey) {
+    throw new CreatePostError(`Failed to parse AtUri: "${result.uri}"`);
+  }
+  return {
+    rkey: uri.rkey,
+  };
 }
+
+export function parseAtUri(uri: string): {
+  authority: string;
+  collection: string | null;
+  rkey: string | null;
+} | null {
+  const match = uri.match(/^at:\/\/(.+?)(\/.+?)?(\/.+?)?$/);
+  if (!match) return null;
+  const [, authority, collection, rkey] = match;
+  if (!authority || !collection || !rkey) return null;
+  return {
+    authority,
+    collection: collection.replace("/", ""),
+    rkey: rkey.replace("/", ""),
+  };
+}
+
+const CreateRecordResponse = z.object({
+  uri: z.string(),
+  cid: z.string(),
+});
 
 type CreateRecordInput = {
   record: unknown;
@@ -94,8 +123,10 @@ async function atprotoCreateRecord({ record, collection }: CreateRecordInput) {
   });
 
   if (!response.ok) {
-    throw new PdsError("Failed to create post", { cause: response });
+    throw new CreatePostError("Failed to create post", { cause: response });
   }
+
+  return CreateRecordResponse.parse(await response.json());
 }
 
 type DeleteRecordInput = {
@@ -122,7 +153,7 @@ async function atprotoDeleteRecord({ collection, rkey }: DeleteRecordInput) {
   });
 
   if (!response.ok) {
-    throw new PdsError("Failed to create post", { cause: response });
+    throw new CreatePostError("Failed to create post", { cause: response });
   }
 }
 
@@ -283,6 +314,16 @@ export const getPost = cache(async (rkey: string) => {
   };
 });
 
+export async function uncached_doesPostExist(rkey: string) {
+  const row = await db
+    .select({ id: schema.Post.id })
+    .from(schema.Post)
+    .where(eq(schema.Post.rkey, rkey))
+    .limit(1);
+
+  return Boolean(row[0]);
+}
+
 export const getCommentsForPost = cache(async (postId: number) => {
   const votes = db
     .select({
@@ -362,4 +403,43 @@ export async function createComment({ subjectRkey, content }: CommentInput) {
     },
     collection: "fyi.unravel.frontpage.comment",
   });
+}
+
+const AtProtoRecord = z.object({
+  value: z.custom<unknown>(
+    (value) => typeof value === "object" && value != null,
+  ),
+  cid: z.string(),
+});
+
+type GetRecordInput = {
+  serviceEndpoint: string;
+  repo: string;
+  collection: string;
+  rkey: string;
+};
+
+export async function atprotoGetRecord({
+  serviceEndpoint,
+  repo,
+  collection,
+  rkey,
+}: GetRecordInput) {
+  const url = new URL(`${serviceEndpoint}/xrpc/com.atproto.repo.getRecord`);
+  url.searchParams.append("repo", repo);
+  url.searchParams.append("collection", collection);
+  url.searchParams.append("rkey", rkey);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok)
+    throw new Error("Failed to fetch record", { cause: response });
+
+  const json = await response.json();
+
+  return AtProtoRecord.parse(json);
 }
