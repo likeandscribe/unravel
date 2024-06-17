@@ -25,6 +25,7 @@ export function VoteButton({
   );
   return (
     <form
+      // Action or unSubmit won't be triggered if you're an author because the button is disabled in that case
       action={hasVoted ? unvoteAction : voteAction}
       onSubmit={(e) => {
         e.preventDefault();
