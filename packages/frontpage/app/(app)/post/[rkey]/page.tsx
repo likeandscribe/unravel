@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from "@/lib/components/ui/alert";
 import { PostCard } from "../../_components/post-card";
 import { NewComment } from "./_comment";
 import { Comment } from "./_commentServer";
@@ -37,7 +38,16 @@ export default async function Item({ params }: { params: Params }) {
           <DeletePostButton rkey={params.rkey} />
         </div>
       )}
-      <NewComment parentRkey={post.rkey} />
+      {post.status === "live" ? (
+        <NewComment parentRkey={post.rkey} />
+      ) : (
+        <Alert>
+          <AlertTitle>This post has been deleted</AlertTitle>
+          <AlertDescription>
+            Deleted posts cannot receive new comments.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="grid gap-6">
         {comments.map((comment) => (
           <Comment

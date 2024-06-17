@@ -42,6 +42,7 @@ export type CommentProps = VariantProps<typeof commentVariants> & {
   voteAction: () => Promise<void>;
   unvoteAction: () => Promise<void>;
   initialVoteState: VoteButtonState;
+  newCommentDisabled?: boolean;
 };
 
 export function CommentClient({
@@ -53,6 +54,7 @@ export function CommentClient({
   voteAction,
   unvoteAction,
   initialVoteState,
+  newCommentDisabled,
 }: CommentProps) {
   const [showNewComment, setShowNewComment] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
@@ -82,7 +84,8 @@ export function CommentClient({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setShowNewComment(true)}
+              onClick={() => showNewComment && setShowNewComment(true)}
+              disabled={newCommentDisabled}
             >
               <ChatBubbleIcon className="w-4 h-4" />
               <span className="sr-only">Reply</span>

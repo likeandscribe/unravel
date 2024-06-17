@@ -9,6 +9,11 @@ export async function createCommentAction(formData: FormData) {
   if (!post) {
     throw new Error("Post not found");
   }
+  const user = await ensureUser();
+
+  if (post.status !== "live") {
+    throw new Error(`[naughty] Cannot comment on deleted post. ${user.did}`);
+  }
 
   await createComment({
     content,

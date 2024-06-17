@@ -45,7 +45,10 @@ export async function POST(request: Request) {
             createdAt: new Date(postRecord.createdAt),
           });
         } else if (op.action === "delete") {
-          await tx.delete(schema.Post).where(eq(schema.Post.rkey, rkey));
+          await tx
+            .update(schema.Post)
+            .set({ status: "deleted" })
+            .where(eq(schema.Post.rkey, rkey));
         }
 
         await tx.insert(schema.ConsumedOffset).values({ offset: seq });
@@ -74,6 +77,12 @@ export async function POST(request: Request) {
             throw new Error("Post not found");
           }
 
+          if (postRecord.status !== "live") {
+            throw new Error(
+              `[naughty] Cannot comment on deleted post. ${repo}`,
+            );
+          }
+
           await tx.insert(schema.Comment).values({
             cid: record.cid,
             rkey,
@@ -83,7 +92,10 @@ export async function POST(request: Request) {
             createdAt: new Date(commentRecord.createdAt),
           });
         } else if (op.action === "delete") {
-          await tx.delete(schema.Comment).where(eq(schema.Comment.rkey, rkey));
+          await tx
+            .update(schema.Comment)
+            .set({ status: "deleted" })
+            .where(eq(schema.Comment.rkey, rkey));
         }
 
         await tx.insert(schema.ConsumedOffset).values({ offset: seq });

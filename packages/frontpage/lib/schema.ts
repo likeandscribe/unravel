@@ -6,7 +6,14 @@ import {
   timestamp,
   bigint,
   unique,
+  pgEnum,
 } from "drizzle-orm/pg-core";
+
+export const submissionStatus = pgEnum("submission_status", [
+  "live",
+  "deleted",
+  "moderator_hidden",
+]);
 
 export const Post = pgTable("posts", {
   id: serial("id").primaryKey(),
@@ -16,6 +23,8 @@ export const Post = pgTable("posts", {
   url: text("url").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   authorDid: text("author_did").notNull(),
+  // TODO: add notNull once this is rolled out
+  status: submissionStatus("status").default("live"),
 });
 
 export const PostVote = pgTable(
@@ -45,6 +54,8 @@ export const Comment = pgTable("comments", {
   body: text("body").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   authorDid: text("author_did").notNull(),
+  // TODO: add notNull once this is rolled out
+  status: submissionStatus("status").default("live"),
 });
 
 export const CommentVote = pgTable(
