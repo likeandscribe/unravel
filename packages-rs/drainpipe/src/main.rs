@@ -1,5 +1,12 @@
 use db::{record_dead_letter, update_seq};
-use diesel::sqlite::SqliteConnection;
+use diesel::{
+    backend::Backend,
+    deserialize::{FromSql, FromSqlRow},
+    expression::AsExpression,
+    serialize::ToSql,
+    sql_types::SmallInt,
+    sqlite::SqliteConnection,
+};
 use futures::{StreamExt as _, TryFutureExt};
 use serde::Serialize;
 use std::{path::PathBuf, thread, time::Duration};
@@ -9,10 +16,42 @@ mod db;
 mod firehose;
 mod schema;
 
-#[derive(Debug)]
-enum ProcessErrorKind {
+#[repr(i16)]
+#[derive(Debug, AsExpression, PartialEq, FromSqlRow)]
+#[sql_type = "SmallInt"]
+pub enum ProcessErrorKind {
     DecodeError,
     ProcessError,
+}
+
+impl<DB> ToSql<SmallInt, DB> for ProcessErrorKind
+where
+    i16: ToSql<SmallInt, DB>,
+    DB: Backend,
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, DB>,
+    ) -> diesel::serialize::Result {
+        match self {
+            ProcessErrorKind::DecodeError => 0.to_sql(out),
+            ProcessErrorKind::ProcessError => 1.to_sql(out),
+        }
+    }
+}
+
+impl<DB> FromSql<SmallInt, DB> for ProcessErrorKind
+where
+    DB: Backend,
+    i16: FromSql<SmallInt, DB>,
+{
+    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+        match i16::from_sql(bytes)? {
+            0 => Ok(ProcessErrorKind::DecodeError),
+            1 => Ok(ProcessErrorKind::ProcessError),
+            x => Err(format!("Unrecognized variant {}", x).into()),
+        }
+    }
 }
 
 #[derive(Debug)]

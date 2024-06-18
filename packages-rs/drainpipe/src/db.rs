@@ -38,7 +38,7 @@ pub fn record_dead_letter(
 
     diesel::insert_into(dead_letter_queue)
         .values((
-            err_kind.eq(kind as i32),
+            err_kind.eq(kind),
             err_msg.eq(&new_msg),
             seq.eq(&new_seq),
             source.eq(&message),
@@ -68,7 +68,7 @@ pub struct DrainpipeMeta {
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct DeadLetter {
     pub seq: i64,
-    pub err_kind: i32,
+    pub err_kind: ProcessErrorKind,
     pub err_msg: String,
     pub source: String,
 }
