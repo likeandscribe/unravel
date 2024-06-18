@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/lib/components/ui/toaster";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
+import { Metadata } from "next";
 
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
@@ -18,6 +19,10 @@ const sourceSans = Source_Sans_3({
   variable: "--font-source_sans",
   weight: ["400", "500"],
 });
+
+export const metadata: Metadata = {
+  title: "Frontpage - federated link aggregator",
+};
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

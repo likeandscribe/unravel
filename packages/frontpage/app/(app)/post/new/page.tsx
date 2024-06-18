@@ -1,4 +1,10 @@
+import { Metadata } from "next";
 import { NewPostForm } from "./_client";
+
+export const metadata: Metadata = {
+  title: "New post | Frontpage",
+  robots: "noindex, nofollow",
+};
 
 export default function NewPost() {
   return (
