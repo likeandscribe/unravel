@@ -58,7 +58,7 @@ where
 struct ProcessError {
     seq: i64,
     inner: anyhow::Error,
-    msg: Source,
+    source: Source,
     kind: ProcessErrorKind,
 }
 
@@ -98,7 +98,7 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
     let (_header, data) = firehose::read(&message).map_err(|e| ProcessError {
         inner: e.into(),
         seq: -1,
-        msg: Source(message.clone()),
+        source: Source(message.clone()),
         kind: ProcessErrorKind::DecodeError,
     })?;
     let sequence = match data {
@@ -113,7 +113,7 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
                     .map_err(|e| ProcessError {
                         seq: commit.sequence,
                         inner: e,
-                        msg: Source(message.clone()),
+                        source: Source(message.clone()),
                         kind: ProcessErrorKind::ProcessError,
                     })
                     .await?;
@@ -227,15 +227,9 @@ async fn main() {
                         }
                         Err(error) => {
                             eprintln!("Error processing message: {error:?}");
-                            record_dead_letter(
-                                &mut ctx.db_connection,
-                                error.kind,
-                                &error.inner.to_string(),
-                                error.seq,
-                                error.msg,
-                            )
-                            .map_err(|_| eprintln!("Failed to record dead letter"))
-                            .ok();
+                            record_dead_letter(&mut ctx.db_connection, &error)
+                                .map_err(|_| eprintln!("Failed to record dead letter"))
+                                .ok();
                         }
                     }
                 }

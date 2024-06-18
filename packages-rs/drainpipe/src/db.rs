@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
-use crate::{ProcessErrorKind, Source};
+use crate::{ProcessError, ProcessErrorKind, Source};
 
 pub fn db_connect(database_url: &String) -> anyhow::Result<SqliteConnection> {
     SqliteConnection::establish(&database_url).map_err(Into::into)
@@ -27,21 +27,15 @@ pub fn update_seq(conn: &mut SqliteConnection, new_seq: i64) -> anyhow::Result<(
     Ok(())
 }
 
-pub fn record_dead_letter(
-    conn: &mut SqliteConnection,
-    kind: ProcessErrorKind,
-    new_msg: &str,
-    new_seq: i64,
-    message: Source,
-) -> anyhow::Result<()> {
+pub fn record_dead_letter(conn: &mut SqliteConnection, e: &ProcessError) -> anyhow::Result<()> {
     use crate::schema::dead_letter_queue::dsl::*;
 
     diesel::insert_into(dead_letter_queue)
         .values((
-            err_kind.eq(kind),
-            err_msg.eq(&new_msg),
-            seq.eq(&new_seq),
-            source.eq(&message),
+            err_kind.eq(&e.kind),
+            err_msg.eq(&e.inner.to_string()),
+            seq.eq(&e.seq),
+            source.eq(&e.source),
         ))
         .execute(conn)?;
 
