@@ -36,7 +36,7 @@ export async function newPostAction(_prevState: unknown, formData: FormData) {
   }
 }
 
-const MAX_POLLS = 5;
+const MAX_POLLS = 10;
 async function waitForPost(rkey: string) {
   let exists = false;
   let polls = 0;
