@@ -274,11 +274,13 @@ export const getFrontpagePosts = cache(async () => {
       commentCount: comments.commentCount,
       rank: rank,
       userHasVoted: userHasVoted.postId,
+      status: schema.Post.status,
     })
     .from(schema.Post)
     .leftJoin(comments, eq(comments.postId, schema.Post.id))
     .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
     .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
+    .where(eq(schema.Post.status, "live"))
     .orderBy(desc(rank));
 
   return rows.map((row) => ({
