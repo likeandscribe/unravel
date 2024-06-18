@@ -4,7 +4,7 @@ use diesel::{
     deserialize::{FromSql, FromSqlRow},
     expression::AsExpression,
     serialize::ToSql,
-    sql_types::SmallInt,
+    sql_types::{Integer, Text},
     sqlite::SqliteConnection,
 };
 use futures::{StreamExt as _, TryFutureExt};
@@ -16,17 +16,17 @@ mod db;
 mod firehose;
 mod schema;
 
-#[repr(i16)]
+#[repr(i32)]
 #[derive(Debug, AsExpression, PartialEq, FromSqlRow)]
-#[sql_type = "SmallInt"]
+#[diesel(sql_type = Integer)]
 pub enum ProcessErrorKind {
     DecodeError,
     ProcessError,
 }
 
-impl<DB> ToSql<SmallInt, DB> for ProcessErrorKind
+impl<DB> ToSql<Integer, DB> for ProcessErrorKind
 where
-    i16: ToSql<SmallInt, DB>,
+    i32: ToSql<Integer, DB>,
     DB: Backend,
 {
     fn to_sql<'b>(
@@ -40,13 +40,13 @@ where
     }
 }
 
-impl<DB> FromSql<SmallInt, DB> for ProcessErrorKind
+impl<DB> FromSql<Integer, DB> for ProcessErrorKind
 where
     DB: Backend,
-    i16: FromSql<SmallInt, DB>,
+    i32: FromSql<Integer, DB>,
 {
     fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
-        match i16::from_sql(bytes)? {
+        match i32::from_sql(bytes)? {
             0 => Ok(ProcessErrorKind::DecodeError),
             1 => Ok(ProcessErrorKind::ProcessError),
             x => Err(format!("Unrecognized variant {}", x).into()),
@@ -58,8 +58,39 @@ where
 struct ProcessError {
     seq: i64,
     inner: anyhow::Error,
-    msg: Vec<u8>,
+    msg: Source,
     kind: ProcessErrorKind,
+}
+
+#[derive(Debug, AsExpression, PartialEq, FromSqlRow)]
+#[diesel(sql_type = Text)]
+pub struct Source(Vec<u8>);
+
+impl<DB> ToSql<Text, DB> for Source
+where
+    DB: Backend,
+    str: ToSql<Text, DB>,
+    String: ToSql<Text, DB>,
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, DB>,
+    ) -> diesel::serialize::Result {
+        let bytes = self.0.as_slice();
+        let s = std::str::from_utf8(bytes).unwrap_or("INVALID UTF-8");
+        s.to_sql(out)
+    }
+}
+
+impl<DB> FromSql<Text, DB> for Source
+where
+    DB: Backend,
+    String: FromSql<Text, DB>,
+{
+    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+        let s = String::from_sql(bytes)?;
+        Ok(Source(s.into_bytes()))
+    }
 }
 
 /// Process a message from the firehose. Returns the sequence number of the message or an error.
@@ -67,7 +98,7 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
     let (_header, data) = firehose::read(&message).map_err(|e| ProcessError {
         inner: e.into(),
         seq: -1,
-        msg: message.clone(),
+        msg: Source(message.clone()),
         kind: ProcessErrorKind::DecodeError,
     })?;
     let sequence = match data {
@@ -82,7 +113,7 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
                     .map_err(|e| ProcessError {
                         seq: commit.sequence,
                         inner: e,
-                        msg: message.clone(),
+                        msg: Source(message.clone()),
                         kind: ProcessErrorKind::ProcessError,
                     })
                     .await?;
@@ -201,8 +232,7 @@ async fn main() {
                                 error.kind,
                                 &error.inner.to_string(),
                                 error.seq,
-                                &String::from_utf8(error.msg)
-                                    .unwrap_or("Unable to decode message".to_string()),
+                                error.msg,
                             )
                             .map_err(|_| eprintln!("Failed to record dead letter"))
                             .ok();
