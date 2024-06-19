@@ -62,7 +62,7 @@ pub struct DrainpipeMeta {
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct DeadLetter {
     pub seq: i64,
-    pub err_kind: ProcessErrorKind,
+    pub err_kind: Option<ProcessErrorKind>,
     pub err_msg: String,
-    pub source: Source,
+    pub source: Option<Source>,
 }
