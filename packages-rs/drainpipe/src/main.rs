@@ -1,10 +1,11 @@
 use db::{record_dead_letter, update_seq};
+use debug_ignore::DebugIgnore;
 use diesel::{
     backend::Backend,
     deserialize::{FromSql, FromSqlRow},
     expression::AsExpression,
     serialize::ToSql,
-    sql_types::{Integer, Text},
+    sql_types::Integer,
     sqlite::SqliteConnection,
 };
 use futures::{StreamExt as _, TryFutureExt};
@@ -58,39 +59,8 @@ where
 struct ProcessError {
     seq: i64,
     inner: anyhow::Error,
-    source: Source,
+    source: DebugIgnore<Vec<u8>>,
     kind: ProcessErrorKind,
-}
-
-#[derive(Debug, AsExpression, PartialEq, FromSqlRow)]
-#[diesel(sql_type = Text)]
-pub struct Source(Vec<u8>);
-
-impl<DB> ToSql<Text, DB> for Source
-where
-    DB: Backend,
-    str: ToSql<Text, DB>,
-    String: ToSql<Text, DB>,
-{
-    fn to_sql<'b>(
-        &'b self,
-        out: &mut diesel::serialize::Output<'b, '_, DB>,
-    ) -> diesel::serialize::Result {
-        let bytes = self.0.as_slice();
-        let s = std::str::from_utf8(bytes).unwrap_or("INVALID UTF-8");
-        s.to_sql(out)
-    }
-}
-
-impl<DB> FromSql<Text, DB> for Source
-where
-    DB: Backend,
-    String: FromSql<Text, DB>,
-{
-    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
-        let s = String::from_sql(bytes)?;
-        Ok(Source(s.into_bytes()))
-    }
 }
 
 /// Process a message from the firehose. Returns the sequence number of the message or an error.
@@ -98,7 +68,7 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
     let (_header, data) = firehose::read(&message).map_err(|e| ProcessError {
         inner: e.into(),
         seq: -1,
-        source: Source(message.clone()),
+        source: message.clone().into(),
         kind: ProcessErrorKind::DecodeError,
     })?;
     let sequence = match data {
@@ -113,7 +83,7 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
                     .map_err(|e| ProcessError {
                         seq: commit.sequence,
                         inner: e,
-                        source: Source(message.clone()),
+                        source: message.clone().into(),
                         kind: ProcessErrorKind::ProcessError,
                     })
                     .await?;

@@ -1,8 +1,9 @@
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use std::ops::Deref;
 
-use crate::{ProcessError, ProcessErrorKind, Source};
+use crate::{ProcessError, ProcessErrorKind};
 
 pub fn db_connect(database_url: &String) -> anyhow::Result<SqliteConnection> {
     SqliteConnection::establish(&database_url).map_err(Into::into)
@@ -35,7 +36,7 @@ pub fn record_dead_letter(conn: &mut SqliteConnection, e: &ProcessError) -> anyh
             err_kind.eq(&e.kind),
             err_msg.eq(&e.inner.to_string()),
             seq.eq(&e.seq),
-            source.eq(&e.source),
+            source.eq(&e.source.deref()),
         ))
         .execute(conn)?;
 
@@ -64,5 +65,5 @@ pub struct DeadLetter {
     pub seq: i64,
     pub err_kind: Option<ProcessErrorKind>,
     pub err_msg: String,
-    pub source: Option<Source>,
+    pub source: Option<Vec<u8>>,
 }
