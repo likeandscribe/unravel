@@ -157,9 +157,7 @@ async fn main() {
     }
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
-    let mut conn = db::db_connect(&database_url).expect("Failed to connect to db");
-    let cursor = db::get_seq(&mut conn).expect("Failed to get sequence");
-
+    let conn = db::db_connect(&database_url).expect("Failed to connect to db");
     let mut ctx = Context {
         frontpage_consumer_secret: std::env::var("FRONTPAGE_CONSUMER_SECRET")
             .expect("FRONTPAGE_CONSUMER_SECRET not set"),
@@ -169,6 +167,8 @@ async fn main() {
     };
 
     db::run_migrations(&mut ctx.db_connection).expect("Failed to run migrations");
+
+    let cursor = db::get_seq(&mut ctx.db_connection).expect("Failed to get sequence");
 
     loop {
         match tokio_tungstenite::connect_async(format!(
