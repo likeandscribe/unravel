@@ -228,7 +228,7 @@ async fn main() {
                         Err(error) => {
                             eprintln!("Error processing message: {error:?}");
                             record_dead_letter(&mut ctx.db_connection, &error)
-                                .map_err(|_| eprintln!("Failed to record dead letter"))
+                                .map_err(|e| eprintln!("Failed to record dead letter {e:?}"))
                                 .ok();
                         }
                     }
