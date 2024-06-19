@@ -4,7 +4,9 @@ diesel::table! {
     dead_letter_queue (rowid) {
         rowid -> Integer,
         seq -> BigInt,
-        msg -> Text,
+        err_msg -> Text,
+        source -> Nullable<Binary>,
+        err_kind -> Nullable<Integer>,
     }
 }
 

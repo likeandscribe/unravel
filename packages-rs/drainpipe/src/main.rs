@@ -1,5 +1,13 @@
 use db::{record_dead_letter, update_seq};
-use diesel::sqlite::SqliteConnection;
+use debug_ignore::DebugIgnore;
+use diesel::{
+    backend::Backend,
+    deserialize::{FromSql, FromSqlRow},
+    expression::AsExpression,
+    serialize::ToSql,
+    sql_types::Integer,
+    sqlite::SqliteConnection,
+};
 use futures::{StreamExt as _, TryFutureExt};
 use serde::Serialize;
 use std::{path::PathBuf, thread, time::Duration};
@@ -9,17 +17,61 @@ mod db;
 mod firehose;
 mod schema;
 
+#[repr(i32)]
+#[derive(Debug, AsExpression, PartialEq, FromSqlRow)]
+#[diesel(sql_type = Integer)]
+pub enum ProcessErrorKind {
+    DecodeError,
+    ProcessError,
+}
+
+impl<DB> ToSql<Integer, DB> for ProcessErrorKind
+where
+    i32: ToSql<Integer, DB>,
+    DB: Backend,
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, DB>,
+    ) -> diesel::serialize::Result {
+        match self {
+            ProcessErrorKind::DecodeError => 0.to_sql(out),
+            ProcessErrorKind::ProcessError => 1.to_sql(out),
+        }
+    }
+}
+
+impl<DB> FromSql<Integer, DB> for ProcessErrorKind
+where
+    DB: Backend,
+    i32: FromSql<Integer, DB>,
+{
+    fn from_sql(bytes: <DB as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+        match i32::from_sql(bytes)? {
+            0 => Ok(ProcessErrorKind::DecodeError),
+            1 => Ok(ProcessErrorKind::ProcessError),
+            x => Err(format!("Unrecognized variant {}", x).into()),
+        }
+    }
+}
+
 #[derive(Debug)]
-enum ProcessError {
-    DecodeError { _e: firehose::Error },
-    ProcessError { seq: i64, error: anyhow::Error },
+struct ProcessError {
+    seq: i64,
+    inner: anyhow::Error,
+    source: DebugIgnore<Vec<u8>>,
+    kind: ProcessErrorKind,
 }
 
 /// Process a message from the firehose. Returns the sequence number of the message or an error.
 async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessError> {
-    let (_header, message) =
-        firehose::read(&message).map_err(|e| ProcessError::DecodeError { _e: e })?;
-    let sequence = match message {
+    let (_header, data) = firehose::read(&message).map_err(|e| ProcessError {
+        inner: e.into(),
+        seq: -1,
+        source: message.clone().into(),
+        kind: ProcessErrorKind::DecodeError,
+    })?;
+    let sequence = match data {
         firehose::SubscribeRepos::Commit(commit) => {
             let frontpage_ops = commit
                 .operations
@@ -28,9 +80,11 @@ async fn process(message: Vec<u8>, ctx: &mut Context) -> Result<i64, ProcessErro
                 .collect::<Vec<_>>();
             if !frontpage_ops.is_empty() {
                 process_frontpage_ops(&frontpage_ops, &commit, &ctx)
-                    .map_err(|e| ProcessError::ProcessError {
+                    .map_err(|e| ProcessError {
                         seq: commit.sequence,
-                        error: e,
+                        inner: e,
+                        source: message.clone().into(),
+                        kind: ProcessErrorKind::ProcessError,
                     })
                     .await?;
             }
@@ -143,16 +197,9 @@ async fn main() {
                         }
                         Err(error) => {
                             eprintln!("Error processing message: {error:?}");
-                            if let ProcessError::ProcessError { seq, error } = error {
-                                record_dead_letter(
-                                    &mut ctx.db_connection,
-                                    // TODO: Would be good to include the actual dropped message here but my rust skill issues are preventing me from doing so
-                                    &error.to_string(),
-                                    seq,
-                                )
-                                .map_err(|_| eprintln!("Failed to record dead letter"))
+                            record_dead_letter(&mut ctx.db_connection, &error)
+                                .map_err(|e| eprintln!("Failed to record dead letter {e:?}"))
                                 .ok();
-                            }
                         }
                     }
                 }
