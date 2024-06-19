@@ -160,6 +160,16 @@ async fn main() {
     let mut conn = db::db_connect(&database_url).expect("Failed to connect to db");
     let cursor = db::get_seq(&mut conn).expect("Failed to get sequence");
 
+    let mut ctx = Context {
+        frontpage_consumer_secret: std::env::var("FRONTPAGE_CONSUMER_SECRET")
+            .expect("FRONTPAGE_CONSUMER_SECRET not set"),
+        frontpage_consumer_url: std::env::var("FRONTPAGE_CONSUMER_URL")
+            .expect("FRONTPAGE_CONSUMER_URL not set"),
+        db_connection: conn,
+    };
+
+    db::run_migrations(&mut ctx.db_connection).expect("Failed to run migrations");
+
     loop {
         match tokio_tungstenite::connect_async(format!(
             "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
@@ -168,14 +178,6 @@ async fn main() {
         .await
         {
             Ok((mut socket, _response)) => {
-                let mut ctx = Context {
-                    frontpage_consumer_secret: std::env::var("FRONTPAGE_CONSUMER_SECRET")
-                        .expect("FRONTPAGE_CONSUMER_SECRET not set"),
-                    frontpage_consumer_url: std::env::var("FRONTPAGE_CONSUMER_URL")
-                        .expect("FRONTPAGE_CONSUMER_URL not set"),
-                    db_connection: db::db_connect(&database_url).expect("Failed to connect to db"),
-                };
-                db::run_migrations(&mut ctx.db_connection).expect("Failed to run migrations");
                 let metrics_monitor = tokio_metrics::TaskMonitor::new();
                 {
                     let metrics_monitor = metrics_monitor.clone();
