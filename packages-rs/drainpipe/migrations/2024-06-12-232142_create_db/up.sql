@@ -5,9 +5,7 @@ CREATE TABLE IF NOT EXISTS drainpipe(
 
 CREATE TABLE IF NOT EXISTS dead_letter_queue(
   seq bigint NOT NULL,
-  err_kind int NOT NULL,
-  err_msg text NOT NULL,
-  source text NOT NULL
+  msg text NOT NULL
 );
 
 INSERT INTO drainpipe(seq)
