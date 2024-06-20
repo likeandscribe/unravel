@@ -1,6 +1,6 @@
 import "server-only";
 import { ensureIsInBeta, ensureUser } from "../user";
-import { atprotoCreateRecord } from "./record";
+import { atprotoCreateRecord, atprotoDeleteRecord } from "./record";
 
 type CommentInput = {
   subjectRkey: string;
@@ -27,6 +27,15 @@ export async function createComment({
       },
       createdAt: new Date().toISOString(),
     },
+    collection: "fyi.unravel.frontpage.comment",
+  });
+}
+
+export async function deleteComment(rkey: string) {
+  await ensureIsInBeta();
+
+  await atprotoDeleteRecord({
+    rkey,
     collection: "fyi.unravel.frontpage.comment",
   });
 }
