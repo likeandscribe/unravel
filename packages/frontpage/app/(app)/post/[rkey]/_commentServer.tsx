@@ -1,11 +1,6 @@
-import {
-  createVote,
-  deleteVote,
-  ensureUser,
-  getPlcDoc,
-  getUser,
-  getVoteForComment,
-} from "@/lib/data";
+import { createVote, deleteVote } from "@/lib/data/atproto/vote";
+import { getVoteForComment } from "@/lib/data/db/vote";
+import { getPlcDoc, getUser, ensureUser } from "@/lib/data/user";
 import { CommentClient, CommentProps } from "./_comment";
 
 export async function Comment({
