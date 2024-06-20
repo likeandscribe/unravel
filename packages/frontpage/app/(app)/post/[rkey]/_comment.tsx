@@ -230,12 +230,13 @@ export function NewComment({
       className="flex items-center gap-2"
       aria-busy={isPending}
       onKeyDown={(event) => {
-        if (
-          "id" in event.target &&
-          event.target.id === textAreaId &&
-          event.key === "Enter" &&
-          (event.metaKey || event.ctrlKey)
-        ) {
+        const isCommentTextArea =
+          "id" in event.target && event.target.id === textAreaId;
+
+        const isCmdEnter =
+          event.key === "Enter" && (event.metaKey || event.ctrlKey);
+
+        if (isCommentTextArea && isCmdEnter) {
           event.preventDefault();
           event.currentTarget.requestSubmit();
         }
