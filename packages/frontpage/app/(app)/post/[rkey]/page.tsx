@@ -67,11 +67,11 @@ export default async function Item({ params }: { params: Params }) {
               id={comment.id}
               comment={comment.body}
               hasAuthored={user?.did === comment.authorDid}
-              deleteAction={async () => {
+              deleteAction={(async (rkey: string) => {
                 "use server";
                 await ensureUser();
-                await deleteComment(comment.rkey);
-              }}
+                await deleteComment(rkey);
+              }).bind(null, comment.rkey)}
             />
           ))}
         </div>
