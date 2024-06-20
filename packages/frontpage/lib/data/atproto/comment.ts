@@ -1,7 +1,26 @@
 import "server-only";
 import { ensureIsInBeta, ensureUser } from "../user";
-import { atprotoCreateRecord, parseAtUri, atprotoDeleteRecord } from "./record";
+import {
+  atprotoCreateRecord,
+  createAtUriParser,
+  atprotoDeleteRecord,
+} from "./record";
 import { DataLayerError } from "../error";
+import { z } from "zod";
+
+const CommentSubjectCollection = z.union([
+  z.literal("fyi.unravel.frontpage.post"),
+  z.literal("fyi.unravel.frontpage.comment"),
+]);
+
+export const CommentRecord = z.object({
+  content: z.string(),
+  subject: z.object({
+    cid: z.string(),
+    uri: createAtUriParser(CommentSubjectCollection),
+  }),
+  createdAt: z.string(),
+});
 
 type CommentInput = {
   subjectRkey: string;
@@ -18,25 +37,24 @@ export async function createComment({
 }: CommentInput) {
   await ensureIsInBeta();
   const user = await ensureUser();
+  const record = {
+    content,
+    subject: {
+      cid: subjectCid,
+      uri: `at://${user.did}/${subjectCollection}/${subjectRkey}`,
+    },
+    createdAt: new Date().toISOString(),
+  };
+
+  CommentRecord.parse(record);
 
   const result = await atprotoCreateRecord({
-    record: {
-      content,
-      subject: {
-        cid: subjectCid,
-        uri: `at://${user.did}/${subjectCollection}/${subjectRkey}`,
-      },
-      createdAt: new Date().toISOString(),
-    },
+    record,
     collection: "fyi.unravel.frontpage.comment",
   });
 
-  const uri = parseAtUri(result.uri);
-  if (!uri || !uri.rkey) {
-    throw new DataLayerError(`Failed to parse AtUri: "${result.uri}"`);
-  }
   return {
-    rkey: uri.rkey,
+    rkey: result.uri.rkey,
   };
 }
 

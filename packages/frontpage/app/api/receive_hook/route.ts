@@ -1,9 +1,12 @@
 import { db } from "@/lib/db";
-import { z } from "zod";
 import * as schema from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { atprotoGetRecord, parseAtUri } from "@/lib/data/atproto/record";
+import { atprotoGetRecord } from "@/lib/data/atproto/record";
 import { getPdsUrl } from "@/lib/data/user";
+import { Commit } from "@/lib/data/atproto/event";
+import { PostRecord } from "@/lib/data/atproto/post";
+import { CommentRecord } from "@/lib/data/atproto/comment";
+import { VoteRecord } from "@/lib/data/atproto/vote";
 
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
@@ -11,13 +14,13 @@ export async function POST(request: Request) {
     console.error("Unauthorized request");
     return new Response("Unauthorized", { status: 401 });
   }
-  const parsed = Message.safeParse(await request.json());
-  if (!parsed.success) {
-    console.error("Could not parse message from drainpipe", parsed.error);
+  const commit = Commit.safeParse(await request.json());
+  if (!commit.success) {
+    console.error("Could not parse commit from drainpipe", commit.error);
     return new Response("Invalid request", { status: 400 });
   }
 
-  const { ops, repo, seq } = parsed.data;
+  const { ops, repo, seq } = commit.data;
   const service = await getPdsUrl(repo);
   if (!service) {
     throw new Error("No AtprotoPersonalDataServer service found");
@@ -115,30 +118,24 @@ export async function POST(request: Request) {
           const hydratedVoteRecordValue = VoteRecord.parse(
             hydratedRecord.value,
           );
-          const subjectUri = parseAtUri(hydratedVoteRecordValue.subject.uri);
-          if (!subjectUri) {
-            throw new Error(
-              `Invalid subject uri: ${hydratedVoteRecordValue.subject.uri}`,
-            );
-          }
-          const subjectCollection = VoteSubjectCollection.parse(
-            subjectUri.collection,
-          );
+
           const subjectTable = {
             "fyi.unravel.frontpage.post": schema.Post,
             "fyi.unravel.frontpage.comment": schema.Comment,
-          }[subjectCollection];
+          }[hydratedVoteRecordValue.subject.uri.collection];
 
           const subject = (
             await tx
               .select()
               .from(subjectTable)
-              .where(eq(subjectTable.rkey, subjectUri.rkey))
+              .where(
+                eq(subjectTable.rkey, hydratedVoteRecordValue.subject.uri.rkey),
+              )
           )[0];
 
           if (!subject) {
             throw new Error(
-              `Subject not found with uri: ${hydratedVoteRecordValue.subject.uri}`,
+              `Subject not found with uri: ${hydratedVoteRecordValue.subject.uri.value}`,
             );
           }
 
@@ -146,7 +143,10 @@ export async function POST(request: Request) {
             throw new Error(`[naughty] Cannot vote on own content ${repo}`);
           }
 
-          if (subjectCollection === "fyi.unravel.frontpage.post") {
+          if (
+            hydratedVoteRecordValue.subject.uri.collection ===
+            "fyi.unravel.frontpage.post"
+          ) {
             await tx.insert(schema.PostVote).values({
               postId: subject.id,
               authorDid: repo,
@@ -154,7 +154,10 @@ export async function POST(request: Request) {
               cid: hydratedRecord.cid,
               rkey,
             });
-          } else if (subjectCollection === "fyi.unravel.frontpage.comment") {
+          } else if (
+            hydratedVoteRecordValue.subject.uri.collection ===
+            "fyi.unravel.frontpage.comment"
+          ) {
             await tx.insert(schema.CommentVote).values({
               commentId: subject.id,
               authorDid: repo,
@@ -183,95 +186,3 @@ export async function POST(request: Request) {
 
   return new Response("OK");
 }
-
-const PostRecord = z.object({
-  title: z.string(),
-  url: z.string(),
-  createdAt: z.string(),
-});
-
-const CommentRecord = z.object({
-  content: z.string(),
-  subject: z.object({
-    cid: z.string(),
-    uri: z.string(),
-  }),
-  createdAt: z.string(),
-});
-
-const VoteRecord = z.object({
-  createdAt: z.string(),
-  subject: z.object({
-    cid: z.string(),
-    uri: z.string(),
-  }),
-});
-
-const voteSubjectCollectionMembers = [
-  z.literal("fyi.unravel.frontpage.post"),
-  z.literal("fyi.unravel.frontpage.comment"),
-] as const;
-
-const VoteSubjectCollection = z.union(voteSubjectCollectionMembers);
-
-const Collection = z.union([
-  ...voteSubjectCollectionMembers,
-  z.literal("fyi.unravel.frontpage.vote"),
-]);
-
-const Path = z.string().transform((p, ctx) => {
-  const collectionResult = Collection.safeParse(p.split("/")[0]);
-  if (!collectionResult.success) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Invalid collection: "${p.split("/")[0]}". Expected one of ${Collection.options
-        .map((c) => c.value)
-        .join(", ")}`,
-    });
-    return z.NEVER;
-  }
-  const rkey = p.split("/")[1];
-  if (!rkey) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Invalid path: ${p}`,
-    });
-
-    return z.NEVER;
-  }
-
-  return {
-    collection: collectionResult.data,
-    rkey,
-    full: p,
-  };
-});
-
-const Operation = z.union([
-  z.object({
-    action: z.union([z.literal("create"), z.literal("update")]),
-    path: Path,
-    cid: z.string(),
-  }),
-  z.object({
-    action: z.literal("delete"),
-    path: Path,
-  }),
-]);
-
-const Message = z.object({
-  ops: z.array(Operation),
-  repo: z.string(),
-  seq: z.string().transform((x, ctx) => {
-    try {
-      return BigInt(x);
-    } catch (e) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Invalid BigInt",
-      });
-
-      return z.NEVER;
-    }
-  }),
-});
