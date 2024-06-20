@@ -5,6 +5,7 @@
   "devDependencies": {
     "prettier": "^3.3.0",
     "turbo": "2.0.3",
-    "vercel": "^34.2.7"
+    "vercel": "^34.2.7",
+    "wrangler": "^3.61.0"
   }
 }
