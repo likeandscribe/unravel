@@ -8,6 +8,8 @@ import { PostRecord } from "@/lib/data/atproto/post";
 import { CommentRecord } from "@/lib/data/atproto/comment";
 import { VoteRecord } from "@/lib/data/atproto/vote";
 
+export const runtime = "edge";
+
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
   if (auth !== `Bearer ${process.env.DRAINPIPE_CONSUMER_SECRET}`) {

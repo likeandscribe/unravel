@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { NewPostForm } from "./_client";
 
+export const runtime = "edge";
+
 export const metadata: Metadata = {
   title: "New post | Frontpage",
   robots: "noindex, nofollow",

@@ -2,6 +2,8 @@ import { getFrontpagePosts } from "@/lib/data/db/post";
 import { PostCard } from "./_components/post-card";
 import { unstable_noStore } from "next/cache";
 
+export const runtime = "edge";
+
 export default async function Home() {
   unstable_noStore();
   const posts = await getFrontpagePosts();

@@ -1,5 +1,7 @@
 import { LoginForm } from "./_lib/form";
 
+export const runtime = "edge";
+
 export default function Component() {
   return (
     <div className="flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">

@@ -9,6 +9,8 @@ import { ensureUser, getUser } from "@/lib/data/user";
 import { notFound } from "next/navigation";
 import { deleteComment } from "@/lib/data/atproto/comment";
 
+export const runtime = "edge";
+
 type Params = {
   rkey: string;
 };

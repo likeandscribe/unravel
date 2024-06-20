@@ -1,5 +1,7 @@
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 
+export const runtime = "edge";
+
 export default function ClosedBeta() {
   return (
     <main className="flex flex-col gap-6">

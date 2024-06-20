@@ -6,6 +6,8 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Metadata } from "next";
 
+export const runtime = "edge";
+
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
   display: "swap",

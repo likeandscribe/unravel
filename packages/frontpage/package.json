@@ -36,6 +36,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.11.3",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20",
     "@types/react": "^18",
