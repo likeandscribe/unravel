@@ -1,4 +1,4 @@
-import "use server";
+import "server-only";
 import { z } from "zod";
 
 // This module refers to the event emitted by the Firehose
