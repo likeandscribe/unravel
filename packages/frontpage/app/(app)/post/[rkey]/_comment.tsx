@@ -18,8 +18,9 @@ import { useToast } from "@/lib/components/ui/use-toast";
 import { createCommentAction } from "./_actions";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { VariantProps, cva } from "class-variance-authority";
-import React, { useActionState, useRef, useState } from "react";
+import React, { useActionState, useRef, useState, useId } from "react";
 import { VoteButton, VoteButtonState } from "../../_components/vote-button";
+import { Spinner } from "@/lib/components/ui/spinner";
 
 const commentVariants = cva(undefined, {
   variants: {
@@ -219,20 +220,41 @@ export function NewComment({
   extraButton?: React.ReactNode;
   textAreaRef?: React.RefObject<HTMLTextAreaElement>;
 }) {
+  const [_, action, isPending] = useActionState(createCommentAction, undefined);
+  const id = useId();
+  const textAreaId = `${id}-comment`;
+
   return (
-    <form action={createCommentAction} className="flex items-center gap-2">
+    <form
+      action={action}
+      className="flex items-center gap-2"
+      aria-busy={isPending}
+      onKeyDown={(event) => {
+        if (
+          "id" in event.target &&
+          event.target.id === textAreaId &&
+          event.key === "Enter" &&
+          (event.metaKey || event.ctrlKey)
+        ) {
+          event.preventDefault();
+          event.currentTarget.requestSubmit();
+        }
+      }}
+    >
       <div className="flex-1">
         <Textarea
+          id={textAreaId}
           autoFocus={autoFocus}
           name="comment"
           ref={textAreaRef}
           placeholder="Write a comment..."
           className="resize-none rounded-2xl border border-gray-200 p-3 shadow-sm focus:border-primary focus:ring-primary dark:border-gray-800 dark:bg-gray-950 dark:focus:border-primary"
+          disabled={isPending}
         />
         <input type="hidden" name="subjectRkey" value={parentRkey} />
       </div>
-      <Button className="flex flex-row gap-2">
-        <ChatBubbleIcon className="w-4 h-4" /> Post
+      <Button className="flex flex-row gap-2" disabled={isPending}>
+        {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />} Post
       </Button>
       {extraButton}
     </form>

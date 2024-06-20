@@ -1,6 +1,7 @@
 import "server-only";
 import { ensureIsInBeta, ensureUser } from "../user";
-import { atprotoCreateRecord, atprotoDeleteRecord } from "./record";
+import { atprotoCreateRecord, parseAtUri, atprotoDeleteRecord } from "./record";
+import { DataLayerError } from "../error";
 
 type CommentInput = {
   subjectRkey: string;
@@ -18,7 +19,7 @@ export async function createComment({
   await ensureIsInBeta();
   const user = await ensureUser();
 
-  await atprotoCreateRecord({
+  const result = await atprotoCreateRecord({
     record: {
       content,
       subject: {
@@ -29,6 +30,14 @@ export async function createComment({
     },
     collection: "fyi.unravel.frontpage.comment",
   });
+
+  const uri = parseAtUri(result.uri);
+  if (!uri || !uri.rkey) {
+    throw new DataLayerError(`Failed to parse AtUri: "${result.uri}"`);
+  }
+  return {
+    rkey: uri.rkey,
+  };
 }
 
 export async function deleteComment(rkey: string) {

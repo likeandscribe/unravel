@@ -64,3 +64,13 @@ export const getCommentsForPost = cache(async (postId: number) => {
     userHasVoted: row.userHasVoted !== null,
   }));
 });
+
+export async function uncached_doesCommentExist(rkey: string) {
+  const row = await db
+    .select({ id: schema.Comment.id })
+    .from(schema.Comment)
+    .where(eq(schema.Comment.rkey, rkey))
+    .limit(1);
+
+  return Boolean(row[0]);
+}
