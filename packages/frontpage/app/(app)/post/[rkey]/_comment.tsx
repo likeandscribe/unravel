@@ -18,7 +18,7 @@ import { useToast } from "@/lib/components/ui/use-toast";
 import { createCommentAction } from "./_actions";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { VariantProps, cva } from "class-variance-authority";
-import React, { useRef, useState } from "react";
+import React, { useActionState, useRef, useState } from "react";
 import { VoteButton, VoteButtonState } from "../../_components/vote-button";
 
 const commentVariants = cva(undefined, {
@@ -41,8 +41,10 @@ export type CommentProps = VariantProps<typeof commentVariants> & {
   createdAt: Date;
   voteAction: () => Promise<void>;
   unvoteAction: () => Promise<void>;
+  deleteAction: () => Promise<void>;
   initialVoteState: VoteButtonState;
   newCommentDisabled?: boolean;
+  hasAuthored: boolean;
 };
 
 export function CommentClient({
@@ -53,9 +55,13 @@ export function CommentClient({
   createdAt,
   voteAction,
   unvoteAction,
+  deleteAction: _deleteAction,
   initialVoteState,
   newCommentDisabled,
+  hasAuthored,
 }: CommentProps) {
+  const [_, action, isDeletePending] = useActionState(_deleteAction, undefined);
+
   const [showNewComment, setShowNewComment] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
   const newCommentTextAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -84,13 +90,64 @@ export function CommentClient({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => showNewComment && setShowNewComment(true)}
+              onClick={() => !newCommentDisabled && setShowNewComment(true)}
               disabled={newCommentDisabled}
             >
               <ChatBubbleIcon className="w-4 h-4" />
               <span className="sr-only">Reply</span>
             </Button>
           </SimpleTooltip>
+          {hasAuthored && (
+            <form
+              action={action}
+              onSubmit={async (e) => {
+                // Prevent default form submission
+                // Action is dispatched on dialog action
+                e.preventDefault();
+              }}
+            >
+              <AlertDialog>
+                <SimpleTooltip content="Delete">
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost-destructive"
+                      size="icon"
+                      disabled={isDeletePending}
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                </SimpleTooltip>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will delete your comment. This action cannot be
+                      undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        action();
+                        toast({
+                          title: "Comment will be deleted shortly",
+                          type: "foreground",
+                        });
+                      }}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </form>
+          )}
         </div>
       </div>
       {showNewComment && (
@@ -139,7 +196,7 @@ export function CommentClient({
                       });
                     }}
                   >
-                    Continue
+                    Discard
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { eq, sql, count, desc } from "drizzle-orm";
+import { eq, sql, count, desc, and } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getUser } from "../user";
 
@@ -52,7 +52,9 @@ export const getCommentsForPost = cache(async (postId: number) => {
       userHasVoted: hasVoted.commentId,
     })
     .from(schema.Comment)
-    .where(eq(schema.Comment.postId, postId))
+    .where(
+      and(eq(schema.Comment.postId, postId), eq(schema.Comment.status, "live")),
+    )
     .leftJoin(votes, eq(votes.commentId, schema.Comment.id))
     .leftJoin(hasVoted, eq(hasVoted.commentId, schema.Comment.id))
     .orderBy(desc(commentRank));
