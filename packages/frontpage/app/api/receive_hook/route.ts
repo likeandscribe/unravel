@@ -2,7 +2,8 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import * as schema from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { atprotoGetRecord, getPdsUrl, parseAtUri } from "@/lib/data";
+import { atprotoGetRecord, parseAtUri } from "@/lib/data/atproto/record";
+import { getPdsUrl } from "@/lib/data/user";
 
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");

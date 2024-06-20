@@ -1,6 +1,9 @@
 "use server";
 
-import { createComment, deletePost, ensureUser, getPost } from "@/lib/data";
+import { createComment } from "@/lib/data/atproto/comment";
+import { deletePost } from "@/lib/data/atproto/post";
+import { getPost } from "@/lib/data/db/post";
+import { ensureUser } from "@/lib/data/user";
 
 export async function createCommentAction(formData: FormData) {
   const content = formData.get("comment") as string;

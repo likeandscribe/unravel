@@ -2,7 +2,7 @@ import { getSession, signOut } from "@/lib/auth";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/lib/components/ui/button";
-import { isBetaUser } from "@/lib/data";
+import { isBetaUser } from "@/lib/data/user";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 
 export default async function Layout({

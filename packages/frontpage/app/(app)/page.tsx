@@ -1,4 +1,4 @@
-import { getFrontpagePosts } from "@/lib/data";
+import { getFrontpagePosts } from "@/lib/data/db/post";
 import { PostCard } from "./_components/post-card";
 import { unstable_noStore } from "next/cache";
 

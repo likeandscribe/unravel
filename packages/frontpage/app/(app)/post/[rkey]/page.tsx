@@ -3,7 +3,9 @@ import { PostCard } from "../../_components/post-card";
 import { NewComment } from "./_comment";
 import { Comment } from "./_commentServer";
 import { DeletePostButton } from "./_delete-post-button";
-import { getCommentsForPost, getPost, getUser } from "@/lib/data";
+import { getCommentsForPost } from "@/lib/data/db/comment";
+import { getPost } from "@/lib/data/db/post";
+import { getUser } from "@/lib/data/user";
 import { notFound } from "next/navigation";
 
 type Params = {
