@@ -1,1 +1,2 @@
+name = "frontpage"
 compatibility_flags = ["nodejs_compat"]
