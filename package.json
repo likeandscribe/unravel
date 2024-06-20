@@ -4,6 +4,7 @@
   "packageManager": "pnpm@9.1.0",
   "devDependencies": {
     "prettier": "^3.3.0",
-    "turbo": "2.0.3"
+    "turbo": "2.0.3",
+    "vercel": "^34.2.7"
   }
 }

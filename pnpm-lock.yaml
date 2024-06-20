@@ -14,6 +14,9 @@ importers:
       turbo:
         specifier: 2.0.3
         version: 2.0.3
+      vercel:
+        specifier: ^34.2.7
+        version: 34.2.7
 
   packages/frontpage:
     dependencies:
