@@ -71,9 +71,14 @@ export async function deleteCommentAction(rkey: string) {
   await deleteComment(rkey);
 }
 
-export async function commentVoteAction(input: { cid: string; rkey: string }) {
+export async function commentVoteAction(input: {
+  cid: string;
+  rkey: string;
+  authorDid: string;
+}) {
   await ensureUser();
   await createVote({
+    subjectAuthorDid: input.authorDid,
     subjectCid: input.cid,
     subjectRkey: input.rkey,
     subjectCollection: CommentCollection,
