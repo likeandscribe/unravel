@@ -8,11 +8,11 @@ import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
 
 export async function createCommentAction(
+  subjectRkey: string,
   _prevState: unknown,
   formData: FormData,
 ) {
   const content = formData.get("comment") as string;
-  const subjectRkey = formData.get("subjectRkey") as string;
   const post = await getPost(subjectRkey);
   if (!post) {
     throw new Error("Post not found");

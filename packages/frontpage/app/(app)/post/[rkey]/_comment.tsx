@@ -220,7 +220,10 @@ export function NewComment({
   extraButton?: React.ReactNode;
   textAreaRef?: React.RefObject<HTMLTextAreaElement>;
 }) {
-  const [_, action, isPending] = useActionState(createCommentAction, undefined);
+  const [_, action, isPending] = useActionState(
+    createCommentAction.bind(null, parentRkey),
+    undefined,
+  );
   const id = useId();
   const textAreaId = `${id}-comment`;
 
@@ -252,7 +255,6 @@ export function NewComment({
           className="resize-none rounded-2xl border border-gray-200 p-3 shadow-sm focus:border-primary focus:ring-primary dark:border-gray-800 dark:bg-gray-950 dark:focus:border-primary"
           disabled={isPending}
         />
-        <input type="hidden" name="subjectRkey" value={parentRkey} />
       </div>
       <Button className="flex flex-row gap-2" disabled={isPending}>
         {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />} Post
