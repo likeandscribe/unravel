@@ -73,7 +73,7 @@ export async function Comment({
           childComments={comment.children}
           isUpvoted={comment.userHasVoted}
           hasAuthored={user?.did === comment.authorDid}
-          level={((props.level ?? 0) + 1) as 0 | 1 | 2 | undefined | null}
+          level={((props.level ?? 0) + 1) as 0 | 1 | 2 | 3 | undefined | null}
           deleteAction={async () => {
             "use server";
           }}

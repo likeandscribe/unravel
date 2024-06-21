@@ -28,6 +28,7 @@ const commentVariants = cva(undefined, {
       0: "",
       1: "pl-8",
       2: "pl-16",
+      3: "pl-24",
     },
   },
   defaultVariants: {
