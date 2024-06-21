@@ -1,7 +1,15 @@
 import "server-only";
-import { ensureIsInBeta } from "../user";
-import { atprotoCreateRecord, atprotoDeleteRecord } from "./record";
+import { ensureIsInBeta, getPdsUrl } from "../user";
+import {
+  atprotoCreateRecord,
+  atprotoDeleteRecord,
+  atprotoGetRecord,
+} from "./record";
 import { z } from "zod";
+import { DataLayerError } from "../error";
+import { CommentCollection, CommentRecord } from "./comment";
+
+export const PostCollection = "fyi.unravel.frontpage.post";
 
 export const PostRecord = z.object({
   title: z.string(),
@@ -36,4 +44,21 @@ export async function deletePost(rkey: string) {
     rkey,
     collection: "fyi.unravel.frontpage.post",
   });
+}
+
+export async function getPost({ rkey, repo }: { rkey: string; repo: string }) {
+  const service = await getPdsUrl(repo);
+
+  if (!service) {
+    throw new DataLayerError("Failed to get service url");
+  }
+
+  const { value } = await atprotoGetRecord({
+    serviceEndpoint: service,
+    repo,
+    collection: PostCollection,
+    rkey,
+  });
+
+  return PostRecord.parse(value);
 }

@@ -57,6 +57,13 @@
       "when": 1718662931500,
       "tag": "0007_smiling_betty_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1718922181653,
+      "tag": "0008_oval_master_mold",
+      "breakpoints": true
     }
   ]
 }

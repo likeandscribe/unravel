@@ -2,22 +2,32 @@
 
 import { createComment } from "@/lib/data/atproto/comment";
 import { deletePost } from "@/lib/data/atproto/post";
-import { uncached_doesCommentExist } from "@/lib/data/db/comment";
+import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
 import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
 
 export async function createCommentAction(
+  input: { parentRkey?: string; postRkey: string },
   _prevState: unknown,
   formData: FormData,
 ) {
   const content = formData.get("comment") as string;
-  const subjectRkey = formData.get("subjectRkey") as string;
-  const post = await getPost(subjectRkey);
+  const user = await ensureUser();
+
+  const [post, comment] = await Promise.all([
+    getPost(input.postRkey),
+    input.parentRkey
+      ? getComment(input.parentRkey).then((c) => {
+          if (!c) throw new Error("Comment not found");
+          return c;
+        })
+      : undefined,
+  ]);
+
   if (!post) {
     throw new Error("Post not found");
   }
-  const user = await ensureUser();
 
   if (post.status !== "live") {
     throw new Error(`[naughty] Cannot comment on deleted post. ${user.did}`);
@@ -25,12 +35,11 @@ export async function createCommentAction(
 
   const { rkey } = await createComment({
     content,
-    subjectRkey,
-    subjectCid: post.cid,
-    subjectCollection: "fyi.unravel.frontpage.post",
+    post,
+    parent: comment,
   });
   await waitForComment(rkey);
-  revalidatePath(`/post/${subjectRkey}`);
+  revalidatePath(`/post/${input.postRkey}`);
 }
 
 const MAX_POLLS = 15;

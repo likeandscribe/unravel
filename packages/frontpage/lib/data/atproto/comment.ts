@@ -1,47 +1,51 @@
 import "server-only";
-import { ensureIsInBeta, ensureUser } from "../user";
+import { ensureIsInBeta, ensureUser, getPdsUrl } from "../user";
 import {
   atprotoCreateRecord,
   createAtUriParser,
   atprotoDeleteRecord,
+  atprotoGetRecord,
 } from "./record";
 import { DataLayerError } from "../error";
 import { z } from "zod";
+import { PostCollection } from "./post";
 
-const CommentSubjectCollection = z.union([
-  z.literal("fyi.unravel.frontpage.post"),
-  z.literal("fyi.unravel.frontpage.comment"),
-]);
+export const CommentCollection = "fyi.unravel.frontpage.comment";
 
 export const CommentRecord = z.object({
   content: z.string(),
-  subject: z.object({
+  parent: z
+    .object({
+      cid: z.string(),
+      uri: createAtUriParser(z.literal(CommentCollection)),
+    })
+    .optional(),
+  post: z.object({
     cid: z.string(),
-    uri: createAtUriParser(CommentSubjectCollection),
+    uri: createAtUriParser(z.literal(PostCollection)),
   }),
   createdAt: z.string(),
 });
 
 type CommentInput = {
-  subjectRkey: string;
-  subjectCid: string;
-  subjectCollection: string;
+  parent?: { cid: string; rkey: string; authorDid: string };
+  post: { cid: string; rkey: string; authorDid: string };
   content: string;
 };
 
-export async function createComment({
-  subjectRkey,
-  subjectCid,
-  subjectCollection,
-  content,
-}: CommentInput) {
+export async function createComment({ parent, post, content }: CommentInput) {
   await ensureIsInBeta();
-  const user = await ensureUser();
   const record = {
     content,
-    subject: {
-      cid: subjectCid,
-      uri: `at://${user.did}/${subjectCollection}/${subjectRkey}`,
+    parent: parent
+      ? {
+          cid: parent.cid,
+          uri: `at://${parent.authorDid}/${CommentCollection}/${parent.rkey}`,
+        }
+      : undefined,
+    post: {
+      cid: post.cid,
+      uri: `at://${post.authorDid}/${PostCollection}/${post.rkey}`,
     },
     createdAt: new Date().toISOString(),
   };
@@ -50,7 +54,7 @@ export async function createComment({
 
   const result = await atprotoCreateRecord({
     record,
-    collection: "fyi.unravel.frontpage.comment",
+    collection: CommentCollection,
   });
 
   return {
@@ -63,6 +67,29 @@ export async function deleteComment(rkey: string) {
 
   await atprotoDeleteRecord({
     rkey,
-    collection: "fyi.unravel.frontpage.comment",
+    collection: CommentCollection,
   });
+}
+
+export async function getComment({
+  rkey,
+  repo,
+}: {
+  rkey: string;
+  repo: string;
+}) {
+  const service = await getPdsUrl(repo);
+
+  if (!service) {
+    throw new DataLayerError("Failed to get service url");
+  }
+
+  const { value, cid } = await atprotoGetRecord({
+    serviceEndpoint: service,
+    repo,
+    collection: CommentCollection,
+    rkey,
+  });
+
+  return { ...CommentRecord.parse(value), cid };
 }

@@ -5,7 +5,7 @@ import { atprotoGetRecord } from "@/lib/data/atproto/record";
 import { getPdsUrl } from "@/lib/data/user";
 import { Commit } from "@/lib/data/atproto/event";
 import { PostRecord } from "@/lib/data/atproto/post";
-import { CommentRecord } from "@/lib/data/atproto/comment";
+import { CommentRecord, getComment } from "@/lib/data/atproto/comment";
 import { VoteRecord } from "@/lib/data/atproto/vote";
 
 export async function POST(request: Request) {
@@ -58,42 +58,36 @@ export async function POST(request: Request) {
         await tx.insert(schema.ConsumedOffset).values({ offset: seq });
       });
     }
-
+    // repo is actually the did of the user
     if (collection === "fyi.unravel.frontpage.comment") {
       await db.transaction(async (tx) => {
         if (op.action === "create") {
-          const record = await atprotoGetRecord({
-            serviceEndpoint: service,
-            repo,
-            collection,
-            rkey,
-          });
-          const commentRecord = CommentRecord.parse(record.value);
+          const comment = await getComment({ rkey, repo });
 
-          const postRecord = (
+          const post = (
             await tx
               .select()
               .from(schema.Post)
-              .where(eq(schema.Post.cid, commentRecord.subject.cid))
+              .where(eq(schema.Post.cid, comment.post.cid))
           )[0];
 
-          if (!postRecord) {
+          if (!post) {
             throw new Error("Post not found");
           }
 
-          if (postRecord.status !== "live") {
+          if (post.status !== "live") {
             throw new Error(
               `[naughty] Cannot comment on deleted post. ${repo}`,
             );
           }
-
+          //TODO: move this to db folder
           await tx.insert(schema.Comment).values({
-            cid: record.cid,
+            cid: comment.cid,
             rkey,
-            body: commentRecord.content,
-            postId: postRecord.id,
+            body: comment.content,
+            postId: post.id,
             authorDid: repo,
-            createdAt: new Date(commentRecord.createdAt),
+            createdAt: new Date(comment.createdAt),
           });
         } else if (op.action === "delete") {
           await tx
