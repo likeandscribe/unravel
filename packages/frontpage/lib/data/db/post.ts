@@ -27,16 +27,17 @@ const buildUserHasVotedQuery = cache(async () => {
     .as("hasVoted");
 });
 
-export const getFrontpagePosts = cache(async () => {
-  const comments = db
-    .select({
-      postId: schema.Comment.postId,
-      commentCount: count(schema.Comment.id).as("commentCount"),
-    })
-    .from(schema.Comment)
-    .groupBy(schema.Comment.postId)
-    .as("comment");
+const commentCountSubQuery = db
+  .select({
+    postId: schema.Comment.postId,
+    commentCount: count(schema.Comment.id).as("commentCount"),
+  })
+  .from(schema.Comment)
+  .where(eq(schema.Comment.status, "live"))
+  .groupBy(schema.Comment.postId, schema.Comment.status)
+  .as("commentCount");
 
+export const getFrontpagePosts = cache(async () => {
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
   // We should closely monitor this and consider alternatives if it gets slow over time
   const rank = sql`
@@ -64,13 +65,16 @@ export const getFrontpagePosts = cache(async () => {
       createdAt: schema.Post.createdAt,
       authorDid: schema.Post.authorDid,
       voteCount: votesSubQuery.voteCount,
-      commentCount: comments.commentCount,
+      commentCount: commentCountSubQuery.commentCount,
       rank: rank,
       userHasVoted: userHasVoted.postId,
       status: schema.Post.status,
     })
     .from(schema.Post)
-    .leftJoin(comments, eq(comments.postId, schema.Post.id))
+    .leftJoin(
+      commentCountSubQuery,
+      eq(commentCountSubQuery.postId, schema.Post.id),
+    )
     .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
     .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
     .where(eq(schema.Post.status, "live"))
@@ -91,22 +95,16 @@ export const getFrontpagePosts = cache(async () => {
 });
 
 export const getPost = cache(async (rkey: string) => {
-  const comments = db
-    .select({
-      postId: schema.Comment.postId,
-      commentCount: count(schema.Comment.id).as("commentCount"),
-    })
-    .from(schema.Comment)
-    .groupBy(schema.Comment.postId)
-    .as("comment");
-
   const userHasVoted = await buildUserHasVotedQuery();
 
   const rows = await db
     .select()
     .from(schema.Post)
     .where(eq(schema.Post.rkey, rkey))
-    .leftJoin(comments, eq(comments.postId, schema.Post.id))
+    .leftJoin(
+      commentCountSubQuery,
+      eq(commentCountSubQuery.postId, schema.Post.id),
+    )
     .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
     .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
     .limit(1);
@@ -116,7 +114,7 @@ export const getPost = cache(async (rkey: string) => {
 
   return {
     ...row.posts,
-    commentCount: row.comment?.commentCount ?? 0,
+    commentCount: row.commentCount?.commentCount ?? 0,
     voteCount: row.vote?.voteCount ?? 1,
     userHasVoted: Boolean(row.hasVoted),
   };
