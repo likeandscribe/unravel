@@ -26,6 +26,7 @@ export async function Comment({
     .find((handle) => handle.startsWith("at://"))
     ?.replace("at://", "");
 
+  const user = await getUser();
   return (
     <>
       <CommentClient
@@ -69,7 +70,10 @@ export async function Comment({
           author={comment.authorDid}
           comment={comment.body}
           createdAt={comment.createdAt}
-          level={(props?.level ?? 0) + 1}
+          childComments={comment.children}
+          isUpvoted={comment.userHasVoted}
+          hasAuthored={user?.did === comment.authorDid}
+          level={((props.level ?? 0) + 1) as 0 | 1 | 2 | undefined | null}
           deleteAction={async () => {
             "use server";
           }}
