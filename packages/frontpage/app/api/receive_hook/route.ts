@@ -64,6 +64,16 @@ export async function POST(request: Request) {
         if (op.action === "create") {
           const comment = await getComment({ rkey, repo });
 
+          const parentComment =
+            comment.parent != null
+              ? (
+                  await tx
+                    .select()
+                    .from(schema.Comment)
+                    .where(eq(schema.Comment.cid, comment.parent.cid))
+                )[0]
+              : null;
+
           const post = (
             await tx
               .select()
@@ -88,6 +98,7 @@ export async function POST(request: Request) {
             postId: post.id,
             authorDid: repo,
             createdAt: new Date(comment.createdAt),
+            parentCommentId: parentComment?.id ?? null,
           });
         } else if (op.action === "delete") {
           await tx
