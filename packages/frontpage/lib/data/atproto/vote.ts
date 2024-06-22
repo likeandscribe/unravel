@@ -6,10 +6,12 @@ import {
   createAtUriParser,
 } from "./record";
 import { z } from "zod";
+import { PostCollection } from "./post";
+import { CommentCollection } from "./comment";
 
 const VoteSubjectCollection = z.union([
-  z.literal("fyi.unravel.frontpage.post"),
-  z.literal("fyi.unravel.frontpage.comment"),
+  z.literal(PostCollection),
+  z.literal(CommentCollection),
 ]);
 
 export const VoteRecord = z.object({

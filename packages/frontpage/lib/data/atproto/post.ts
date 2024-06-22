@@ -29,7 +29,7 @@ export async function createPost({ title, url }: PostInput) {
 
   const result = await atprotoCreateRecord({
     record,
-    collection: "fyi.unravel.frontpage.post",
+    collection: PostCollection,
   });
 
   return {
@@ -42,7 +42,7 @@ export async function deletePost(rkey: string) {
 
   await atprotoDeleteRecord({
     rkey,
-    collection: "fyi.unravel.frontpage.post",
+    collection: PostCollection,
   });
 }
 

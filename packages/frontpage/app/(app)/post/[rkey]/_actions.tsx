@@ -1,6 +1,10 @@
 "use server";
 
-import { createComment, deleteComment } from "@/lib/data/atproto/comment";
+import {
+  CommentCollection,
+  createComment,
+  deleteComment,
+} from "@/lib/data/atproto/comment";
 import { deletePost } from "@/lib/data/atproto/post";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
@@ -72,7 +76,7 @@ export async function commentVoteAction(input: { cid: string; rkey: string }) {
   await createVote({
     subjectCid: input.cid,
     subjectRkey: input.rkey,
-    subjectCollection: "fyi.unravel.frontpage.comment",
+    subjectCollection: CommentCollection,
   });
 }
 

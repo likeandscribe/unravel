@@ -4,8 +4,12 @@ import { eq } from "drizzle-orm";
 import { atprotoGetRecord } from "@/lib/data/atproto/record";
 import { getPdsUrl } from "@/lib/data/user";
 import { Commit } from "@/lib/data/atproto/event";
-import { PostRecord } from "@/lib/data/atproto/post";
-import { CommentRecord, getComment } from "@/lib/data/atproto/comment";
+import { PostCollection, PostRecord } from "@/lib/data/atproto/post";
+import {
+  CommentCollection,
+  CommentRecord,
+  getComment,
+} from "@/lib/data/atproto/comment";
 import { VoteRecord } from "@/lib/data/atproto/vote";
 
 export async function POST(request: Request) {
@@ -29,7 +33,7 @@ export async function POST(request: Request) {
   const promises = ops.map(async (op) => {
     const { collection, rkey } = op.path;
 
-    if (collection === "fyi.unravel.frontpage.post") {
+    if (collection === PostCollection) {
       await db.transaction(async (tx) => {
         if (op.action === "create") {
           const record = await atprotoGetRecord({
@@ -59,7 +63,7 @@ export async function POST(request: Request) {
       });
     }
     // repo is actually the did of the user
-    if (collection === "fyi.unravel.frontpage.comment") {
+    if (collection === CommentCollection) {
       await db.transaction(async (tx) => {
         if (op.action === "create") {
           const comment = await getComment({ rkey, repo });
@@ -125,8 +129,8 @@ export async function POST(request: Request) {
           );
 
           const subjectTable = {
-            "fyi.unravel.frontpage.post": schema.Post,
-            "fyi.unravel.frontpage.comment": schema.Comment,
+            [PostCollection]: schema.Post,
+            [CommentCollection]: schema.Comment,
           }[hydratedVoteRecordValue.subject.uri.collection];
 
           const subject = (
@@ -149,8 +153,7 @@ export async function POST(request: Request) {
           }
 
           if (
-            hydratedVoteRecordValue.subject.uri.collection ===
-            "fyi.unravel.frontpage.post"
+            hydratedVoteRecordValue.subject.uri.collection === PostCollection
           ) {
             await tx.insert(schema.PostVote).values({
               postId: subject.id,
@@ -160,8 +163,7 @@ export async function POST(request: Request) {
               rkey,
             });
           } else if (
-            hydratedVoteRecordValue.subject.uri.collection ===
-            "fyi.unravel.frontpage.comment"
+            hydratedVoteRecordValue.subject.uri.collection === CommentCollection
           ) {
             await tx.insert(schema.CommentVote).values({
               commentId: subject.id,
