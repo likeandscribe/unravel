@@ -4,7 +4,7 @@ import { getCommentsForPost } from "@/lib/data/db/comment";
 
 type ServerCommentProps = Omit<
   CommentProps,
-  "voteAction" | "unvoteAction" | "initialVoteState" | "hasAuthored"
+  "voteAction" | "unvoteAction" | "initialVoteState" | "hasAuthored" | "handle"
 > & {
   cid: string;
   isUpvoted: boolean;
@@ -12,27 +12,28 @@ type ServerCommentProps = Omit<
 };
 
 export async function Comment({
-  author,
+  authorDid,
   isUpvoted,
   childComments,
   ...props
 }: ServerCommentProps) {
-  const plc = await getPlcDoc(author);
+  const plc = await getPlcDoc(authorDid);
   const handle = plc.alsoKnownAs
     .find((handle) => handle.startsWith("at://"))
     ?.replace("at://", "");
 
   const user = await getUser();
-  const hasAuthored = user?.did === author;
+  const hasAuthored = user?.did === authorDid;
 
   return (
     <>
       <CommentClient
         {...props}
-        author={handle ?? ""}
+        handle={handle ?? ""}
         hasAuthored={hasAuthored}
+        authorDid={authorDid}
         initialVoteState={
-          (await getUser())?.did === author
+          (await getUser())?.did === authorDid
             ? "authored"
             : isUpvoted
               ? "voted"
@@ -46,7 +47,7 @@ export async function Comment({
           cid={comment.cid}
           rkey={comment.rkey}
           postRkey={props.postRkey}
-          author={comment.authorDid}
+          authorDid={comment.authorDid}
           comment={comment.body}
           createdAt={comment.createdAt}
           childComments={comment.children}

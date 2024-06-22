@@ -26,16 +26,18 @@ type VoteInput = {
   subjectRkey: string;
   subjectCid: string;
   subjectCollection: string;
+  subjectAuthorDid: string;
 };
 
 export async function createVote({
   subjectRkey,
   subjectCid,
   subjectCollection,
+  subjectAuthorDid,
 }: VoteInput) {
-  const user = await ensureUser();
+  await ensureUser();
   await ensureIsInBeta();
-  const uri = `at://${user.did}/${subjectCollection}/${subjectRkey}`;
+  const uri = `at://${subjectAuthorDid}/${subjectCollection}/${subjectRkey}`;
 
   const record = {
     createdAt: new Date().toISOString(),

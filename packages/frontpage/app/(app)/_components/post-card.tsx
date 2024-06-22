@@ -46,6 +46,7 @@ export async function PostCard({
             "use server";
             await ensureUser();
             await createVote({
+              subjectAuthorDid: author,
               subjectCid: cid,
               subjectRkey: rkey,
               subjectCollection: PostCollection,

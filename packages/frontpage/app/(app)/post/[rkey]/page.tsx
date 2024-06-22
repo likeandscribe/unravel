@@ -60,7 +60,7 @@ export default async function Item({ params }: { params: Params }) {
               cid={comment.cid}
               rkey={comment.rkey}
               postRkey={post.rkey}
-              author={comment.authorDid}
+              authorDid={comment.authorDid}
               createdAt={comment.createdAt}
               id={comment.id}
               comment={comment.body}

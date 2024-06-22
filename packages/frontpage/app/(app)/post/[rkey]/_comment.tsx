@@ -52,7 +52,8 @@ export type CommentProps = VariantProps<typeof commentVariants> & {
   cid: string;
   id: number;
   postRkey: string;
-  author: string;
+  handle: string;
+  authorDid: string;
   comment: string;
   createdAt: Date;
   initialVoteState: VoteButtonState;
@@ -64,7 +65,8 @@ export function CommentClient({
   rkey,
   cid,
   postRkey,
-  author,
+  authorDid,
+  handle,
   comment,
   level,
   createdAt,
@@ -79,7 +81,7 @@ export function CommentClient({
     <article className={commentVariants({ level })}>
       <div className="grid gap-2 flex-1 p-1" tabIndex={0} ref={commentRef}>
         <div className="flex items-center gap-2">
-          <div className="font-medium">{author}</div>
+          <div className="font-medium">{handle}</div>
           <div className="text-gray-500 text-xs dark:text-gray-400">
             <TimeAgo createdAt={createdAt} side="bottom" />
           </div>
@@ -92,6 +94,7 @@ export function CommentClient({
             <VoteButton
               initialState={initialVoteState}
               voteAction={commentVoteAction.bind(null, {
+                authorDid,
                 cid,
                 rkey,
               })}
