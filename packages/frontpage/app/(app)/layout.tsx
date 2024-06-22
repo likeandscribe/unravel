@@ -21,7 +21,7 @@ export default async function Layout({
             <span className="font-serif text-2xl font-bold">Frontpage</span>
           </Link>
           {session && (
-            <Button className="ml-4" asChild>
+            <Button className="ml-4 bg-slate-200 hover:bg-slate-100" asChild>
               <Link href="/post/new">New</Link>
             </Button>
           )}

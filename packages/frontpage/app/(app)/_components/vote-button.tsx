@@ -42,14 +42,14 @@ export function VoteButton({
       <Button
         variant="ghost"
         size="icon"
-        className="hover:bg-gray-100 dark:hover:bg-gray-800 z-10 relative"
+        className="hover:bg-gray-100 dark:hover:bg-gray-800 z-10 relative group"
         disabled={initialState === "authored"}
         name={hasVoted ? "unvote" : "vote"}
       >
         <ChevronUpIcon
           className={cn(
             "w-5 h-5",
-            hasVoted && "text-yellow-500 disabled:text-yello-500",
+            hasVoted && "text-yellow-500 group-disabled:text-yellow-500",
           )}
         />
       </Button>
