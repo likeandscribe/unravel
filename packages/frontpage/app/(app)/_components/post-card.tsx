@@ -39,7 +39,7 @@ export async function PostCard({
 
   return (
     // TODO: Make article route to postHref via onClick on card except innser links or buttons
-    <article className="flex items-center gap-4 shadow-sm rounded-lg p-4">
+    <article className="flex items-center gap-4 shadow-sm rounded-lg p-4 bg-white dark:bg-slate-900">
       <div className="flex flex-col items-center">
         <VoteButton
           voteAction={async () => {
