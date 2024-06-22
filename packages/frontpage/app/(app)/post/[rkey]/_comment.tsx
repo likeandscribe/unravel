@@ -288,11 +288,13 @@ export function NewComment({
           name="comment"
           ref={textAreaRef}
           placeholder="Write a comment..."
-          className="resize-none rounded-2xl border border-gray-200 p-3 shadow-sm focus:border-primary focus:ring-primary dark:border-gray-800 dark:bg-gray-950 dark:focus:border-primary"
           disabled={isPending}
         />
       </div>
-      <Button className="flex flex-row gap-2" disabled={isPending}>
+      <Button
+        className="flex flex-row gap-2 bg-slate-200 hover:bg-slate-100"
+        disabled={isPending}
+      >
         {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />} Post
       </Button>
       {extraButton}
