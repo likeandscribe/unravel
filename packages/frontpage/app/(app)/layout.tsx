@@ -50,13 +50,16 @@ export default async function Layout({
               <>You&apos;re not currently part of the beta</>
             )}
           </span>
-          <Button
-            asChild
-            variant="ghost"
-            className="text-indigo-600 dark:text-indigo-400"
-          >
-            <Link href="/invite-only">Learn more</Link>
-          </Button>
+
+          {!isInBeta && (
+            <Button
+              asChild
+              variant="ghost"
+              className="text-indigo-600 dark:text-indigo-400"
+            >
+              <Link href="/invite-only">Learn more</Link>
+            </Button>
+          )}
         </div>
       )}
 
