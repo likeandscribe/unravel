@@ -15,7 +15,12 @@ import { Button } from "@/lib/components/ui/button";
 import { Textarea } from "@/lib/components/ui/textarea";
 import { SimpleTooltip } from "@/lib/components/ui/tooltip";
 import { useToast } from "@/lib/components/ui/use-toast";
-import { createCommentAction } from "./_actions";
+import {
+  commentUnvoteAction,
+  commentVoteAction,
+  createCommentAction,
+  deleteCommentAction,
+} from "./_actions";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { VariantProps, cva } from "class-variance-authority";
 import React, { useActionState, useRef, useState, useId } from "react";
@@ -38,34 +43,28 @@ const commentVariants = cva(undefined, {
 
 export type CommentProps = VariantProps<typeof commentVariants> & {
   rkey: string;
+  cid: string;
+  id: number;
   postRkey: string;
   author: string;
   comment: string;
   createdAt: Date;
-  voteAction: () => Promise<void>;
-  unvoteAction: () => Promise<void>;
-  deleteAction: () => Promise<void>;
   initialVoteState: VoteButtonState;
-  newCommentDisabled?: boolean;
   hasAuthored: boolean;
 };
 
 export function CommentClient({
+  id,
   rkey,
+  cid,
   postRkey,
   author,
   comment,
   level,
   createdAt,
-  voteAction,
-  unvoteAction,
-  deleteAction: _deleteAction,
   initialVoteState,
-  newCommentDisabled,
   hasAuthored,
 }: CommentProps) {
-  const [_, action, isDeletePending] = useActionState(_deleteAction, undefined);
-
   const [showNewComment, setShowNewComment] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
   const newCommentTextAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -86,72 +85,25 @@ export function CommentClient({
           <SimpleTooltip content="Vote" side="bottom">
             <VoteButton
               initialState={initialVoteState}
-              voteAction={voteAction}
-              unvoteAction={unvoteAction}
+              voteAction={commentVoteAction.bind(null, {
+                cid,
+                rkey,
+              })}
+              unvoteAction={commentUnvoteAction.bind(null, id)}
             />
           </SimpleTooltip>
           <SimpleTooltip content="Comment" side="bottom">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => !newCommentDisabled && setShowNewComment(true)}
-              disabled={newCommentDisabled}
+              onClick={() => !hasAuthored && setShowNewComment(true)}
+              disabled={hasAuthored}
             >
               <ChatBubbleIcon className="w-4 h-4" />
               <span className="sr-only">Reply</span>
             </Button>
           </SimpleTooltip>
-          {hasAuthored && (
-            <form
-              action={action}
-              onSubmit={async (e) => {
-                // Prevent default form submission
-                // Action is dispatched on dialog action
-                e.preventDefault();
-              }}
-            >
-              <AlertDialog>
-                <SimpleTooltip content="Delete">
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost-destructive"
-                      size="icon"
-                      disabled={isDeletePending}
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                </SimpleTooltip>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Are you absolutely sure?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will delete your comment. This action cannot be
-                      undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => {
-                        action();
-                        toast({
-                          title: "Comment will be deleted shortly",
-                          type: "foreground",
-                        });
-                      }}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </form>
-          )}
+          {hasAuthored && <DeleteCommentButton rkey={rkey} />}
         </div>
       </div>
       {showNewComment && (
@@ -210,6 +162,63 @@ export function CommentClient({
         />
       )}
     </article>
+  );
+}
+
+function DeleteCommentButton({ rkey }: { rkey: string }) {
+  const [_, deleteAction, isDeletePending] = useActionState(
+    deleteCommentAction.bind(null, rkey),
+    undefined,
+  );
+  const { toast } = useToast();
+
+  return (
+    <form
+      action={deleteAction}
+      onSubmit={async (e) => {
+        // Prevent default form submission
+        // Action is dispatched on dialog action
+        e.preventDefault();
+      }}
+    >
+      <AlertDialog>
+        <SimpleTooltip content="Delete">
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost-destructive"
+              size="icon"
+              disabled={isDeletePending}
+            >
+              <TrashIcon className="w-4 h-4" />
+              <span className="sr-only">Delete</span>
+            </Button>
+          </AlertDialogTrigger>
+        </SimpleTooltip>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete your comment. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                deleteAction();
+                toast({
+                  title: "Comment will be deleted shortly",
+                  type: "foreground",
+                });
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </form>
   );
 }
 

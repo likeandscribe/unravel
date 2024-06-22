@@ -1,9 +1,11 @@
 "use server";
 
-import { createComment } from "@/lib/data/atproto/comment";
+import { createComment, deleteComment } from "@/lib/data/atproto/comment";
 import { deletePost } from "@/lib/data/atproto/post";
+import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
+import { getVoteForComment } from "@/lib/data/db/vote";
 import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
 
@@ -58,4 +60,29 @@ async function waitForComment(rkey: string) {
 
 export async function deletePostAction(rkey: string) {
   await deletePost(rkey);
+}
+
+export async function deleteCommentAction(rkey: string) {
+  await ensureUser();
+  await deleteComment(rkey);
+}
+
+export async function commentVoteAction(input: { cid: string; rkey: string }) {
+  await ensureUser();
+  await createVote({
+    subjectCid: input.cid,
+    subjectRkey: input.rkey,
+    subjectCollection: "fyi.unravel.frontpage.comment",
+  });
+}
+
+export async function commentUnvoteAction(commentId: number) {
+  await ensureUser();
+  const vote = await getVoteForComment(commentId);
+  if (!vote) {
+    console.error("Vote not found for comment", commentId);
+    return;
+  }
+
+  await deleteVote(vote.rkey);
 }

@@ -5,10 +5,8 @@ import { Comment } from "./_commentServer";
 import { DeletePostButton } from "./_delete-post-button";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
-import { ensureUser, getUser } from "@/lib/data/user";
+import { getUser } from "@/lib/data/user";
 import { notFound } from "next/navigation";
-import { CommentCollection, deleteComment } from "@/lib/data/atproto/comment";
-import { PostCollection } from "@/lib/data/atproto/post";
 
 type Params = {
   rkey: string;
@@ -67,12 +65,6 @@ export default async function Item({ params }: { params: Params }) {
               id={comment.id}
               comment={comment.body}
               childComments={comment.children}
-              hasAuthored={user?.did === comment.authorDid}
-              deleteAction={async () => {
-                "use server";
-                await ensureUser();
-                await deleteComment(comment.rkey);
-              }}
             />
           ))}
         </div>

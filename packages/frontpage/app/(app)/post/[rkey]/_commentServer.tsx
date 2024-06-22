@@ -1,14 +1,11 @@
-import { createVote, deleteVote } from "@/lib/data/atproto/vote";
-import { getVoteForComment } from "@/lib/data/db/vote";
-import { getPlcDoc, getUser, ensureUser } from "@/lib/data/user";
+import { getPlcDoc, getUser } from "@/lib/data/user";
 import { CommentClient, CommentProps } from "./_comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 
 type ServerCommentProps = Omit<
   CommentProps,
-  "voteAction" | "unvoteAction" | "initialVoteState"
+  "voteAction" | "unvoteAction" | "initialVoteState" | "hasAuthored"
 > & {
-  id: number;
   cid: string;
   isUpvoted: boolean;
   childComments: Awaited<ReturnType<typeof getCommentsForPost>>;
@@ -16,7 +13,6 @@ type ServerCommentProps = Omit<
 
 export async function Comment({
   author,
-  id,
   isUpvoted,
   childComments,
   ...props
@@ -27,11 +23,14 @@ export async function Comment({
     ?.replace("at://", "");
 
   const user = await getUser();
+  const hasAuthored = user?.did === author;
+
   return (
     <>
       <CommentClient
         {...props}
         author={handle ?? ""}
+        hasAuthored={hasAuthored}
         initialVoteState={
           (await getUser())?.did === author
             ? "authored"
@@ -39,26 +38,6 @@ export async function Comment({
               ? "voted"
               : "unvoted"
         }
-        voteAction={async () => {
-          "use server";
-          await ensureUser();
-          await createVote({
-            subjectCid: props.cid,
-            subjectRkey: props.rkey,
-            subjectCollection: "fyi.unravel.frontpage.comment",
-          });
-        }}
-        unvoteAction={async () => {
-          "use server";
-          await ensureUser();
-          const vote = await getVoteForComment(id);
-          if (!vote) {
-            console.error("Vote not found for comment", id);
-            return;
-          }
-
-          await deleteVote(vote.rkey);
-        }}
       />
       {childComments?.map((comment) => (
         <Comment
@@ -72,11 +51,7 @@ export async function Comment({
           createdAt={comment.createdAt}
           childComments={comment.children}
           isUpvoted={comment.userHasVoted}
-          hasAuthored={user?.did === comment.authorDid}
           level={Math.min((props.level ?? 0) + 1, 3) as CommentProps["level"]}
-          deleteAction={async () => {
-            "use server";
-          }}
         />
       ))}
     </>
