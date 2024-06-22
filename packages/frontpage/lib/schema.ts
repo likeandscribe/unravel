@@ -62,15 +62,14 @@ export const Comment = pgTable(
     status: submissionStatus("status").default("live"),
     parentCommentId: integer("parent_comment_id"),
   },
-  (table) => {
-    return {
-      parentReference: foreignKey({
-        columns: [table.parentCommentId],
-        foreignColumns: [table.id],
-        name: "parent_comment_id_fkey",
-      }),
-    };
-  },
+  (t) => ({
+    parentReference: foreignKey({
+      columns: [t.parentCommentId],
+      foreignColumns: [t.id],
+      name: "parent_comment_id_fkey",
+    }),
+    unique_author_rkey: unique().on(t.authorDid, t.rkey),
+  }),
 );
 
 export const CommentVote = pgTable(
