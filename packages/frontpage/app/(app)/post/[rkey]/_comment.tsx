@@ -259,6 +259,7 @@ export function NewComment({
     <form
       action={action}
       onSubmit={async (event) => {
+        event.preventDefault();
         action(new FormData(event.currentTarget));
         onActionDone?.();
       }}
