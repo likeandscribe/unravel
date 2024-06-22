@@ -7,6 +7,8 @@ import {
   bigint,
   unique,
   pgEnum,
+  AnyPgColumn,
+  foreignKey,
 } from "drizzle-orm/pg-core";
 
 export const submissionStatus = pgEnum("submission_status", [
@@ -44,19 +46,31 @@ export const PostVote = pgTable(
   }),
 );
 
-export const Comment = pgTable("comments", {
-  id: serial("id").primaryKey(),
-  rkey: text("rkey").notNull().unique(),
-  cid: text("cid").notNull().unique(),
-  postId: integer("post_id")
-    .notNull()
-    .references(() => Post.id),
-  body: text("body").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  authorDid: text("author_did").notNull(),
-  // TODO: add notNull once this is rolled out
-  status: submissionStatus("status").default("live"),
-});
+export const Comment = pgTable(
+  "comments",
+  {
+    id: serial("id").primaryKey(),
+    rkey: text("rkey").notNull().unique(),
+    cid: text("cid").notNull().unique(),
+    postId: integer("post_id")
+      .notNull()
+      .references(() => Post.id),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    authorDid: text("author_did").notNull(),
+    // TODO: add notNull once this is rolled out
+    status: submissionStatus("status").default("live"),
+    parentCommentId: integer("parent_comment_id"),
+  },
+  (t) => ({
+    parentReference: foreignKey({
+      columns: [t.parentCommentId],
+      foreignColumns: [t.id],
+      name: "parent_comment_id_fkey",
+    }),
+    unique_author_rkey: unique().on(t.authorDid, t.rkey),
+  }),
+);
 
 export const CommentVote = pgTable(
   "comment_votes",

@@ -1,11 +1,13 @@
 import "server-only";
 import { z } from "zod";
+import { CommentCollection } from "./comment";
+import { PostCollection } from "./post";
 
 // This module refers to the event emitted by the Firehose
 
 export const Collection = z.union([
-  z.literal("fyi.unravel.frontpage.post"),
-  z.literal("fyi.unravel.frontpage.comment"),
+  z.literal(PostCollection),
+  z.literal(CommentCollection),
   z.literal("fyi.unravel.frontpage.vote"),
 ]);
 

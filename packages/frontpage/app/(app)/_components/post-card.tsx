@@ -4,6 +4,7 @@ import { getVoteForPost } from "@/lib/data/db/vote";
 import { getPlcDoc, ensureUser, getUser } from "@/lib/data/user";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { VoteButton } from "./vote-button";
+import { PostCollection } from "@/lib/data/atproto/post";
 
 type PostProps = {
   id: number;
@@ -47,7 +48,7 @@ export async function PostCard({
             await createVote({
               subjectCid: cid,
               subjectRkey: rkey,
-              subjectCollection: "fyi.unravel.frontpage.post",
+              subjectCollection: PostCollection,
             });
           }}
           unvoteAction={async () => {

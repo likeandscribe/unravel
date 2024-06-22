@@ -50,6 +50,7 @@ export const getCommentsForPost = cache(async (postId: number) => {
         .as("voteCount"),
       rank: commentRank,
       userHasVoted: hasVoted.commentId,
+      parentCommentId: schema.Comment.parentCommentId,
     })
     .from(schema.Comment)
     .where(
@@ -59,10 +60,41 @@ export const getCommentsForPost = cache(async (postId: number) => {
     .leftJoin(hasVoted, eq(hasVoted.commentId, schema.Comment.id))
     .orderBy(desc(commentRank));
 
-  return rows.map((row) => ({
-    ...row,
-    userHasVoted: row.userHasVoted !== null,
-  }));
+  return nestCommentRows(
+    rows.map((row) => ({
+      ...row,
+      userHasVoted: row.userHasVoted !== null,
+    })),
+  );
+});
+
+type CommentRowWithChildren<
+  T extends { id: number; parentCommentId: number | null },
+> = T & {
+  children: CommentRowWithChildren<T>[];
+};
+
+const nestCommentRows = <
+  T extends { id: number; parentCommentId: number | null },
+>(
+  items: T[],
+  id: number | null = null,
+): CommentRowWithChildren<T>[] =>
+  items
+    .filter((item) => item.parentCommentId === id)
+    .map((item) => ({
+      ...item,
+      children: nestCommentRows(items, item.id),
+    }));
+
+export const getComment = cache(async (rkey: string) => {
+  const rows = await db
+    .select()
+    .from(schema.Comment)
+    .where(eq(schema.Comment.rkey, rkey))
+    .limit(1);
+
+  return rows[0] ?? null;
 });
 
 export async function uncached_doesCommentExist(rkey: string) {

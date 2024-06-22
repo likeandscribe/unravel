@@ -1,23 +1,39 @@
 "use server";
 
-import { createComment } from "@/lib/data/atproto/comment";
+import {
+  CommentCollection,
+  createComment,
+  deleteComment,
+} from "@/lib/data/atproto/comment";
 import { deletePost } from "@/lib/data/atproto/post";
-import { uncached_doesCommentExist } from "@/lib/data/db/comment";
+import { createVote, deleteVote } from "@/lib/data/atproto/vote";
+import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
+import { getVoteForComment } from "@/lib/data/db/vote";
 import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
 
 export async function createCommentAction(
+  input: { parentRkey?: string; postRkey: string },
   _prevState: unknown,
   formData: FormData,
 ) {
   const content = formData.get("comment") as string;
-  const subjectRkey = formData.get("subjectRkey") as string;
-  const post = await getPost(subjectRkey);
+  const user = await ensureUser();
+
+  const [post, comment] = await Promise.all([
+    getPost(input.postRkey),
+    input.parentRkey
+      ? getComment(input.parentRkey).then((c) => {
+          if (!c) throw new Error("Comment not found");
+          return c;
+        })
+      : undefined,
+  ]);
+
   if (!post) {
     throw new Error("Post not found");
   }
-  const user = await ensureUser();
 
   if (post.status !== "live") {
     throw new Error(`[naughty] Cannot comment on deleted post. ${user.did}`);
@@ -25,12 +41,11 @@ export async function createCommentAction(
 
   const { rkey } = await createComment({
     content,
-    subjectRkey,
-    subjectCid: post.cid,
-    subjectCollection: "fyi.unravel.frontpage.post",
+    post,
+    parent: comment,
   });
   await waitForComment(rkey);
-  revalidatePath(`/post/${subjectRkey}`);
+  revalidatePath(`/post/${input.postRkey}`);
 }
 
 const MAX_POLLS = 15;
@@ -49,4 +64,29 @@ async function waitForComment(rkey: string) {
 
 export async function deletePostAction(rkey: string) {
   await deletePost(rkey);
+}
+
+export async function deleteCommentAction(rkey: string) {
+  await ensureUser();
+  await deleteComment(rkey);
+}
+
+export async function commentVoteAction(input: { cid: string; rkey: string }) {
+  await ensureUser();
+  await createVote({
+    subjectCid: input.cid,
+    subjectRkey: input.rkey,
+    subjectCollection: CommentCollection,
+  });
+}
+
+export async function commentUnvoteAction(commentId: number) {
+  await ensureUser();
+  const vote = await getVoteForComment(commentId);
+  if (!vote) {
+    console.error("Vote not found for comment", commentId);
+    return;
+  }
+
+  await deleteVote(vote.rkey);
 }

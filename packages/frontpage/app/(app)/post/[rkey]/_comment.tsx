@@ -15,10 +15,21 @@ import { Button } from "@/lib/components/ui/button";
 import { Textarea } from "@/lib/components/ui/textarea";
 import { SimpleTooltip } from "@/lib/components/ui/tooltip";
 import { useToast } from "@/lib/components/ui/use-toast";
-import { createCommentAction } from "./_actions";
+import {
+  commentUnvoteAction,
+  commentVoteAction,
+  createCommentAction,
+  deleteCommentAction,
+} from "./_actions";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { VariantProps, cva } from "class-variance-authority";
-import React, { useActionState, useRef, useState, useId } from "react";
+import {
+  useActionState,
+  useRef,
+  useState,
+  useId,
+  startTransition,
+} from "react";
 import { VoteButton, VoteButtonState } from "../../_components/vote-button";
 import { Spinner } from "@/lib/components/ui/spinner";
 
@@ -28,6 +39,7 @@ const commentVariants = cva(undefined, {
       0: "",
       1: "pl-8",
       2: "pl-16",
+      3: "pl-24",
     },
   },
   defaultVariants: {
@@ -37,32 +49,28 @@ const commentVariants = cva(undefined, {
 
 export type CommentProps = VariantProps<typeof commentVariants> & {
   rkey: string;
+  cid: string;
+  id: number;
+  postRkey: string;
   author: string;
   comment: string;
   createdAt: Date;
-  voteAction: () => Promise<void>;
-  unvoteAction: () => Promise<void>;
-  deleteAction: () => Promise<void>;
   initialVoteState: VoteButtonState;
-  newCommentDisabled?: boolean;
   hasAuthored: boolean;
 };
 
 export function CommentClient({
+  id,
   rkey,
+  cid,
+  postRkey,
   author,
   comment,
   level,
   createdAt,
-  voteAction,
-  unvoteAction,
-  deleteAction: _deleteAction,
   initialVoteState,
-  newCommentDisabled,
   hasAuthored,
 }: CommentProps) {
-  const [_, action, isDeletePending] = useActionState(_deleteAction, undefined);
-
   const [showNewComment, setShowNewComment] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
   const newCommentTextAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -83,79 +91,38 @@ export function CommentClient({
           <SimpleTooltip content="Vote" side="bottom">
             <VoteButton
               initialState={initialVoteState}
-              voteAction={voteAction}
-              unvoteAction={unvoteAction}
+              voteAction={commentVoteAction.bind(null, {
+                cid,
+                rkey,
+              })}
+              unvoteAction={commentUnvoteAction.bind(null, id)}
             />
           </SimpleTooltip>
           <SimpleTooltip content="Comment" side="bottom">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => !newCommentDisabled && setShowNewComment(true)}
-              disabled={newCommentDisabled}
+              onClick={() => !hasAuthored && setShowNewComment(true)}
+              disabled={hasAuthored}
             >
               <ChatBubbleIcon className="w-4 h-4" />
               <span className="sr-only">Reply</span>
             </Button>
           </SimpleTooltip>
-          {hasAuthored && (
-            <form
-              action={action}
-              onSubmit={async (e) => {
-                // Prevent default form submission
-                // Action is dispatched on dialog action
-                e.preventDefault();
-              }}
-            >
-              <AlertDialog>
-                <SimpleTooltip content="Delete">
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost-destructive"
-                      size="icon"
-                      disabled={isDeletePending}
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                </SimpleTooltip>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Are you absolutely sure?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will delete your comment. This action cannot be
-                      undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => {
-                        action();
-                        toast({
-                          title: "Comment will be deleted shortly",
-                          type: "foreground",
-                        });
-                      }}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </form>
-          )}
+          {hasAuthored && <DeleteCommentButton rkey={rkey} />}
         </div>
       </div>
       {showNewComment && (
         <NewComment
           textAreaRef={newCommentTextAreaRef}
           parentRkey={rkey}
+          postRkey={postRkey}
           autoFocus
+          onActionDone={() => {
+            startTransition(() => {
+              setShowNewComment(false);
+            });
+          }}
           extraButton={
             <AlertDialog>
               <SimpleTooltip content="Discard comment">
@@ -209,24 +176,93 @@ export function CommentClient({
   );
 }
 
+function DeleteCommentButton({ rkey }: { rkey: string }) {
+  const [_, deleteAction, isDeletePending] = useActionState(
+    deleteCommentAction.bind(null, rkey),
+    undefined,
+  );
+  const { toast } = useToast();
+
+  return (
+    <form
+      action={deleteAction}
+      onSubmit={async (e) => {
+        // Prevent default form submission
+        // Action is dispatched on dialog action
+        e.preventDefault();
+      }}
+    >
+      <AlertDialog>
+        <SimpleTooltip content="Delete">
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost-destructive"
+              size="icon"
+              disabled={isDeletePending}
+            >
+              <TrashIcon className="w-4 h-4" />
+              <span className="sr-only">Delete</span>
+            </Button>
+          </AlertDialogTrigger>
+        </SimpleTooltip>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete your comment. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                deleteAction();
+                toast({
+                  title: "Comment will be deleted shortly",
+                  type: "foreground",
+                });
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </form>
+  );
+}
+
 export function NewComment({
   autoFocus = false,
   parentRkey,
+  postRkey,
   extraButton,
   textAreaRef,
+  onActionDone,
 }: {
-  parentRkey: string;
+  parentRkey?: string;
+  postRkey: string;
   autoFocus?: boolean;
+  onActionDone?: () => void;
   extraButton?: React.ReactNode;
   textAreaRef?: React.RefObject<HTMLTextAreaElement>;
 }) {
-  const [_, action, isPending] = useActionState(createCommentAction, undefined);
+  const [_, action, isPending] = useActionState(
+    createCommentAction.bind(null, { parentRkey, postRkey }),
+    undefined,
+  );
   const id = useId();
   const textAreaId = `${id}-comment`;
 
   return (
     <form
       action={action}
+      onSubmit={async (event) => {
+        event.preventDefault();
+        action(new FormData(event.currentTarget));
+        onActionDone?.();
+      }}
       className="flex items-center gap-2"
       aria-busy={isPending}
       onKeyDown={(event) => {
@@ -252,7 +288,6 @@ export function NewComment({
           className="resize-none rounded-2xl border border-gray-200 p-3 shadow-sm focus:border-primary focus:ring-primary dark:border-gray-800 dark:bg-gray-950 dark:focus:border-primary"
           disabled={isPending}
         />
-        <input type="hidden" name="subjectRkey" value={parentRkey} />
       </div>
       <Button className="flex flex-row gap-2" disabled={isPending}>
         {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />} Post
