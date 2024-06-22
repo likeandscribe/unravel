@@ -5,6 +5,7 @@ import { Toaster } from "@/lib/components/ui/toaster";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Metadata } from "next";
+import { ThemeProvider } from "@/lib/components/theme-provider";
 
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
@@ -26,12 +27,19 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={cn(sourceSans.variable, sourceSerif.variable)}>
-        {children}
-        <Toaster />
-        <SpeedInsights />
-        <Analytics />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+          <SpeedInsights />
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   );
