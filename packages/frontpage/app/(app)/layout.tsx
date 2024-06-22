@@ -58,9 +58,9 @@ export default async function Layout({
 
       <main className="mb-6">{children}</main>
 
-      <footer className="flex justify-between text-gray-500 dark:text-gray-400">
+      <footer className="flex justify-between items-center text-gray-500 dark:text-gray-400">
         <p>
-          Made with ❤️ by{" "}
+          Made by{" "}
           <a
             href="https://bsky.app/profile/unravel.fyi"
             className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
