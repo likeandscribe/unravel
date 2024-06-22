@@ -28,7 +28,13 @@ export const metadata: Metadata = {
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(sourceSans.variable, sourceSerif.variable)}>
+      <body
+        className={cn(
+          sourceSans.variable,
+          sourceSerif.variable,
+          "bg-slate-50/50 dark:bg-slate-950 min-h-screen",
+        )}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

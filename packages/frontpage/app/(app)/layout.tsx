@@ -32,7 +32,7 @@ export default async function Layout({
       </div>
 
       {session && (
-        <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900 dark:text-slate-300 p-4 mb-4 gap-2 rounded-md">
+        <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900/50 dark:text-slate-300 p-4 mb-4 gap-2 rounded-md">
           <span>
             {isInBeta ? (
               <>
@@ -50,13 +50,16 @@ export default async function Layout({
               <>You&apos;re not currently part of the beta</>
             )}
           </span>
-          <Button
-            asChild
-            variant="ghost"
-            className="text-indigo-600 dark:text-indigo-400"
-          >
-            <Link href="/invite-only">Learn more</Link>
-          </Button>
+
+          {!isInBeta && (
+            <Button
+              asChild
+              variant="ghost"
+              className="text-indigo-600 dark:text-indigo-400"
+            >
+              <Link href="/invite-only">Learn more</Link>
+            </Button>
+          )}
         </div>
       )}
 
