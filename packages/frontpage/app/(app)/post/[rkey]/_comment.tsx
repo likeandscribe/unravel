@@ -23,7 +23,13 @@ import {
 } from "./_actions";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { VariantProps, cva } from "class-variance-authority";
-import React, { useActionState, useRef, useState, useId } from "react";
+import {
+  useActionState,
+  useRef,
+  useState,
+  useId,
+  startTransition,
+} from "react";
 import { VoteButton, VoteButtonState } from "../../_components/vote-button";
 import { Spinner } from "@/lib/components/ui/spinner";
 
@@ -112,6 +118,11 @@ export function CommentClient({
           parentRkey={rkey}
           postRkey={postRkey}
           autoFocus
+          onActionDone={() => {
+            startTransition(() => {
+              setShowNewComment(false);
+            });
+          }}
           extraButton={
             <AlertDialog>
               <SimpleTooltip content="Discard comment">
@@ -228,10 +239,12 @@ export function NewComment({
   postRkey,
   extraButton,
   textAreaRef,
+  onActionDone,
 }: {
   parentRkey?: string;
   postRkey: string;
   autoFocus?: boolean;
+  onActionDone?: () => void;
   extraButton?: React.ReactNode;
   textAreaRef?: React.RefObject<HTMLTextAreaElement>;
 }) {
@@ -245,6 +258,10 @@ export function NewComment({
   return (
     <form
       action={action}
+      onSubmit={async (event) => {
+        action(new FormData(event.currentTarget));
+        onActionDone?.();
+      }}
       className="flex items-center gap-2"
       aria-busy={isPending}
       onKeyDown={(event) => {
