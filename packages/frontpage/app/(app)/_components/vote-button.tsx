@@ -42,7 +42,7 @@ export function VoteButton({
       <Button
         variant="ghost"
         size="icon"
-        className="hover:bg-gray-100 dark:hover:bg-gray-800 z-10 relative group"
+        className="z-10 relative group"
         disabled={initialState === "authored"}
         name={hasVoted ? "unvote" : "vote"}
       >
