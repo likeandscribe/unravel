@@ -291,10 +291,7 @@ export function NewComment({
           disabled={isPending}
         />
       </div>
-      <Button
-        className="flex flex-row gap-2 dark:bg-slate-200 dark:hover:bg-slate-100"
-        disabled={isPending}
-      >
+      <Button className="flex flex-row gap-2" disabled={isPending}>
         {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />} Post
       </Button>
       {extraButton}
