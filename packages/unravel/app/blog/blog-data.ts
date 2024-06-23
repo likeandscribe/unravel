@@ -1,3 +1,4 @@
+import slugify from "slugify";
 import { z } from "zod";
 
 // TODO: Extract into shared lib (it currently also exists in frontpage)
@@ -63,7 +64,11 @@ export async function listBlogs() {
     },
   );
 
-  return BlogArray.parse(await blogList.json());
+  const list = BlogArray.parse(await blogList.json());
+
+  return {
+    records: list.records.map((b) => transformBlog(b)),
+  };
 }
 
 export async function getBlog(rkey: string) {
@@ -73,7 +78,7 @@ export async function getBlog(rkey: string) {
     rkey: rkey,
   });
 
-  const blog = await fetch(
+  const response = await fetch(
     `${serviceUri}/com.atproto.repo.getRecord?${queryParams}`,
     {
       method: "GET",
@@ -83,5 +88,19 @@ export async function getBlog(rkey: string) {
     },
   );
 
-  return Blog.parse(await blog.json());
+  if (response.status === 400) return null;
+
+  const json = await response.json();
+
+  return transformBlog(Blog.parse(json));
+}
+
+function transformBlog(blog: z.infer<typeof Blog>) {
+  return {
+    ...blog,
+    slug: `${blog.uri.rkey}-${slugify(blog.value.title, {
+      lower: true,
+      remove: /[*+~.()'"!:@]/g,
+    })}`,
+  };
 }

@@ -1,15 +1,21 @@
 import Markdown from "@/lib/markdown";
 import { getBlog } from "../blog-data";
+import { notFound } from "next/navigation";
 
 interface Props {
-  params: { rkey: string };
+  params: { slug: string };
 }
 
-export default async function BlogPost({ params: { rkey } }: Props) {
+export default async function BlogPost({ params: { slug } }: Props) {
+  const rkey = slug.split("-")[0];
+  if (!rkey) notFound();
   const blog = await getBlog(rkey);
+  if (!blog) notFound();
 
   return (
     <>
+      <title>{blog.value.title}</title>
+      <link rel="canonical" href={`/blog/${blog.slug}`} />
       <h1 className="text-4xl mb-8 mt-32">{blog.value.title}</h1>
       <div>
         <Markdown
