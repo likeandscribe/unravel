@@ -1,12 +1,40 @@
 import { z } from "zod";
 
-// Schemas
+// TODO: Extract into shared lib (it currently also exists in frontpage)
+const AtUri = z.string().transform((value, ctx) => {
+  const match = value.match(/^at:\/\/(.+?)(\/.+?)?(\/.+?)?$/);
+  if (!match) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Invalid AT URI: ${value}`,
+    });
+    return z.NEVER;
+  }
+
+  const [, authority, collection, rkey] = match;
+  if (!authority || !collection || !rkey) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Undefined or empty AT URI parts: ${value}`,
+    });
+    return z.NEVER;
+  }
+
+  return {
+    authority,
+    collection: collection.replace("/", ""),
+    rkey: rkey.replace("/", ""),
+    value,
+  };
+});
+
 const Blog = z.object({
   value: z.object({
     content: z.string(),
     title: z.string(),
     createdAt: z.coerce.date(),
   }),
+  uri: AtUri,
   cid: z.string(),
 });
 
