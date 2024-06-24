@@ -29,6 +29,13 @@ export default async function BlogPost({ params: { slug } }: Props) {
                 {...props}
               />
             ),
+            li: (props) => <li className="mb-2 ml-4 list-disc" {...props} />,
+            blockquote: (props) => (
+              <blockquote
+                className="border-l-4 border-gray-200 dark:border-gray-800 pl-4 py-2 my-8 [&_p]:mb-0"
+                {...props}
+              />
+            ),
           }}
         />
       </div>
