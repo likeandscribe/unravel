@@ -38,9 +38,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="container mx-auto px-4 md:px-6 py-12 max-w-3xl">
-            {children}
-          </main>
+          {children}
         </ThemeProvider>
       </body>
     </html>
