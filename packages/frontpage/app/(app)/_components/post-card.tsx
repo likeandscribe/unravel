@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getVoteForPost } from "@/lib/data/db/vote";
-import { getPlcDoc, ensureUser, getUser } from "@/lib/data/user";
+import {
+  getPlcDoc,
+  ensureUser,
+  getUser,
+  getVerifiedHandle,
+} from "@/lib/data/user";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { VoteButton } from "./vote-button";
 import { PostCollection } from "@/lib/data/atproto/post";
@@ -32,10 +37,7 @@ export async function PostCard({
   isUpvoted,
 }: PostProps) {
   const postHref = `/post/${rkey}`;
-  const plc = await getPlcDoc(author);
-  const handle = plc.alsoKnownAs
-    .find((handle) => handle.startsWith("at://"))
-    ?.replace("at://", "");
+  const handle = await getVerifiedHandle(author);
 
   return (
     // TODO: Make article route to postHref via onClick on card except innser links or buttons

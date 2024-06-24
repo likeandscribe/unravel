@@ -1,4 +1,4 @@
-import { getPlcDoc, getUser } from "@/lib/data/user";
+import { getPlcDoc, getUser, getVerifiedHandle } from "@/lib/data/user";
 import { CommentClientWrapperWithToolbar, CommentProps } from "./_comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { cva } from "class-variance-authority";
@@ -42,10 +42,7 @@ export async function Comment({
   createdAt,
   ...props
 }: ServerCommentProps) {
-  const plc = await getPlcDoc(authorDid);
-  const handle = plc.alsoKnownAs
-    .find((handle) => handle.startsWith("at://"))
-    ?.replace("at://", "");
+  const handle = await getVerifiedHandle(authorDid);
 
   const user = await getUser();
   const hasAuthored = user?.did === authorDid;
