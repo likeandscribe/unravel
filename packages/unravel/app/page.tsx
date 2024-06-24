@@ -9,11 +9,11 @@ export default function Home() {
 
   return (
     <>
+      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <script
         src="https://cdn.unicorn.studio/v1.2.0/unicornStudio.umd.js"
         integrity="sha384-dLpfEqVDadil7TSM6fSnJrBnRCbfYeiQ6gbOvXQZ+3ER6h8ZmuNK4w1NFHWxygia"
         crossOrigin="anonymous"
-        defer
       />
       <div
         className="unicorn-embed w-screen h-screen"
