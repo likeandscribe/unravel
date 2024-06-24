@@ -108,3 +108,20 @@ const PlcDocument = z.object({
     }),
   ),
 });
+
+const ProfileResponse = z.object({
+  avatar: z.string(),
+});
+
+export const getBlueskyProfile = cache(async (did: string) => {
+  const json = await fetch(
+    `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${did}`,
+    {
+      next: {
+        revalidate: 60 * 60, // 1 hour
+      },
+    },
+  ).then((res) => res.json());
+
+  return ProfileResponse.parse(json);
+});

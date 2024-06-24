@@ -1,20 +1,45 @@
 import { getPlcDoc, getUser } from "@/lib/data/user";
-import { CommentClient, CommentProps } from "./_comment";
+import { CommentClientWrapperWithToolbar, CommentProps } from "./_comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
+import { cva } from "class-variance-authority";
+import { TimeAgo } from "@/lib/components/time-ago";
+import { UserAvatar } from "@/lib/components/avatar";
+
+const commentVariants = cva(undefined, {
+  variants: {
+    level: {
+      0: "",
+      1: "pl-8",
+      2: "pl-16",
+      3: "pl-24",
+    },
+  },
+  defaultVariants: {
+    level: 0,
+  },
+});
 
 type ServerCommentProps = Omit<
   CommentProps,
-  "voteAction" | "unvoteAction" | "initialVoteState" | "hasAuthored" | "handle"
+  | "voteAction"
+  | "unvoteAction"
+  | "initialVoteState"
+  | "hasAuthored"
+  | "children"
 > & {
   cid: string;
   isUpvoted: boolean;
   childComments: Awaited<ReturnType<typeof getCommentsForPost>>;
+  comment: string;
+  createdAt: Date;
 };
 
 export async function Comment({
   authorDid,
   isUpvoted,
   childComments,
+  comment,
+  createdAt,
   ...props
 }: ServerCommentProps) {
   const plc = await getPlcDoc(authorDid);
@@ -27,9 +52,8 @@ export async function Comment({
 
   return (
     <>
-      <CommentClient
+      <CommentClientWrapperWithToolbar
         {...props}
-        handle={handle ?? ""}
         hasAuthored={hasAuthored}
         authorDid={authorDid}
         initialVoteState={
@@ -39,7 +63,19 @@ export async function Comment({
               ? "voted"
               : "unvoted"
         }
-      />
+      >
+        <div className="flex items-center gap-2">
+          <UserAvatar did={authorDid} />
+          <div className="font-medium">{handle}</div>
+          <div className="text-gray-500 text-xs dark:text-gray-400">
+            <TimeAgo createdAt={createdAt} side="bottom" />
+          </div>
+        </div>
+        <div className="prose prose-stone">
+          <p>{comment}</p>
+        </div>
+      </CommentClientWrapperWithToolbar>
+
       {childComments?.map((comment) => (
         <Comment
           key={comment.id}
