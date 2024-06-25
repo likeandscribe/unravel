@@ -42,7 +42,6 @@ export function VoteButton({
       <Button
         variant="ghost"
         size="icon"
-        className="z-10 relative group"
         disabled={initialState === "authored"}
         name={hasVoted ? "unvote" : "vote"}
       >
