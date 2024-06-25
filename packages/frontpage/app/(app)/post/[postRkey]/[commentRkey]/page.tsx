@@ -1,6 +1,7 @@
-import { getComment } from "@/lib/data/db/comment";
+import { getCommentWithChildren } from "@/lib/data/db/comment";
 import { notFound } from "next/navigation";
 import { Comment } from "../_commentServer";
+import { getPost } from "@/lib/data/db/post";
 
 type Params = {
   commentRkey: string;
@@ -8,7 +9,11 @@ type Params = {
 };
 
 export default async function CommentPage({ params }: { params: Params }) {
-  const comment = await getComment(params.commentRkey);
+  const post = await getPost(params.postRkey);
+  if (!post) {
+    notFound();
+  }
+  const comment = await getCommentWithChildren(post.id, params.commentRkey);
   if (!comment) {
     notFound();
   }
@@ -24,7 +29,7 @@ export default async function CommentPage({ params }: { params: Params }) {
       createdAt={comment.createdAt}
       id={comment.id}
       comment={comment.body}
-      childComments={[]}
+      childComments={comment.children}
     />
   );
 }

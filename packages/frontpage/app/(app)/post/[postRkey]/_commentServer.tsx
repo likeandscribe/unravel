@@ -1,24 +1,9 @@
 import { getUser, getVerifiedHandle } from "@/lib/data/user";
 import { CommentClientWrapperWithToolbar, CommentProps } from "./_comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
-import { cva } from "class-variance-authority";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { UserAvatar } from "@/lib/components/avatar";
 import Link from "next/link";
-
-const commentVariants = cva(undefined, {
-  variants: {
-    level: {
-      0: "",
-      1: "pl-8",
-      2: "pl-16",
-      3: "pl-24",
-    },
-  },
-  defaultVariants: {
-    level: 0,
-  },
-});
 
 type ServerCommentProps = Omit<
   CommentProps,
