@@ -7,7 +7,6 @@ import {
   bigint,
   unique,
   pgEnum,
-  AnyPgColumn,
   foreignKey,
 } from "drizzle-orm/pg-core";
 
@@ -17,17 +16,23 @@ export const submissionStatus = pgEnum("submission_status", [
   "moderator_hidden",
 ]);
 
-export const Post = pgTable("posts", {
-  id: serial("id").primaryKey(),
-  rkey: text("rkey").notNull().unique(),
-  cid: text("cid").notNull().unique(),
-  title: text("title").notNull(),
-  url: text("url").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  authorDid: text("author_did").notNull(),
-  // TODO: add notNull once this is rolled out
-  status: submissionStatus("status").default("live"),
-});
+export const Post = pgTable(
+  "posts",
+  {
+    id: serial("id").primaryKey(),
+    rkey: text("rkey").notNull(),
+    cid: text("cid").notNull().unique(),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    authorDid: text("author_did").notNull(),
+    // TODO: add notNull once this is rolled out
+    status: submissionStatus("status").default("live"),
+  },
+  (t) => ({
+    unique_author_rkey: unique().on(t.authorDid, t.rkey),
+  }),
+);
 
 export const PostVote = pgTable(
   "post_votes",
@@ -39,7 +44,7 @@ export const PostVote = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     authorDid: text("author_did").notNull(),
     cid: text("cid").notNull().unique(),
-    rkey: text("rkey").notNull().unique(),
+    rkey: text("rkey").notNull(),
   },
   (t) => ({
     unique_authr_rkey: unique().on(t.authorDid, t.rkey),
@@ -50,7 +55,7 @@ export const Comment = pgTable(
   "comments",
   {
     id: serial("id").primaryKey(),
-    rkey: text("rkey").notNull().unique(),
+    rkey: text("rkey").notNull(),
     cid: text("cid").notNull().unique(),
     postId: integer("post_id")
       .notNull()
@@ -82,7 +87,7 @@ export const CommentVote = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     authorDid: text("author_did").notNull(),
     cid: text("cid").notNull().unique(),
-    rkey: text("rkey").notNull().unique(),
+    rkey: text("rkey").notNull(),
   },
   (t) => ({
     unique_authr_rkey: unique().on(t.authorDid, t.rkey),

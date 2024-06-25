@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import * as schema from "../schema";
+import dns from "node:dns/promises";
+import { unstable_cache } from "next/cache";
 
 /**
  * Returns null when not logged in. If you want to ensure that the user is logged in, use `ensureUser` instead.
@@ -107,4 +109,68 @@ const PlcDocument = z.object({
       serviceEndpoint: z.string(),
     }),
   ),
+});
+
+const getAtprotoDidFromDns = unstable_cache(
+  async (handle: string) => {
+    const records = await dns.resolveTxt(`_atproto.${handle}`).catch((e) => {
+      if ("code" in e && e.code === "ENODATA") {
+        return [];
+      }
+
+      throw e;
+    });
+    // records is [ [ "did=xxx" ] ]
+    // We're assuming that you only have one txt record or that the first one is the one we want
+    return records[0]?.join().split("did=")[1] ?? null;
+  },
+  ["dns", "resolveTxt"],
+  {
+    revalidate: 60 * 60 * 24, // 24 hours
+  },
+);
+
+export const getVerifiedHandle = cache(async (did: string) => {
+  const plcDoc = await getPlcDoc(did);
+  const plcHandle = plcDoc.alsoKnownAs
+    .find((handle) => handle.startsWith("at://"))
+    ?.replace("at://", "");
+
+  if (!plcHandle) return null;
+
+  const dnsPromise = getAtprotoDidFromDns(plcHandle).catch((e) => {
+    console.error(e);
+    return null;
+  });
+  const httpPromise = fetch(`https://${plcHandle}/.well-known/atproto-did`, {
+    next: {
+      revalidate: 60 * 60 * 24, // 24 hours
+    },
+  })
+    .then((res) => res.text())
+    .catch((e) => {
+      console.error(e);
+      return null;
+    });
+
+  if ((await dnsPromise) === did || (await httpPromise)?.trim() === did) {
+    return plcHandle;
+  }
+});
+
+const ProfileResponse = z.object({
+  avatar: z.string(),
+});
+
+export const getBlueskyProfile = cache(async (did: string) => {
+  const json = await fetch(
+    `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${did}`,
+    {
+      next: {
+        revalidate: 60 * 60, // 1 hour
+      },
+    },
+  ).then((res) => res.json());
+
+  return ProfileResponse.parse(json);
 });

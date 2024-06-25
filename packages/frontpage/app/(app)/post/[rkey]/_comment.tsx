@@ -52,26 +52,22 @@ export type CommentProps = VariantProps<typeof commentVariants> & {
   cid: string;
   id: number;
   postRkey: string;
-  handle: string;
   authorDid: string;
-  comment: string;
-  createdAt: Date;
   initialVoteState: VoteButtonState;
   hasAuthored: boolean;
+  children: React.ReactNode;
 };
 
-export function CommentClient({
+export function CommentClientWrapperWithToolbar({
   id,
   rkey,
   cid,
   postRkey,
   authorDid,
-  handle,
-  comment,
   level,
-  createdAt,
   initialVoteState,
   hasAuthored,
+  children,
 }: CommentProps) {
   const [showNewComment, setShowNewComment] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
@@ -80,15 +76,7 @@ export function CommentClient({
   return (
     <article className={commentVariants({ level })}>
       <div className="grid gap-2 flex-1 p-1" tabIndex={0} ref={commentRef}>
-        <div className="flex items-center gap-2">
-          <div className="font-medium">{handle}</div>
-          <div className="text-gray-500 text-xs dark:text-gray-400">
-            <TimeAgo createdAt={createdAt} side="bottom" />
-          </div>
-        </div>
-        <div className="prose prose-stone">
-          <p>{comment}</p>
-        </div>
+        {children}
         <div className="flex items-center gap-4">
           <SimpleTooltip content="Vote" side="bottom">
             <VoteButton
