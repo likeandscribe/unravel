@@ -9,12 +9,12 @@ import { getUser } from "@/lib/data/user";
 import { notFound } from "next/navigation";
 
 type Params = {
-  rkey: string;
+  postRkey: string;
 };
 
 export default async function Item({ params }: { params: Params }) {
   getUser(); // Prefetch user
-  const post = await getPost(params.rkey);
+  const post = await getPost(params.postRkey);
   if (!post) {
     notFound();
   }
@@ -39,7 +39,7 @@ export default async function Item({ params }: { params: Params }) {
         />
         {user?.did === post.authorDid && (
           <div className="flex justify-end">
-            <DeletePostButton rkey={params.rkey} />
+            <DeletePostButton rkey={post.rkey} />
           </div>
         )}
         {post.status === "live" ? (
