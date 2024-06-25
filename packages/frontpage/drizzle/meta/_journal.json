@@ -71,6 +71,13 @@
       "when": 1719050407535,
       "tag": "0009_lying_zeigeist",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1719351325903,
+      "tag": "0010_regular_roxanne_simpson",
+      "breakpoints": true
     }
   ]
 }
