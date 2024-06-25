@@ -1,9 +1,10 @@
-import { getPlcDoc, getUser, getVerifiedHandle } from "@/lib/data/user";
+import { getUser, getVerifiedHandle } from "@/lib/data/user";
 import { CommentClientWrapperWithToolbar, CommentProps } from "./_comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { cva } from "class-variance-authority";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { UserAvatar } from "@/lib/components/avatar";
+import Link from "next/link";
 
 const commentVariants = cva(undefined, {
   variants: {
@@ -64,9 +65,12 @@ export async function Comment({
         <div className="flex items-center gap-2">
           <UserAvatar did={authorDid} />
           <div className="font-medium">{handle}</div>
-          <div className="text-gray-500 text-xs dark:text-gray-400">
+          <Link
+            href={`/post/${props.postRkey}/${props.rkey}`}
+            className="text-gray-500 text-xs dark:text-gray-400"
+          >
             <TimeAgo createdAt={createdAt} side="bottom" />
-          </div>
+          </Link>
         </div>
         <div className="prose prose-stone">
           <p>{comment}</p>
