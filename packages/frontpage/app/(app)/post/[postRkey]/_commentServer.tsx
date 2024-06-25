@@ -52,7 +52,7 @@ export async function Comment({
           <div className="font-medium">{handle}</div>
           <Link
             href={`/post/${props.postRkey}/${props.rkey}`}
-            className="text-gray-500 text-xs dark:text-gray-400"
+            className="text-gray-500 text-xs dark:text-gray-400 hover:underline"
           >
             <TimeAgo createdAt={createdAt} side="bottom" />
           </Link>
