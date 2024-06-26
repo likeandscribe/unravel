@@ -4,7 +4,7 @@ import { cache } from "react";
 import { db } from "@/lib/db";
 import { eq, sql, count, desc } from "drizzle-orm";
 import * as schema from "@/lib/schema";
-import { getUser } from "../user";
+import { getBlueskyProfile, getUser } from "../user";
 import * as atprotoPost from "../atproto/post";
 
 const votesSubQuery = db
@@ -158,6 +158,45 @@ export async function unauthed_createPost({
 
     await tx.insert(schema.ConsumedOffset).values({ offset });
   });
+
+  if (process.env.DISCORD_WEBHOOK_URL) {
+    const bskyProfile = await getBlueskyProfile(authorDid);
+    const webhookResponse = await fetch(process.env.DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        embeds: [
+          {
+            title: "New post on Frontpage",
+            description: post.title,
+            url: `https://frontpage.unravel.fyi/post/${rkey}`,
+            color: 10181046,
+            author: bskyProfile
+              ? {
+                  name: `@${bskyProfile.handle}`,
+                  icon_url: bskyProfile.avatar,
+                  url: `https://bsky.app/profile/${bskyProfile.handle}`,
+                }
+              : undefined,
+            fields: [
+              {
+                name: "Link",
+                value: post.url,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!webhookResponse.ok) {
+      console.error("Failed to alert of new post", webhookResponse.statusText);
+    }
+  } else {
+    console.error("Can't alert of new post: No DISCORD_WEBHOOK_URL set");
+  }
 }
 
 type DeletePostInput = {

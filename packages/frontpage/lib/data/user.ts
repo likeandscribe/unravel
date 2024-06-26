@@ -156,10 +156,12 @@ export const getVerifiedHandle = cache(async (did: string) => {
   if ((await dnsPromise) === did || (await httpPromise)?.trim() === did) {
     return plcHandle;
   }
+  return null;
 });
 
 const ProfileResponse = z.object({
   avatar: z.string(),
+  handle: z.string(),
 });
 
 export const getBlueskyProfile = cache(async (did: string) => {
