@@ -4,12 +4,9 @@ import { eq } from "drizzle-orm";
 import { atprotoGetRecord } from "@/lib/data/atproto/record";
 import { getPdsUrl } from "@/lib/data/user";
 import { Commit } from "@/lib/data/atproto/event";
-import { PostCollection, PostRecord } from "@/lib/data/atproto/post";
-import {
-  CommentCollection,
-  CommentRecord,
-  getComment,
-} from "@/lib/data/atproto/comment";
+import * as atprotoPost from "@/lib/data/atproto/post";
+import * as dbPost from "@/lib/data/db/post";
+import { CommentCollection, getComment } from "@/lib/data/atproto/comment";
 import { VoteRecord } from "@/lib/data/atproto/vote";
 
 export async function POST(request: Request) {
@@ -33,34 +30,25 @@ export async function POST(request: Request) {
   const promises = ops.map(async (op) => {
     const { collection, rkey } = op.path;
 
-    if (collection === PostCollection) {
-      await db.transaction(async (tx) => {
-        if (op.action === "create") {
-          const record = await atprotoGetRecord({
-            serviceEndpoint: service,
-            repo,
-            collection,
-            rkey,
-          });
-          const postRecord = PostRecord.parse(record.value);
-
-          await tx.insert(schema.Post).values({
-            rkey,
-            cid: record.cid,
-            title: postRecord.title,
-            url: postRecord.url,
-            authorDid: repo,
-            createdAt: new Date(postRecord.createdAt),
-          });
-        } else if (op.action === "delete") {
-          await tx
-            .update(schema.Post)
-            .set({ status: "deleted" })
-            .where(eq(schema.Post.rkey, rkey));
-        }
-
-        await tx.insert(schema.ConsumedOffset).values({ offset: seq });
-      });
+    if (collection === atprotoPost.PostCollection) {
+      if (op.action === "create") {
+        const record = await atprotoGetRecord({
+          serviceEndpoint: service,
+          repo,
+          collection,
+          rkey,
+        });
+        const postRecord = atprotoPost.PostRecord.parse(record.value);
+        await dbPost.unauthed_createPost({
+          post: postRecord,
+          rkey,
+          authorDid: repo,
+          cid: record.cid,
+          offset: seq,
+        });
+      } else if (op.action === "delete") {
+        dbPost.unauthed_deletePost({ rkey, offset: seq });
+      }
     }
     // repo is actually the did of the user
     if (collection === CommentCollection) {
@@ -129,7 +117,7 @@ export async function POST(request: Request) {
           );
 
           const subjectTable = {
-            [PostCollection]: schema.Post,
+            [atprotoPost.PostCollection]: schema.Post,
             [CommentCollection]: schema.Comment,
           }[hydratedVoteRecordValue.subject.uri.collection];
 
@@ -153,7 +141,8 @@ export async function POST(request: Request) {
           }
 
           if (
-            hydratedVoteRecordValue.subject.uri.collection === PostCollection
+            hydratedVoteRecordValue.subject.uri.collection ===
+            atprotoPost.PostCollection
           ) {
             await tx.insert(schema.PostVote).values({
               postId: subject.id,

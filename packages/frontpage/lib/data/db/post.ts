@@ -4,7 +4,8 @@ import { cache } from "react";
 import { db } from "@/lib/db";
 import { eq, sql, count, desc } from "drizzle-orm";
 import * as schema from "@/lib/schema";
-import { getUser } from "../user";
+import { getBlueskyProfile, getUser } from "../user";
+import * as atprotoPost from "../atproto/post";
 
 const votesSubQuery = db
   .select({
@@ -128,4 +129,88 @@ export async function uncached_doesPostExist(rkey: string) {
     .limit(1);
 
   return Boolean(row[0]);
+}
+
+type CreatePostInput = {
+  post: atprotoPost.Post;
+  authorDid: string;
+  rkey: string;
+  cid: string;
+  offset: bigint;
+};
+
+export async function unauthed_createPost({
+  post,
+  rkey,
+  authorDid,
+  cid,
+  offset,
+}: CreatePostInput) {
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.Post).values({
+      rkey,
+      cid,
+      authorDid,
+      title: post.title,
+      url: post.url,
+      createdAt: new Date(post.createdAt),
+    });
+
+    await tx.insert(schema.ConsumedOffset).values({ offset });
+  });
+
+  if (process.env.DISCORD_WEBHOOK_URL) {
+    const bskyProfile = await getBlueskyProfile(authorDid);
+    const webhookResponse = await fetch(process.env.DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        embeds: [
+          {
+            title: "New post on Frontpage",
+            description: post.title,
+            url: `https://frontpage.unravel.fyi/post/${rkey}`,
+            color: 10181046,
+            author: bskyProfile
+              ? {
+                  name: `@${bskyProfile.handle}`,
+                  icon_url: bskyProfile.avatar,
+                  url: `https://bsky.app/profile/${bskyProfile.handle}`,
+                }
+              : undefined,
+            fields: [
+              {
+                name: "Link",
+                value: post.url,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!webhookResponse.ok) {
+      console.error("Failed to alert of new post", webhookResponse.statusText);
+    }
+  } else {
+    console.error("Can't alert of new post: No DISCORD_WEBHOOK_URL set");
+  }
+}
+
+type DeletePostInput = {
+  rkey: string;
+  offset: bigint;
+};
+
+export async function unauthed_deletePost({ rkey, offset }: DeletePostInput) {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.Post)
+      .set({ status: "deleted" })
+      .where(eq(schema.Post.rkey, rkey));
+
+    await tx.insert(schema.ConsumedOffset).values({ offset });
+  });
 }
