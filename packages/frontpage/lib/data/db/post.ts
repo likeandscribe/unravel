@@ -215,5 +215,7 @@ export async function unauthed_deletePost({ rkey, offset }: DeletePostInput) {
 
     console.log("Inserting consumed offset", offset);
     await tx.insert(schema.ConsumedOffset).values({ offset });
+    console.log("Done deleting post");
   });
+  console.log("Done deleting post transaction");
 }
