@@ -57,7 +57,7 @@ export const Commit = z.object({
   seq: z.string().transform((x, ctx) => {
     try {
       return BigInt(x);
-    } catch (e) {
+    } catch (_e) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Invalid BigInt",

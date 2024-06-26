@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 
 const ToastProvider = ToastPrimitives.Provider;
 
-const ToastViewport = ({
+function ToastViewport({
   className,
   ...props
-}: React.ComponentProps<typeof ToastPrimitives.Viewport>) => {
+}: React.ComponentProps<typeof ToastPrimitives.Viewport>) {
   return (
     <ToastPrimitives.Viewport
       className={cn(
@@ -22,7 +22,7 @@ const ToastViewport = ({
       {...props}
     />
   );
-};
+}
 
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
@@ -42,26 +42,26 @@ const toastVariants = cva(
   },
 );
 
-const Toast = ({
+function Toast({
   className,
   variant,
   ...props
 }: React.ComponentProps<typeof ToastPrimitives.Root> &
-  VariantProps<typeof toastVariants>) => {
+  VariantProps<typeof toastVariants>) {
   return (
     <ToastPrimitives.Root
       className={cn(toastVariants({ variant }), className)}
       {...props}
     />
   );
-};
+}
 
 Toast.displayName = ToastPrimitives.Root.displayName;
 
-const ToastAction = ({
+function ToastAction({
   className,
   ...props
-}: React.ComponentProps<typeof ToastPrimitives.Action>) => {
+}: React.ComponentProps<typeof ToastPrimitives.Action>) {
   return (
     <ToastPrimitives.Action
       className={cn(
@@ -71,14 +71,14 @@ const ToastAction = ({
       {...props}
     />
   );
-};
+}
 
 ToastAction.displayName = ToastPrimitives.Action.displayName;
 
-const ToastClose = ({
+function ToastClose({
   className,
   ...props
-}: React.ComponentProps<typeof ToastPrimitives.Close>) => {
+}: React.ComponentProps<typeof ToastPrimitives.Close>) {
   return (
     <ToastPrimitives.Close
       className={cn(
@@ -91,35 +91,35 @@ const ToastClose = ({
       <Cross2Icon className="h-4 w-4" />
     </ToastPrimitives.Close>
   );
-};
+}
 
 ToastClose.displayName = ToastPrimitives.Close.displayName;
 
-const ToastTitle = ({
+function ToastTitle({
   className,
   ...props
-}: React.ComponentProps<typeof ToastPrimitives.Title>) => {
+}: React.ComponentProps<typeof ToastPrimitives.Title>) {
   return (
     <ToastPrimitives.Title
       className={cn("text-sm font-semibold [&+div]:text-xs", className)}
       {...props}
     />
   );
-};
+}
 
 ToastTitle.displayName = ToastPrimitives.Title.displayName;
 
-const ToastDescription = ({
+function ToastDescription({
   className,
   ...props
-}: React.ComponentProps<typeof ToastPrimitives.Description>) => {
+}: React.ComponentProps<typeof ToastPrimitives.Description>) {
   return (
     <ToastPrimitives.Description
       className={cn("text-sm opacity-90", className)}
       {...props}
     />
   );
-};
+}
 
 ToastDescription.displayName = ToastPrimitives.Description.displayName;
 

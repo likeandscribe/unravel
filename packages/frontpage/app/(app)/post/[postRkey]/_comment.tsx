@@ -1,5 +1,4 @@
 "use client";
-import { TimeAgo } from "@/lib/components/time-ago";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,8 +72,11 @@ export function CommentClientWrapperWithToolbar({
   const commentRef = useRef<HTMLDivElement>(null);
   const newCommentTextAreaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const time = new Date();
   return (
     <article className={commentVariants({ level })}>
+      {time.toISOString()}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
       <div className="grid gap-2 flex-1 p-1" tabIndex={0} ref={commentRef}>
         {children}
         <div className="flex items-center gap-4">
@@ -100,14 +102,15 @@ export function CommentClientWrapperWithToolbar({
               <span className="sr-only">Reply</span>
             </Button>
           </SimpleTooltip>
-          {hasAuthored && <DeleteCommentButton rkey={rkey} />}
+          {hasAuthored ? <DeleteCommentButton rkey={rkey} /> : null}
         </div>
       </div>
-      {showNewComment && (
+      {showNewComment ? (
         <NewComment
           textAreaRef={newCommentTextAreaRef}
           parentRkey={rkey}
           postRkey={postRkey}
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           onActionDone={() => {
             startTransition(() => {
@@ -162,7 +165,7 @@ export function CommentClientWrapperWithToolbar({
             </AlertDialog>
           }
         />
-      )}
+      ) : null}
     </article>
   );
 }
@@ -272,6 +275,7 @@ export function NewComment({
       <div className="flex-1">
         <Textarea
           id={textAreaId}
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus={autoFocus}
           name="comment"
           ref={textAreaRef}

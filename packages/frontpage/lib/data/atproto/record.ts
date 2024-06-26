@@ -32,6 +32,7 @@ export const AtUri = z.string().transform((value, ctx) => {
 
 type Prettify<T> = {
   [K in keyof T]: T[K];
+  // eslint-disable-next-line @typescript-eslint/ban-types
 } & {};
 
 export function createAtUriParser<TCollection extends z.ZodType>(
@@ -46,6 +47,7 @@ export function createAtUriParser<TCollection extends z.ZodType>(
     if (!collection.success) {
       collection.error.errors.forEach((e) => {
         ctx.addIssue({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           code: e.code as any,
           message: e.message,
         });

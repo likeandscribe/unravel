@@ -12,10 +12,10 @@ const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
 const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
-const AlertDialogOverlay = ({
+function AlertDialogOverlay({
   className,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) => {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
   return (
     <AlertDialogPrimitive.Overlay
       className={cn(
@@ -25,14 +25,14 @@ const AlertDialogOverlay = ({
       {...props}
     />
   );
-};
+}
 
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
-const AlertDialogContent = ({
+function AlertDialogContent({
   className,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) => {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
@@ -45,85 +45,89 @@ const AlertDialogContent = ({
       />
     </AlertDialogPortal>
   );
-};
+}
 
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 
-const AlertDialogHeader = ({
+function AlertDialogHeader({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-2 text-center sm:text-left",
-      className,
-    )}
-    {...props}
-  />
-);
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col space-y-2 text-center sm:text-left",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
 AlertDialogHeader.displayName = "AlertDialogHeader";
 
-const AlertDialogFooter = ({
+function AlertDialogFooter({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      className,
-    )}
-    {...props}
-  />
-);
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
 AlertDialogFooter.displayName = "AlertDialogFooter";
 
-const AlertDialogTitle = ({
+function AlertDialogTitle({
   className,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Title>) => {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Title>) {
   return (
     <AlertDialogPrimitive.Title
       className={cn("text-lg font-semibold", className)}
       {...props}
     />
   );
-};
+}
 
 AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName;
 
-const AlertDialogDescription = ({
+function AlertDialogDescription({
   className,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Description>) => {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
   return (
     <AlertDialogPrimitive.Description
       className={cn("text-sm text-muted-foreground", className)}
       {...props}
     />
   );
-};
+}
 
 AlertDialogDescription.displayName =
   AlertDialogPrimitive.Description.displayName;
 
-const AlertDialogAction = ({
+function AlertDialogAction({
   className,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Action>) => {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Action>) {
   return (
     <AlertDialogPrimitive.Action
       className={cn(buttonVariants(), className)}
       {...props}
     />
   );
-};
+}
 
 AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
 
-const AlertDialogCancel = ({
+function AlertDialogCancel({
   className,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) => {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) {
   return (
     <AlertDialogPrimitive.Cancel
       className={cn(
@@ -134,7 +138,7 @@ const AlertDialogCancel = ({
       {...props}
     />
   );
-};
+}
 
 AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
 

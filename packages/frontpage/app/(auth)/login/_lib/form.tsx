@@ -43,7 +43,9 @@ export function LoginForm() {
         <Button type="submit" className="w-full">
           Sign in
         </Button>
-        {state?.error && <Alert variant="destructive">{state.error}</Alert>}
+        {state?.error ? (
+          <Alert variant="destructive">{state.error}</Alert>
+        ) : null}
       </div>
     </form>
   );

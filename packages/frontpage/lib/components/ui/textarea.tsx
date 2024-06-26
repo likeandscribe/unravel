@@ -5,10 +5,7 @@ import { cn } from "@/lib/utils";
 export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 
-const Textarea = ({
-  className,
-  ...props
-}: React.ComponentProps<"textarea">) => {
+function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea
       className={cn(
@@ -18,7 +15,7 @@ const Textarea = ({
       {...props}
     />
   );
-};
+}
 
 Textarea.displayName = "Textarea";
 

@@ -1,4 +1,3 @@
-import { getCommentsForPost } from "@/lib/data/db/comment";
 import { getUser } from "@/lib/data/user";
 import { notFound } from "next/navigation";
 import { PostCard } from "../../_components/post-card";
@@ -22,7 +21,6 @@ export default async function Post({
     notFound();
   }
   const user = await getUser();
-  const comments = await getCommentsForPost(post.id);
 
   return (
     <>

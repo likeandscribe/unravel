@@ -29,14 +29,14 @@ export function NewPostForm() {
         <Input name="url" id={`${id}-url`} type="url" />
       </div>
       <Button type="submit" disabled={isPending}>
-        {isPending && <Spinner className="mr-2" />} Submit
+        {isPending ? <Spinner className="mr-2" /> : null} Submit
       </Button>
-      {state?.error && (
+      {state?.error ? (
         <Alert>
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
-      )}
+      ) : null}
     </form>
   );
 }

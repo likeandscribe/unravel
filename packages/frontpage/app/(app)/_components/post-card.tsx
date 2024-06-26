@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getVoteForPost } from "@/lib/data/db/vote";
-import {
-  getPlcDoc,
-  ensureUser,
-  getUser,
-  getVerifiedHandle,
-} from "@/lib/data/user";
+import { ensureUser, getUser, getVerifiedHandle } from "@/lib/data/user";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { VoteButton } from "./vote-button";
 import { PostCollection } from "@/lib/data/atproto/post";

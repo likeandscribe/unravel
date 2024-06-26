@@ -20,18 +20,18 @@ export default async function Layout({
           <Link href="/">
             <span className="font-serif text-2xl font-bold">Frontpage</span>
           </Link>
-          {session && (
+          {session ? (
             <Button className="ml-4" asChild>
               <Link href="/post/new">New</Link>
             </Button>
-          )}
+          ) : null}
         </div>
         <Suspense>
           <LoginOrLogout />
         </Suspense>
       </div>
 
-      {session && (
+      {session ? (
         <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900/50 dark:text-slate-300 p-4 mb-4 gap-2 rounded-md">
           <span>
             {isInBeta ? (
@@ -61,7 +61,7 @@ export default async function Layout({
             </Button>
           )}
         </div>
-      )}
+      ) : null}
 
       <main className="mb-6">{children}</main>
 
@@ -93,7 +93,7 @@ async function LoginOrLogout() {
           await signOut();
         }}
       >
-        <button>Logout ({session.user.name})</button>
+        <button type="submit">Logout ({session.user.name})</button>
       </form>
     );
   }

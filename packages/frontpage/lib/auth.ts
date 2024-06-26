@@ -70,7 +70,11 @@ const auth = NextAuth({
           refreshJwt: authorizedInfo.refreshJwt,
           sub: authorizedInfo.id,
         };
-      } else if (Date.now() + 500 < (token.expiresAt as any as number)) {
+      } else if (
+        Date.now() + 500 <
+        // @ts-expect-error it's unknown but we know it's a number
+        token.expiresAt
+      ) {
         return token;
       }
 
@@ -92,8 +96,8 @@ const auth = NextAuth({
       }
     },
     session: async ({ session, token }) => {
-      session.user.refreshJwt = token.refreshJwt as any;
-      session.user.accessJwt = token.accessJwt as any;
+      session.user.refreshJwt = token.refreshJwt as string;
+      session.user.accessJwt = token.accessJwt as string;
       return session;
     },
   },

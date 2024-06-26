@@ -2,7 +2,12 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "DRAINPIPE_CONSUMER_SECRET",
+        "POSTGRES_URL",
+        "DISCORD_WEBHOOK_URL"
+      ]
     },
     "type-check": {}
   }

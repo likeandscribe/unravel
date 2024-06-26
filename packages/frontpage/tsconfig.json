@@ -3,18 +3,15 @@
   "compilerOptions": {
     "paths": {
       // TODO: Move this to subpath imports once https://github.com/microsoft/TypeScript/issues/52460 is resolved
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    "**/*.mjs",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

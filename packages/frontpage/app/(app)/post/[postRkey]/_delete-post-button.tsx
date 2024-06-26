@@ -14,7 +14,7 @@ import {
 import { Button } from "@/lib/components/ui/button";
 import { useToast } from "@/lib/components/ui/use-toast";
 import { TrashIcon } from "@radix-ui/react-icons";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { deletePostAction } from "./_actions";
 
 export function DeletePostButton({ rkey }: { rkey: string }) {

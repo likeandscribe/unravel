@@ -1,5 +1,5 @@
 import "server-only";
-import { ensureIsInBeta, ensureUser, getPdsUrl } from "../user";
+import { ensureIsInBeta, getPdsUrl } from "../user";
 import {
   atprotoCreateRecord,
   createAtUriParser,

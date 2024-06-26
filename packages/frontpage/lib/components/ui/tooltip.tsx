@@ -16,11 +16,11 @@ export type TooltipContentProps = React.ComponentPropsWithoutRef<
   typeof TooltipPrimitive.Content
 >;
 
-const TooltipContent = ({
+function TooltipContent({
   className,
   sideOffset = 4,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) => {
+}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
   return (
     <TooltipPrimitive.Content
       sideOffset={sideOffset}
@@ -31,7 +31,7 @@ const TooltipContent = ({
       {...props}
     />
   );
-};
+}
 
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
