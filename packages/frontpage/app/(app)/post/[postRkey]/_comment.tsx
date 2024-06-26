@@ -72,10 +72,8 @@ export function CommentClientWrapperWithToolbar({
   const commentRef = useRef<HTMLDivElement>(null);
   const newCommentTextAreaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
-  const time = new Date();
   return (
     <article className={commentVariants({ level })}>
-      {time.toISOString()}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
       <div className="grid gap-2 flex-1 p-1" tabIndex={0} ref={commentRef}>
         {children}
