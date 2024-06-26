@@ -29,6 +29,7 @@ export async function POST(request: Request) {
 
   const promises = ops.map(async (op) => {
     const { collection, rkey } = op.path;
+    console.log("Processing", collection, rkey, op.action);
 
     if (collection === atprotoPost.PostCollection) {
       if (op.action === "create") {

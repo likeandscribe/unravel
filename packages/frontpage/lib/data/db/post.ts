@@ -205,6 +205,7 @@ type DeletePostInput = {
 };
 
 export async function unauthed_deletePost({ rkey, offset }: DeletePostInput) {
+  console.log("Deleting post", rkey, offset);
   await db.transaction(async (tx) => {
     await tx
       .update(schema.Post)
