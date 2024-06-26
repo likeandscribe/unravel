@@ -7,7 +7,6 @@ import {
 } from "./record";
 import { z } from "zod";
 import { DataLayerError } from "../error";
-import { CommentCollection, CommentRecord } from "./comment";
 
 export const PostCollection = "fyi.unravel.frontpage.post";
 
@@ -16,6 +15,8 @@ export const PostRecord = z.object({
   url: z.string(),
   createdAt: z.string(),
 });
+
+export type Post = z.infer<typeof PostRecord>;
 
 type PostInput = {
   title: string;

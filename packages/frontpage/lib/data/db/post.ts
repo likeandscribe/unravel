@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { eq, sql, count, desc } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getUser } from "../user";
+import * as atprotoPost from "../atproto/post";
 
 const votesSubQuery = db
   .select({
@@ -128,4 +129,49 @@ export async function uncached_doesPostExist(rkey: string) {
     .limit(1);
 
   return Boolean(row[0]);
+}
+
+type CreatePostInput = {
+  post: atprotoPost.Post;
+  authorDid: string;
+  rkey: string;
+  cid: string;
+  offset: bigint;
+};
+
+export async function unauthed_createPost({
+  post,
+  rkey,
+  authorDid,
+  cid,
+  offset,
+}: CreatePostInput) {
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.Post).values({
+      rkey,
+      cid,
+      authorDid,
+      title: post.title,
+      url: post.url,
+      createdAt: new Date(post.createdAt),
+    });
+
+    await tx.insert(schema.ConsumedOffset).values({ offset });
+  });
+}
+
+type DeletePostInput = {
+  rkey: string;
+  offset: bigint;
+};
+
+export async function unauthed_deletePost({ rkey, offset }: DeletePostInput) {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.Post)
+      .set({ status: "deleted" })
+      .where(eq(schema.Post.rkey, rkey));
+
+    await tx.insert(schema.ConsumedOffset).values({ offset });
+  });
 }
