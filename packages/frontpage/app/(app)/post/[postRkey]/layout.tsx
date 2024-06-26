@@ -22,7 +22,10 @@ export default async function Post({
     notFound();
   }
   const user = await getUser();
-  const comments = await getCommentsForPost(post.id);
+
+  const isPostAuthor = user?.did === post.authorDid
+  const postIsLive = post.status === "live";
+  const showDeleteButton = isPostAuthor && postIsLive;
 
   return (
     <>
@@ -40,7 +43,7 @@ export default async function Post({
           cid={post.cid}
           isUpvoted={post.userHasVoted}
         />
-        {user?.did === post.authorDid && (
+        {showDeleteButton && (
           <div className="flex justify-end">
             <DeletePostButton rkey={post.rkey} />
           </div>
