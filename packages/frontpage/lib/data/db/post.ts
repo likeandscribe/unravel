@@ -207,11 +207,13 @@ type DeletePostInput = {
 export async function unauthed_deletePost({ rkey, offset }: DeletePostInput) {
   console.log("Deleting post", rkey, offset);
   await db.transaction(async (tx) => {
+    console.log("Updating post status to deleted", rkey);
     await tx
       .update(schema.Post)
       .set({ status: "deleted" })
       .where(eq(schema.Post.rkey, rkey));
 
+    console.log("Inserting consumed offset", offset);
     await tx.insert(schema.ConsumedOffset).values({ offset });
   });
 }
