@@ -48,7 +48,7 @@ export async function POST(request: Request) {
           offset: seq,
         });
       } else if (op.action === "delete") {
-        dbPost.unauthed_deletePost({ rkey, offset: seq });
+        await dbPost.unauthed_deletePost({ rkey, offset: seq });
       }
     }
     // repo is actually the did of the user
