@@ -171,7 +171,7 @@ export async function unauthed_createPost({
           {
             title: "New post on Frontpage",
             description: post.title,
-            url: `https://frontpage.unravel.fyi/post/${rkey}`,
+            url: `https://frontpage.fyi/post/${rkey}`,
             color: 10181046,
             author: bskyProfile
               ? {
