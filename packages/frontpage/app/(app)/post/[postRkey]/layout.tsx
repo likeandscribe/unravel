@@ -38,7 +38,7 @@ export default async function Post({
           cid={post.cid}
           isUpvoted={post.userHasVoted}
         />
-        {user?.did === post.authorDid && (
+        {user?.did === post.authorDid && post.status === "live" && (
           <div className="flex justify-end">
             <DeletePostButton rkey={post.rkey} />
           </div>
