@@ -14,15 +14,16 @@ import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
 
 export async function createCommentAction(
-  input: { parentRkey?: string; postRkey: string },
+  input: { parentRkey?: string; postRkey: string; postAuthor: string },
   _prevState: unknown,
   formData: FormData,
 ) {
   const content = formData.get("comment") as string;
   const user = await ensureUser();
+  console.log(input);
 
   const [post, comment] = await Promise.all([
-    getPost(input.postRkey),
+    getPost(input.postAuthor, input.postRkey),
     input.parentRkey
       ? getComment(input.parentRkey).then((c) => {
           if (!c) throw new Error("Comment not found");
@@ -45,7 +46,7 @@ export async function createCommentAction(
     parent: comment,
   });
   await waitForComment(rkey);
-  revalidatePath(`/post/${input.postRkey}`);
+  revalidatePath(`/post`);
 }
 
 const MAX_POLLS = 15;

@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
-import { eq, sql, count, desc } from "drizzle-orm";
+import { eq, sql, count, desc, and } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getBlueskyProfile, getUser } from "../user";
 import * as atprotoPost from "../atproto/post";
@@ -95,13 +95,13 @@ export const getFrontpagePosts = cache(async () => {
   }));
 });
 
-export const getPost = cache(async (rkey: string) => {
+export const getPost = cache(async (author: string, rkey: string) => {
   const userHasVoted = await buildUserHasVotedQuery();
 
   const rows = await db
     .select()
     .from(schema.Post)
-    .where(eq(schema.Post.rkey, rkey))
+    .where(and(eq(schema.Post.authorDid, author), eq(schema.Post.rkey, rkey)))
     .leftJoin(
       commentCountSubQuery,
       eq(commentCountSubQuery.postId, schema.Post.id),
@@ -121,11 +121,13 @@ export const getPost = cache(async (rkey: string) => {
   };
 });
 
-export async function uncached_doesPostExist(rkey: string) {
+export async function uncached_doesPostExist(authorDid: string, rkey: string) {
   const row = await db
     .select({ id: schema.Post.id })
     .from(schema.Post)
-    .where(eq(schema.Post.rkey, rkey))
+    .where(
+      and(eq(schema.Post.authorDid, authorDid), eq(schema.Post.rkey, rkey)),
+    )
     .limit(1);
 
   return Boolean(row[0]);

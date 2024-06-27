@@ -74,6 +74,7 @@ export async function Comment({
           createdAt={comment.createdAt}
           childComments={comment.children}
           isUpvoted={comment.userHasVoted}
+          postAuthorDid={props.postAuthorDid}
           // TODO: Show deeper levels behind a parent permalink. For now we just show them all at the max level
           level={Math.min((props.level ?? 0) + 1, 3) as CommentProps["level"]}
         />

@@ -7,10 +7,11 @@ import Link from "next/link";
 type Params = {
   commentRkey: string;
   postRkey: string;
+  postAuthor: string;
 };
 
 export default async function CommentPage({ params }: { params: Params }) {
-  const post = await getPost(params.postRkey);
+  const post = await getPost(params.postAuthor, params.postRkey);
   if (!post) {
     notFound();
   }

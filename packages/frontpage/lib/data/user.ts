@@ -35,7 +35,6 @@ export const getUser = cache(async () => {
   }
 
   return {
-    handle: session.user.name,
     pdsUrl,
     did: token.sub,
     accessJwt: session.user.accessJwt,
@@ -130,6 +129,34 @@ const getAtprotoDidFromDns = unstable_cache(
   },
 );
 
+export const getVerifiedDid = cache(async (handle: string) => {
+  const [dnsDid, httpDid] = await Promise.all([
+    getAtprotoDidFromDns(handle).catch((_) => {
+      return null;
+    }),
+    fetch(`https://${handle}/.well-known/atproto-did`, {
+      next: {
+        revalidate: 60 * 60 * 24, // 24 hours
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          return null;
+        }
+        return res.text();
+      })
+      .catch((_) => {
+        return null;
+      }),
+  ]);
+
+  if (dnsDid && httpDid && dnsDid !== httpDid) {
+    return null;
+  }
+
+  return dnsDid ?? httpDid ?? null;
+});
+
 export const getVerifiedHandle = cache(async (did: string) => {
   const plcDoc = await getPlcDoc(did);
   const plcHandle = plcDoc.alsoKnownAs
@@ -138,25 +165,9 @@ export const getVerifiedHandle = cache(async (did: string) => {
 
   if (!plcHandle) return null;
 
-  const dnsPromise = getAtprotoDidFromDns(plcHandle).catch((e) => {
-    console.error(e);
-    return null;
-  });
-  const httpPromise = fetch(`https://${plcHandle}/.well-known/atproto-did`, {
-    next: {
-      revalidate: 60 * 60 * 24, // 24 hours
-    },
-  })
-    .then((res) => res.text())
-    .catch((e) => {
-      console.error(e);
-      return null;
-    });
+  const resolvedDid = await getVerifiedDid(plcHandle);
 
-  if ((await dnsPromise) === did || (await httpPromise)?.trim() === did) {
-    return plcHandle;
-  }
-  return null;
+  return resolvedDid ? plcHandle : null;
 });
 
 const ProfileResponse = z.object({

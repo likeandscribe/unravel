@@ -31,8 +31,8 @@ export async function PostCard({
   cid,
   isUpvoted,
 }: PostProps) {
-  const postHref = `/post/${rkey}`;
   const handle = await getVerifiedHandle(author);
+  const postHref = `/post/${handle}/${rkey}`;
 
   return (
     // TODO: Make article route to postHref via onClick on card except innser links or buttons
