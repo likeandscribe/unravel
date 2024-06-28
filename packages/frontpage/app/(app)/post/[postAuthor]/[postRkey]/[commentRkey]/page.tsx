@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Comment } from "../_commentServer";
 import { getPost } from "@/lib/data/db/post";
 import Link from "next/link";
+import { getDidFromHandleOrDid } from "@/lib/data/user";
 
 type Params = {
   commentRkey: string;
@@ -11,7 +12,11 @@ type Params = {
 };
 
 export default async function CommentPage({ params }: { params: Params }) {
-  const post = await getPost(params.postAuthor, params.postRkey);
+  const postDidParam = await getDidFromHandleOrDid(params.postAuthor);
+  if (!postDidParam) {
+    notFound();
+  }
+  const post = await getPost(postDidParam, params.postRkey);
   if (!post) {
     notFound();
   }
@@ -35,7 +40,8 @@ export default async function CommentPage({ params }: { params: Params }) {
         key={comment.id}
         cid={comment.cid}
         rkey={comment.rkey}
-        postRkey={params.postRkey}
+        postAuthorParam={params.postAuthor}
+        postRkey={post.rkey}
         authorDid={comment.authorDid}
         createdAt={comment.createdAt}
         id={comment.id}

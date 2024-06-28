@@ -1,4 +1,8 @@
-import { getUser, getVerifiedHandle } from "@/lib/data/user";
+import {
+  getDidFromHandleOrDid,
+  getUser,
+  getVerifiedHandle,
+} from "@/lib/data/user";
 import { CommentClientWrapperWithToolbar, CommentProps } from "./_comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { TimeAgo } from "@/lib/components/time-ago";
@@ -7,17 +11,21 @@ import Link from "next/link";
 
 type ServerCommentProps = Omit<
   CommentProps,
+  // Client only props
   | "voteAction"
   | "unvoteAction"
   | "initialVoteState"
   | "hasAuthored"
   | "children"
+  | "postAuthorDid"
 > & {
+  // Server only props
   cid: string;
   isUpvoted: boolean;
   childComments: Awaited<ReturnType<typeof getCommentsForPost>>;
   comment: string;
   createdAt: Date;
+  postAuthorParam: string;
 };
 
 export async function Comment({
@@ -26,9 +34,18 @@ export async function Comment({
   childComments,
   comment,
   createdAt,
+  postAuthorParam,
   ...props
 }: ServerCommentProps) {
-  const handle = await getVerifiedHandle(authorDid);
+  const [postAuthorDid, handle] = await Promise.all([
+    getDidFromHandleOrDid(postAuthorParam),
+    getVerifiedHandle(authorDid),
+  ]);
+
+  if (!postAuthorDid) {
+    // This should never happen because we resolve this in the post page
+    throw new Error("Post author not found");
+  }
 
   const user = await getUser();
   const hasAuthored = user?.did === authorDid;
@@ -39,6 +56,7 @@ export async function Comment({
         {...props}
         hasAuthored={hasAuthored}
         authorDid={authorDid}
+        postAuthorDid={postAuthorDid}
         initialVoteState={
           (await getUser())?.did === authorDid
             ? "authored"
@@ -51,7 +69,7 @@ export async function Comment({
           <UserAvatar did={authorDid} />
           <div className="font-medium">{handle}</div>
           <Link
-            href={`/post/${props.postRkey}/${props.rkey}`}
+            href={`/post/${postAuthorParam}/${props.postRkey}/${props.rkey}`}
             className="text-gray-500 text-xs dark:text-gray-400 hover:underline"
           >
             <TimeAgo createdAt={createdAt} side="bottom" />
@@ -74,7 +92,7 @@ export async function Comment({
           createdAt={comment.createdAt}
           childComments={comment.children}
           isUpvoted={comment.userHasVoted}
-          postAuthorDid={props.postAuthorDid}
+          postAuthorParam={postAuthorParam}
           // TODO: Show deeper levels behind a parent permalink. For now we just show them all at the max level
           level={Math.min((props.level ?? 0) + 1, 3) as CommentProps["level"]}
         />

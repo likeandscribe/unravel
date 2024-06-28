@@ -4,11 +4,23 @@ import { Comment } from "./_commentServer";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
 import { notFound } from "next/navigation";
-import { PostParams, resolvePostParams } from "./_post-params";
+import { getDidFromHandleOrDid } from "@/lib/data/user";
 
-export default async function Post({ params }: { params: PostParams }) {
-  const resolvedParams = await resolvePostParams(params);
-  const post = await getPost(resolvedParams.authorDid, resolvedParams.postRkey);
+type Params = {
+  postAuthor: string;
+  postRkey: string;
+};
+
+export default async function Post({ params }: { params: Params }) {
+  const didParam = await getDidFromHandleOrDid(params.postAuthor);
+  console.log({
+    didParam,
+    author: params.postAuthor,
+  });
+  if (!didParam) {
+    notFound();
+  }
+  const post = await getPost(didParam, params.postRkey);
   if (!post) {
     notFound();
   }
@@ -17,10 +29,7 @@ export default async function Post({ params }: { params: PostParams }) {
   return (
     <>
       {post.status === "live" ? (
-        <NewComment
-          postRkey={post.rkey}
-          postAuthor={resolvedParams.authorDid}
-        />
+        <NewComment postRkey={post.rkey} postAuthorDid={didParam} />
       ) : (
         <Alert>
           <AlertTitle>This post has been deleted</AlertTitle>
@@ -38,7 +47,7 @@ export default async function Post({ params }: { params: PostParams }) {
             rkey={comment.rkey}
             postRkey={post.rkey}
             authorDid={comment.authorDid}
-            postAuthorDid={resolvedParams.authorDid}
+            postAuthorParam={params.postAuthor}
             createdAt={comment.createdAt}
             id={comment.id}
             comment={comment.body}

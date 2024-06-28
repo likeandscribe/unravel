@@ -1,9 +1,8 @@
-import { getUser } from "@/lib/data/user";
+import { getDidFromHandleOrDid, getUser } from "@/lib/data/user";
 import { notFound } from "next/navigation";
 import { PostCard } from "../../../_components/post-card";
 import { DeletePostButton } from "./_delete-post-button";
 import { getPost } from "@/lib/data/db/post";
-import { resolvePostParams } from "./_post-params";
 
 type Params = {
   postRkey: string;
@@ -18,8 +17,11 @@ export default async function Post({
   params: Params;
 }) {
   getUser(); // Prefetch user
-  const resolvedParams = await resolvePostParams(params);
-  const post = await getPost(resolvedParams.authorDid, resolvedParams.postRkey);
+  const didParam = await getDidFromHandleOrDid(params.postAuthor);
+  if (!didParam) {
+    notFound();
+  }
+  const post = await getPost(didParam, params.postRkey);
   if (!post) {
     notFound();
   }

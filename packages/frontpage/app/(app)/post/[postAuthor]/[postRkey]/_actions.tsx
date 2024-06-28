@@ -14,7 +14,7 @@ import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
 
 export async function createCommentAction(
-  input: { parentRkey?: string; postRkey: string; postAuthor: string },
+  input: { parentRkey?: string; postRkey: string; postAuthorDid: string },
   _prevState: unknown,
   formData: FormData,
 ) {
@@ -23,7 +23,7 @@ export async function createCommentAction(
   console.log(input);
 
   const [post, comment] = await Promise.all([
-    getPost(input.postAuthor, input.postRkey),
+    getPost(input.postAuthorDid, input.postRkey),
     input.parentRkey
       ? getComment(input.parentRkey).then((c) => {
           if (!c) throw new Error("Comment not found");

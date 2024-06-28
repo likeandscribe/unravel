@@ -95,13 +95,15 @@ export const getFrontpagePosts = cache(async () => {
   }));
 });
 
-export const getPost = cache(async (author: string, rkey: string) => {
+export const getPost = cache(async (authorDid: string, rkey: string) => {
   const userHasVoted = await buildUserHasVotedQuery();
 
   const rows = await db
     .select()
     .from(schema.Post)
-    .where(and(eq(schema.Post.authorDid, author), eq(schema.Post.rkey, rkey)))
+    .where(
+      and(eq(schema.Post.authorDid, authorDid), eq(schema.Post.rkey, rkey)),
+    )
     .leftJoin(
       commentCountSubQuery,
       eq(commentCountSubQuery.postId, schema.Post.id),

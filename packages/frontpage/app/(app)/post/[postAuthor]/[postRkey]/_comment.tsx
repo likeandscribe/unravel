@@ -110,7 +110,7 @@ export function CommentClientWrapperWithToolbar({
           textAreaRef={newCommentTextAreaRef}
           parentRkey={rkey}
           postRkey={postRkey}
-          postAuthor={postAuthorDid}
+          postAuthorDid={postAuthorDid}
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           onActionDone={() => {
@@ -232,21 +232,21 @@ export function NewComment({
   autoFocus = false,
   parentRkey,
   postRkey,
-  postAuthor,
+  postAuthorDid,
   extraButton,
   textAreaRef,
   onActionDone,
 }: {
   parentRkey?: string;
   postRkey: string;
-  postAuthor: string;
+  postAuthorDid: string;
   autoFocus?: boolean;
   onActionDone?: () => void;
   extraButton?: React.ReactNode;
   textAreaRef?: React.RefObject<HTMLTextAreaElement>;
 }) {
   const [_, action, isPending] = useActionState(
-    createCommentAction.bind(null, { parentRkey, postRkey, postAuthor }),
+    createCommentAction.bind(null, { parentRkey, postRkey, postAuthorDid }),
     undefined,
   );
   const id = useId();
