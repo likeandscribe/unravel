@@ -7,6 +7,7 @@ import {
 } from "./record";
 import { z } from "zod";
 import { DataLayerError } from "../error";
+import { DID } from "./did";
 
 export const PostCollection = "fyi.unravel.frontpage.post";
 
@@ -47,7 +48,7 @@ export async function deletePost(rkey: string) {
   });
 }
 
-export async function getPost({ rkey, repo }: { rkey: string; repo: string }) {
+export async function getPost({ rkey, repo }: { rkey: string; repo: DID }) {
   const service = await getPdsUrl(repo);
 
   if (!service) {

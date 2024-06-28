@@ -29,8 +29,9 @@ import {
   useId,
   startTransition,
 } from "react";
-import { VoteButton, VoteButtonState } from "../../_components/vote-button";
+import { VoteButton, VoteButtonState } from "../../../_components/vote-button";
 import { Spinner } from "@/lib/components/ui/spinner";
+import { DID } from "@/lib/data/atproto/did";
 
 const commentVariants = cva(undefined, {
   variants: {
@@ -51,7 +52,8 @@ export type CommentProps = VariantProps<typeof commentVariants> & {
   cid: string;
   id: number;
   postRkey: string;
-  authorDid: string;
+  authorDid: DID;
+  postAuthorDid: DID;
   initialVoteState: VoteButtonState;
   hasAuthored: boolean;
   children: React.ReactNode;
@@ -63,6 +65,7 @@ export function CommentClientWrapperWithToolbar({
   cid,
   postRkey,
   authorDid,
+  postAuthorDid,
   level,
   initialVoteState,
   hasAuthored,
@@ -108,6 +111,7 @@ export function CommentClientWrapperWithToolbar({
           textAreaRef={newCommentTextAreaRef}
           parentRkey={rkey}
           postRkey={postRkey}
+          postAuthorDid={postAuthorDid}
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           onActionDone={() => {
@@ -229,19 +233,21 @@ export function NewComment({
   autoFocus = false,
   parentRkey,
   postRkey,
+  postAuthorDid,
   extraButton,
   textAreaRef,
   onActionDone,
 }: {
   parentRkey?: string;
   postRkey: string;
+  postAuthorDid: DID;
   autoFocus?: boolean;
   onActionDone?: () => void;
   extraButton?: React.ReactNode;
   textAreaRef?: React.RefObject<HTMLTextAreaElement>;
 }) {
   const [_, action, isPending] = useActionState(
-    createCommentAction.bind(null, { parentRkey, postRkey }),
+    createCommentAction.bind(null, { parentRkey, postRkey, postAuthorDid }),
     undefined,
   );
   const id = useId();

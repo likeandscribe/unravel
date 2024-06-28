@@ -4,13 +4,19 @@ import { Comment } from "./_commentServer";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
 import { notFound } from "next/navigation";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 
 type Params = {
+  postAuthor: string;
   postRkey: string;
 };
 
 export default async function Post({ params }: { params: Params }) {
-  const post = await getPost(params.postRkey);
+  const didParam = await getDidFromHandleOrDid(params.postAuthor);
+  if (!didParam) {
+    notFound();
+  }
+  const post = await getPost(didParam, params.postRkey);
   if (!post) {
     notFound();
   }
@@ -19,7 +25,7 @@ export default async function Post({ params }: { params: Params }) {
   return (
     <>
       {post.status === "live" ? (
-        <NewComment postRkey={post.rkey} />
+        <NewComment postRkey={post.rkey} postAuthorDid={didParam} />
       ) : (
         <Alert>
           <AlertTitle>This post has been deleted</AlertTitle>
@@ -37,6 +43,7 @@ export default async function Post({ params }: { params: Params }) {
             rkey={comment.rkey}
             postRkey={post.rkey}
             authorDid={comment.authorDid}
+            postAuthorParam={params.postAuthor}
             createdAt={comment.createdAt}
             id={comment.id}
             comment={comment.body}

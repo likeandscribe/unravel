@@ -7,8 +7,7 @@ import { redirect } from "next/navigation";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import * as schema from "../schema";
-import dns from "node:dns/promises";
-import { unstable_cache } from "next/cache";
+import { DID, getVerifiedDid, parseDid } from "./atproto/did";
 
 /**
  * Returns null when not logged in. If you want to ensure that the user is logged in, use `ensureUser` instead.
@@ -29,15 +28,19 @@ export const getUser = cache(async () => {
     throw new Error("Invalid token. Missing sub");
   }
 
-  const pdsUrl = await getPdsUrl(token.sub);
+  const did = parseDid(token.sub);
+  if (!did) {
+    throw new Error("Invalid DID");
+  }
+
+  const pdsUrl = await getPdsUrl(did);
   if (!pdsUrl) {
     throw new Error("No AtprotoPersonalDataServer service found");
   }
 
   return {
-    handle: session.user.name,
     pdsUrl,
-    did: token.sub,
+    did,
     accessJwt: session.user.accessJwt,
   };
 });
@@ -78,7 +81,7 @@ export const isBetaUser = cache(async () => {
   );
 });
 
-export const getPdsUrl = cache(async (did: string) => {
+export const getPdsUrl = cache(async (did: DID) => {
   const plc = await getPlcDoc(did);
 
   return (
@@ -87,7 +90,7 @@ export const getPdsUrl = cache(async (did: string) => {
   );
 });
 
-export const getPlcDoc = cache(async (did: string) => {
+export const getPlcDoc = cache(async (did: DID) => {
   const response = await fetch(`https://plc.directory/${did}`, {
     next: {
       // TODO: Also revalidate this when we receive an identity change event
@@ -111,26 +114,7 @@ const PlcDocument = z.object({
   ),
 });
 
-const getAtprotoDidFromDns = unstable_cache(
-  async (handle: string) => {
-    const records = await dns.resolveTxt(`_atproto.${handle}`).catch((e) => {
-      if ("code" in e && e.code === "ENODATA") {
-        return [];
-      }
-
-      throw e;
-    });
-    // records is [ [ "did=xxx" ] ]
-    // We're assuming that you only have one txt record or that the first one is the one we want
-    return records[0]?.join().split("did=")[1] ?? null;
-  },
-  ["dns", "resolveTxt"],
-  {
-    revalidate: 60 * 60 * 24, // 24 hours
-  },
-);
-
-export const getVerifiedHandle = cache(async (did: string) => {
+export const getVerifiedHandle = cache(async (did: DID) => {
   const plcDoc = await getPlcDoc(did);
   const plcHandle = plcDoc.alsoKnownAs
     .find((handle) => handle.startsWith("at://"))
@@ -138,25 +122,9 @@ export const getVerifiedHandle = cache(async (did: string) => {
 
   if (!plcHandle) return null;
 
-  const dnsPromise = getAtprotoDidFromDns(plcHandle).catch((e) => {
-    console.error(e);
-    return null;
-  });
-  const httpPromise = fetch(`https://${plcHandle}/.well-known/atproto-did`, {
-    next: {
-      revalidate: 60 * 60 * 24, // 24 hours
-    },
-  })
-    .then((res) => res.text())
-    .catch((e) => {
-      console.error(e);
-      return null;
-    });
+  const resolvedDid = await getVerifiedDid(plcHandle);
 
-  if ((await dnsPromise) === did || (await httpPromise)?.trim() === did) {
-    return plcHandle;
-  }
-  return null;
+  return resolvedDid ? plcHandle : null;
 });
 
 const ProfileResponse = z.object({
@@ -164,7 +132,7 @@ const ProfileResponse = z.object({
   handle: z.string(),
 });
 
-export const getBlueskyProfile = cache(async (did: string) => {
+export const getBlueskyProfile = cache(async (did: DID) => {
   const json = await fetch(
     `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${did}`,
     {

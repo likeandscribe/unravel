@@ -1,11 +1,13 @@
 import { getUser } from "@/lib/data/user";
 import { notFound } from "next/navigation";
-import { PostCard } from "../../_components/post-card";
+import { PostCard } from "../../../_components/post-card";
 import { DeletePostButton } from "./_delete-post-button";
 import { getPost } from "@/lib/data/db/post";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 
 type Params = {
   postRkey: string;
+  postAuthor: string;
 };
 
 export default async function Post({
@@ -16,7 +18,11 @@ export default async function Post({
   params: Params;
 }) {
   getUser(); // Prefetch user
-  const post = await getPost(params.postRkey);
+  const didParam = await getDidFromHandleOrDid(params.postAuthor);
+  if (!didParam) {
+    notFound();
+  }
+  const post = await getPost(didParam, params.postRkey);
   if (!post) {
     notFound();
   }
