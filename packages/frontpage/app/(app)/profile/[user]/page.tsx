@@ -13,6 +13,7 @@ import {
 import { getBlueskyProfile } from "@/lib/data/user";
 import { getUserComments } from "@/lib/data/db/comment";
 import { Comment } from "../../post/[postAuthor]/[postRkey]/_commentServer";
+import { Suspense } from "react";
 
 type Params = {
   user: string;
@@ -52,83 +53,93 @@ export default async function Profile({ params }: { params: Params }) {
           <TabsTrigger value="posts">Posts</TabsTrigger>
           <TabsTrigger value="comments">Comments</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" className="flex flex-col gap-4">
-          {overview.map((entity) => {
-            if (entity.type === "post") {
-              return (
-                <PostCard
-                  key={entity.id}
-                  author={entity.authorDid}
-                  createdAt={entity.createdAt}
-                  id={entity.id}
-                  title={entity.title}
-                  url={entity.url}
-                  votes={entity.voteCount}
-                  commentCount={entity.commentCount}
-                  cid={entity.cid}
-                  rkey={entity.rkey}
-                  isUpvoted={entity.userHasVoted}
-                />
-              );
-            }
-            if (entity.type === "comment") {
-              return (
-                <Comment
-                  comment={entity.body}
-                  isUpvoted
-                  rkey={entity.rkey}
-                  cid={entity.cid}
-                  id={entity.id}
-                  key={entity.id}
-                  level={1}
-                  postRkey={entity.postRkey as string}
-                  authorDid={entity.authorDid}
-                  createdAt={entity.createdAt}
-                  childComments={[]}
-                  postAuthorParam={entity.postAuthorDid as DID}
-                />
-              );
-            }
-          })}
+        <TabsContent value="overview">
+          <div className="flex flex-col gap-4">
+            {overview.map((entity) => {
+              if (entity.type === "post") {
+                return (
+                  <PostCard
+                    key={entity.id}
+                    author={entity.authorDid}
+                    createdAt={entity.createdAt}
+                    id={entity.id}
+                    title={entity.title}
+                    url={entity.url}
+                    votes={entity.voteCount}
+                    commentCount={entity.commentCount}
+                    cid={entity.cid}
+                    rkey={entity.rkey}
+                    isUpvoted={entity.userHasVoted}
+                  />
+                );
+              }
+              if (entity.type === "comment") {
+                return (
+                  <Comment
+                    comment={entity.body}
+                    isUpvoted
+                    rkey={entity.rkey}
+                    cid={entity.cid}
+                    id={entity.id}
+                    key={entity.id}
+                    level={1}
+                    postRkey={entity.postRkey as string}
+                    authorDid={entity.authorDid}
+                    createdAt={entity.createdAt}
+                    childComments={[]}
+                    postAuthorParam={entity.postAuthorDid as DID}
+                  />
+                );
+              }
+            })}
+          </div>
         </TabsContent>
-        <TabsContent value="posts" className="flex flex-col gap-4">
-          {userPosts.map((post) => {
-            return (
-              <PostCard
-                key={post.id}
-                author={post.authorDid}
-                createdAt={post.createdAt}
-                id={post.id}
-                title={post.title}
-                url={post.url}
-                votes={post.voteCount}
-                commentCount={post.commentCount}
-                cid={post.cid}
-                rkey={post.rkey}
-                isUpvoted={post.userHasVoted}
-              />
-            );
-          })}
+        <TabsContent value="posts">
+          <Suspense>
+            <div className="flex flex-col gap-4">
+              {userPosts.map((post) => {
+                return (
+                  <PostCard
+                    key={post.id}
+                    author={post.authorDid}
+                    createdAt={post.createdAt}
+                    id={post.id}
+                    title={post.title}
+                    url={post.url}
+                    votes={post.voteCount}
+                    commentCount={post.commentCount}
+                    cid={post.cid}
+                    rkey={post.rkey}
+                    isUpvoted={post.userHasVoted}
+                  />
+                );
+              })}
+            </div>
+          </Suspense>
         </TabsContent>
-        <TabsContent value="comments" className="flex flex-col gap-4">
-          {userComments.map((comment) => {
-            return (
-              <Comment
-                comment={comment.body}
-                isUpvoted
-                rkey={comment.rkey}
-                cid={comment.cid}
-                id={comment.id}
-                key={comment.id}
-                level={1}
-                postRkey={comment.postRkey as string}
-                authorDid={comment.authorDid}
-                createdAt={comment.createdAt}
-                childComments={[]}
-                postAuthorParam={comment.postAuthorDid as DID}
-              />
-            );
-          })}
+        <TabsContent value="comments">
+          <Suspense>
+            <div className="flex flex-col gap-4">
+              {userComments.map((comment) => {
+                return (
+                  <Comment
+                    comment={comment.body}
+                    isUpvoted
+                    rkey={comment.rkey}
+                    cid={comment.cid}
+                    id={comment.id}
+                    key={comment.id}
+                    level={1}
+                    postRkey={comment.postRkey as string}
+                    authorDid={comment.authorDid}
+                    createdAt={comment.createdAt}
+                    childComments={[]}
+                    postAuthorParam={comment.postAuthorDid as DID}
+                  />
+                );
+              })}
+            </div>
+          </Suspense>
         </TabsContent>
       </Tabs>
     </>
