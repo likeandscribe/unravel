@@ -83,7 +83,7 @@ export function OgWrapper({
         width: "100%",
         height: "100%",
         padding: 64,
-        paddingBottom: 40,
+        paddingTop: 40,
       }}
     >
       <svg
