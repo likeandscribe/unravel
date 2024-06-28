@@ -33,13 +33,13 @@ export async function generateMetadata({
   if (!postAuthorDid || !commentAuthorDid) {
     notFound();
   }
-  const post = await getPost(commentAuthorDid, params.postRkey);
+  const post = await getPost(postAuthorDid, params.postRkey);
   if (!post) {
     notFound();
   }
   const comment = await getCommentWithChildren(
     post.id,
-    postAuthorDid,
+    commentAuthorDid,
     params.commentRkey,
   );
   if (!comment) {
