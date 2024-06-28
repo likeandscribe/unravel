@@ -18,6 +18,9 @@ export async function generateMetadata({
 
   return {
     title: post.title,
+    alternates: {
+      canonical: `https://frontpage.fyi${path}`,
+    },
     openGraph: {
       title: post.title,
       description: "Discuss this post on Frontpage.",

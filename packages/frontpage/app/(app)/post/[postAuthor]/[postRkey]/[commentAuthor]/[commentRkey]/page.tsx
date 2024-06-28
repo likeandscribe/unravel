@@ -23,6 +23,9 @@ export async function generateMetadata({
 
   return {
     title: `${post.title} - @${handle}: "${truncateText(comment.body, 15)}..."`,
+    alternates: {
+      canonical: `https://frontpage.fyi${path}`,
+    },
     openGraph: {
       title: `@${handle}'s comment on Frontpage`,
       description: truncateText(comment.body, 47),
