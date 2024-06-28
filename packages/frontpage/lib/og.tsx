@@ -16,7 +16,7 @@ export async function frontpageOgImageResponse(element: React.ReactElement) {
     height: 630,
     fonts: await Promise.all([
       loadGoogleFont("Source Serif 4", 400),
-      loadGoogleFont("Source Serif 4", 500),
+      loadGoogleFont("Source Serif 4", 700),
       loadGoogleFont("Source Sans 3", 400),
     ]),
   });
@@ -24,7 +24,6 @@ export async function frontpageOgImageResponse(element: React.ReactElement) {
 
 async function loadGoogleFont(name: string, weight: 400 | 500 | 700) {
   const url = `https://fonts.googleapis.com/css2?family=${name.replace(/ /g, "+")}:wght@${weight}`;
-  console.log(url);
 
   const css = await (
     await fetch(url, {
