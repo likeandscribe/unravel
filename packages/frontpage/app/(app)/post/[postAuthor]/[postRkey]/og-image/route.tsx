@@ -1,9 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
-import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
-import { getPost } from "@/lib/data/db/post";
+
 import { getBlueskyProfile } from "@/lib/data/user";
-import { notFound } from "next/navigation";
 import {
   OgBox,
   frontpageOgImageResponse,
@@ -12,6 +10,7 @@ import {
   OgWrapper,
   OgBottomBar,
 } from "@/lib/og";
+import { getPostPageData } from "../_lib/page-data";
 
 type Params = {
   postRkey: string;
@@ -22,10 +21,7 @@ export const dynamic = "force-static";
 export const revalidate = 60 * 60; // 1 hour
 
 export async function GET(_req: Request, { params }: { params: Params }) {
-  const authorDid = await getDidFromHandleOrDid(params.postAuthor);
-  if (!authorDid) notFound();
-  const post = await getPost(authorDid, params.postRkey);
-  if (!post) notFound();
+  const { post } = await getPostPageData(params);
   const { avatar } = await getBlueskyProfile(post.authorDid);
 
   return frontpageOgImageResponse(
