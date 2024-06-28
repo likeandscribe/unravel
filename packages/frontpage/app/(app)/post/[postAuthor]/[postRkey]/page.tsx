@@ -4,7 +4,7 @@ import { Comment } from "./_commentServer";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
 import { notFound } from "next/navigation";
-import { getDidFromHandleOrDid } from "@/lib/data/user";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 
 type Params = {
   postAuthor: string;

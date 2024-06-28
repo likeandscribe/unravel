@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import * as schema from "../schema";
-import { DID, getAtprotoDidFromDns, isDid, parseDid } from "./atproto/did";
+import { DID, getVerifiedDid, parseDid } from "./atproto/did";
 
 /**
  * Returns null when not logged in. If you want to ensure that the user is logged in, use `ensureUser` instead.
@@ -114,34 +114,6 @@ const PlcDocument = z.object({
   ),
 });
 
-export const getVerifiedDid = cache(async (handle: string) => {
-  const [dnsDid, httpDid] = await Promise.all([
-    getAtprotoDidFromDns(handle).catch((_) => {
-      return null;
-    }),
-    fetch(`https://${handle}/.well-known/atproto-did`, {
-      next: {
-        revalidate: 60 * 60 * 24, // 24 hours
-      },
-    })
-      .then((res) => {
-        if (!res.ok) {
-          return null;
-        }
-        return res.text();
-      })
-      .catch((_) => {
-        return null;
-      }),
-  ]);
-
-  if (dnsDid && httpDid && dnsDid !== httpDid) {
-    return null;
-  }
-
-  return dnsDid ?? (httpDid ? parseDid(httpDid) : null);
-});
-
 export const getVerifiedHandle = cache(async (did: DID) => {
   const plcDoc = await getPlcDoc(did);
   const plcHandle = plcDoc.alsoKnownAs
@@ -171,16 +143,4 @@ export const getBlueskyProfile = cache(async (did: DID) => {
   ).then((res) => res.json());
 
   return ProfileResponse.parse(json);
-});
-
-/**
- * Returns the DID of the the handle or the DID itself if it's a DID. Or null if the handle doesn't resolve to a DID.
- */
-export const getDidFromHandleOrDid = cache(async (handleOrDid: string) => {
-  const decodedHandleOrDid = decodeURIComponent(handleOrDid);
-  if (isDid(decodedHandleOrDid)) {
-    return decodedHandleOrDid;
-  }
-
-  return getVerifiedDid(decodedHandleOrDid);
 });

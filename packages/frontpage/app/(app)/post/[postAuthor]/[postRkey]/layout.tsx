@@ -1,8 +1,9 @@
-import { getDidFromHandleOrDid, getUser } from "@/lib/data/user";
+import { getUser } from "@/lib/data/user";
 import { notFound } from "next/navigation";
 import { PostCard } from "../../../_components/post-card";
 import { DeletePostButton } from "./_delete-post-button";
 import { getPost } from "@/lib/data/db/post";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 
 type Params = {
   postRkey: string;

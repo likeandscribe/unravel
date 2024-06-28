@@ -1,13 +1,10 @@
-import {
-  getDidFromHandleOrDid,
-  getUser,
-  getVerifiedHandle,
-} from "@/lib/data/user";
+import { getUser, getVerifiedHandle } from "@/lib/data/user";
 import { CommentClientWrapperWithToolbar, CommentProps } from "./_comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { UserAvatar } from "@/lib/components/avatar";
 import Link from "next/link";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 
 type ServerCommentProps = Omit<
   CommentProps,

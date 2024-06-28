@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Comment } from "../../_commentServer";
 import { getPost } from "@/lib/data/db/post";
 import Link from "next/link";
-import { getDidFromHandleOrDid } from "@/lib/data/user";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 
 type Params = {
   commentRkey: string;
