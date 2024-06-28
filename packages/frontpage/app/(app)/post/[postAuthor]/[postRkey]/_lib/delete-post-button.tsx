@@ -15,7 +15,7 @@ import { Button } from "@/lib/components/ui/button";
 import { useToast } from "@/lib/components/ui/use-toast";
 import { TrashIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
-import { deletePostAction } from "./_actions";
+import { deletePostAction } from "./actions";
 
 export function DeletePostButton({ rkey }: { rkey: string }) {
   const { toast } = useToast();

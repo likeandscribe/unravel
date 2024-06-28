@@ -1,18 +1,8 @@
-import { getCommentWithChildren } from "@/lib/data/db/comment";
-import { notFound } from "next/navigation";
-import { Comment } from "../../_commentServer";
-import { getPost } from "@/lib/data/db/post";
+import { Comment } from "../../_lib/comment";
 import Link from "next/link";
-import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 import { Metadata } from "next";
 import { getVerifiedHandle } from "@/lib/data/user";
-
-type Params = {
-  commentRkey: string;
-  postRkey: string;
-  postAuthor: string;
-  commentAuthor: string;
-};
+import { CommentPageParams, getCommentPageData } from "./_lib/page-data";
 
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
@@ -24,27 +14,9 @@ function truncateText(text: string, maxLength: number) {
 export async function generateMetadata({
   params,
 }: {
-  params: Params;
+  params: CommentPageParams;
 }): Promise<Metadata> {
-  const [postAuthorDid, commentAuthorDid] = await Promise.all([
-    getDidFromHandleOrDid(params.postAuthor),
-    getDidFromHandleOrDid(params.commentAuthor),
-  ]);
-  if (!postAuthorDid || !commentAuthorDid) {
-    notFound();
-  }
-  const post = await getPost(postAuthorDid, params.postRkey);
-  if (!post) {
-    notFound();
-  }
-  const comment = await getCommentWithChildren(
-    post.id,
-    commentAuthorDid,
-    params.commentRkey,
-  );
-  if (!comment) {
-    notFound();
-  }
+  const { comment, post } = await getCommentPageData(params);
 
   const handle = await getVerifiedHandle(comment.authorDid);
   const path = `/post/${params.postAuthor}/${params.postRkey}/${params.commentAuthor}/${params.commentRkey}`;
@@ -67,26 +39,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function CommentPage({ params }: { params: Params }) {
-  const [postAuthorDid, commentAuthorDid] = await Promise.all([
-    getDidFromHandleOrDid(params.postAuthor),
-    getDidFromHandleOrDid(params.commentAuthor),
-  ]);
-  if (!postAuthorDid || !commentAuthorDid) {
-    notFound();
-  }
-  const post = await getPost(postAuthorDid, params.postRkey);
-  if (!post) {
-    notFound();
-  }
-  const comment = await getCommentWithChildren(
-    post.id,
-    commentAuthorDid,
-    params.commentRkey,
-  );
-  if (!comment) {
-    notFound();
-  }
+export default async function CommentPage({
+  params,
+}: {
+  params: CommentPageParams;
+}) {
+  const { comment, post } = await getCommentPageData(params);
 
   return (
     <>

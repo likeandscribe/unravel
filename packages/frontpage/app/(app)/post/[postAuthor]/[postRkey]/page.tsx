@@ -1,31 +1,17 @@
 import { Alert, AlertDescription, AlertTitle } from "@/lib/components/ui/alert";
-import { NewComment } from "./_comment";
-import { Comment } from "./_commentServer";
+import { NewComment } from "./_lib/comment-client";
+import { Comment } from "./_lib/comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
-import { getPost } from "@/lib/data/db/post";
-import { notFound } from "next/navigation";
-import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 import { Metadata } from "next";
 import { getVerifiedHandle } from "@/lib/data/user";
-
-type Params = {
-  postAuthor: string;
-  postRkey: string;
-};
+import { PostPageParams, getPostPageData } from "./_lib/page-data";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Params;
+  params: PostPageParams;
 }): Promise<Metadata> {
-  const authorDid = await getDidFromHandleOrDid(params.postAuthor);
-  if (!authorDid) {
-    notFound();
-  }
-  const post = await getPost(authorDid, params.postRkey);
-  if (!post) {
-    notFound();
-  }
+  const { post } = await getPostPageData(params);
 
   const handle = await getVerifiedHandle(post.authorDid);
   const path = `/post/${params.postAuthor}/${params.postRkey}`;
@@ -48,15 +34,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function Post({ params }: { params: Params }) {
-  const authorDid = await getDidFromHandleOrDid(params.postAuthor);
-  if (!authorDid) {
-    notFound();
-  }
-  const post = await getPost(authorDid, params.postRkey);
-  if (!post) {
-    notFound();
-  }
+export default async function Post({ params }: { params: PostPageParams }) {
+  const { post, authorDid } = await getPostPageData(params);
   const comments = await getCommentsForPost(post.id);
 
   return (

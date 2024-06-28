@@ -4,7 +4,7 @@ import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 import { getPost } from "@/lib/data/db/post";
 import { getBlueskyProfile } from "@/lib/data/user";
 import { notFound } from "next/navigation";
-import { OgBox, frontpageOgImageResponse } from "../../_og";
+import { OgBox, frontpageOgImageResponse } from "../../../../../../lib/og";
 
 type Params = {
   postRkey: string;
