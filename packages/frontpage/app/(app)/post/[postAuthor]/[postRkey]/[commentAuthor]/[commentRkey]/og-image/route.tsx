@@ -32,7 +32,7 @@ export async function GET(
       <OgBox style={{ gap: 12, flexDirection: "column", flexGrow: 1 }}>
         <OgBox
           style={{
-            fontSize: 20,
+            fontSize: 32,
             fontFamily: "Source Sans 3",
           }}
         >
