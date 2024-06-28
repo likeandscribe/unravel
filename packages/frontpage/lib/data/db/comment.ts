@@ -108,7 +108,6 @@ const findCommentSubtree = <
   authorDid: string,
   rkey: string,
 ): CommentRowWithChildren<T> | null => {
-  console.log({ items, authorDid, rkey });
   for (const item of items) {
     if (item.rkey === rkey && item.authorDid === authorDid) {
       return item;
