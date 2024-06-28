@@ -19,7 +19,7 @@ import {
   commentVoteAction,
   createCommentAction,
   deleteCommentAction,
-} from "./_actions";
+} from "./actions";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import { VariantProps, cva } from "class-variance-authority";
 import {
@@ -29,7 +29,10 @@ import {
   useId,
   startTransition,
 } from "react";
-import { VoteButton, VoteButtonState } from "../../../_components/vote-button";
+import {
+  VoteButton,
+  VoteButtonState,
+} from "../../../../_components/vote-button";
 import { Spinner } from "@/lib/components/ui/spinner";
 import { DID } from "@/lib/data/atproto/did";
 

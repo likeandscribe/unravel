@@ -1,31 +1,50 @@
 import { Alert, AlertDescription, AlertTitle } from "@/lib/components/ui/alert";
-import { NewComment } from "./_comment";
-import { Comment } from "./_commentServer";
+import { NewComment } from "./_lib/comment-client";
+import { Comment } from "./_lib/comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
-import { getPost } from "@/lib/data/db/post";
-import { notFound } from "next/navigation";
-import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
+import { Metadata } from "next";
+import { getVerifiedHandle } from "@/lib/data/user";
+import { PostPageParams, getPostPageData } from "./_lib/page-data";
 
-type Params = {
-  postAuthor: string;
-  postRkey: string;
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: PostPageParams;
+}): Promise<Metadata> {
+  const { post } = await getPostPageData(params);
 
-export default async function Post({ params }: { params: Params }) {
-  const didParam = await getDidFromHandleOrDid(params.postAuthor);
-  if (!didParam) {
-    notFound();
-  }
-  const post = await getPost(didParam, params.postRkey);
-  if (!post) {
-    notFound();
-  }
+  const handle = await getVerifiedHandle(post.authorDid);
+  const path = `/post/${params.postAuthor}/${params.postRkey}`;
+
+  return {
+    title: post.title,
+    alternates: {
+      canonical: `https://frontpage.fyi${path}`,
+    },
+    openGraph: {
+      title: post.title,
+      description: "Discuss this post on Frontpage.",
+      type: "article",
+      publishedTime: post.createdAt.toISOString(),
+      authors: [`@${handle}`],
+      url: `https://frontpage.fyi${path}`,
+      images: [
+        {
+          url: `${path}/og-image`,
+        },
+      ],
+    },
+  };
+}
+
+export default async function Post({ params }: { params: PostPageParams }) {
+  const { post, authorDid } = await getPostPageData(params);
   const comments = await getCommentsForPost(post.id);
 
   return (
     <>
       {post.status === "live" ? (
-        <NewComment postRkey={post.rkey} postAuthorDid={didParam} />
+        <NewComment postRkey={post.rkey} postAuthorDid={authorDid} />
       ) : (
         <Alert>
           <AlertTitle>This post has been deleted</AlertTitle>

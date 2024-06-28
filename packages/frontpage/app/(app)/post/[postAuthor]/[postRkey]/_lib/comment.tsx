@@ -1,5 +1,8 @@
 import { getUser, getVerifiedHandle } from "@/lib/data/user";
-import { CommentClientWrapperWithToolbar, CommentProps } from "./_comment";
+import {
+  CommentClientWrapperWithToolbar,
+  CommentProps,
+} from "./comment-client";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { UserAvatar } from "@/lib/components/avatar";
