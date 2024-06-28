@@ -7,7 +7,7 @@ export function OgBox({
   return <div style={{ ...style, display: "flex" }} {...props} />;
 }
 
-export async function frontpageImageResponse(element: React.ReactElement) {
+export async function frontpageOgImageResponse(element: React.ReactElement) {
   return new ImageResponse(element, {
     headers: {
       "Cache-Control": "public, max-age=31536000, immutable",

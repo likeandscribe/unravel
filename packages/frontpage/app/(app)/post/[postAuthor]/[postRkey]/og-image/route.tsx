@@ -4,9 +4,7 @@ import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 import { getPost } from "@/lib/data/db/post";
 import { getBlueskyProfile } from "@/lib/data/user";
 import { notFound } from "next/navigation";
-import { ImageResponse } from "next/og";
-import { OgBox, frontpageImageResponse } from "../../_og";
-import { ChatBubbleIcon } from "@radix-ui/react-icons";
+import { OgBox, frontpageOgImageResponse } from "../../_og";
 
 type Params = {
   postRkey: string;
@@ -23,7 +21,7 @@ export async function GET(_req: Request, { params }: { params: Params }) {
   if (!post) notFound();
   const { avatar } = await getBlueskyProfile(post.authorDid);
 
-  return frontpageImageResponse(
+  return frontpageOgImageResponse(
     <OgBox
       style={{
         display: "flex",
@@ -62,7 +60,6 @@ export async function GET(_req: Request, { params }: { params: Params }) {
           height={100}
           style={{ borderRadius: "100%" }}
         />
-        <ChatBubbleIcon />
         <OgBox style={{ flexDirection: "column", gap: 5, paddingRight: 20 }}>
           <OgBox style={{ fontSize: 32, textWrap: "balance" }}>
             {post.title}
