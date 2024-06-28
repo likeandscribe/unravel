@@ -5,6 +5,7 @@ import {
   createComment,
   deleteComment,
 } from "@/lib/data/atproto/comment";
+import { DID } from "@/lib/data/atproto/did";
 import { deletePost } from "@/lib/data/atproto/post";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
@@ -14,7 +15,7 @@ import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
 
 export async function createCommentAction(
-  input: { parentRkey?: string; postRkey: string; postAuthorDid: string },
+  input: { parentRkey?: string; postRkey: string; postAuthorDid: DID },
   _prevState: unknown,
   formData: FormData,
 ) {
@@ -75,7 +76,7 @@ export async function deleteCommentAction(rkey: string) {
 export async function commentVoteAction(input: {
   cid: string;
   rkey: string;
-  authorDid: string;
+  authorDid: DID;
 }) {
   await ensureUser();
   await createVote({

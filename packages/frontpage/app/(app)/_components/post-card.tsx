@@ -5,13 +5,14 @@ import { ensureUser, getUser, getVerifiedHandle } from "@/lib/data/user";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { VoteButton } from "./vote-button";
 import { PostCollection } from "@/lib/data/atproto/post";
+import { DID } from "@/lib/data/atproto/did";
 
 type PostProps = {
   id: number;
   title: string;
   url: string;
   votes: number;
-  author: string;
+  author: DID;
   createdAt: Date;
   commentCount: number;
   rkey: string;

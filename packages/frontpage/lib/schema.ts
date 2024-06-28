@@ -8,7 +8,15 @@ import {
   unique,
   pgEnum,
   foreignKey,
+  customType,
 } from "drizzle-orm/pg-core";
+import type { DID } from "./data/atproto/did";
+
+const did = customType<{ data: DID }>({
+  dataType() {
+    return "text";
+  },
+});
 
 export const submissionStatus = pgEnum("submission_status", [
   "live",
@@ -25,7 +33,7 @@ export const Post = pgTable(
     title: text("title").notNull(),
     url: text("url").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    authorDid: text("author_did").notNull(),
+    authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
     status: submissionStatus("status").default("live"),
   },
@@ -42,7 +50,7 @@ export const PostVote = pgTable(
       .notNull()
       .references(() => Post.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    authorDid: text("author_did").notNull(),
+    authorDid: did("author_did").notNull(),
     cid: text("cid").notNull().unique(),
     rkey: text("rkey").notNull(),
   },
@@ -62,7 +70,7 @@ export const Comment = pgTable(
       .references(() => Post.id),
     body: text("body").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    authorDid: text("author_did").notNull(),
+    authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
     status: submissionStatus("status").default("live"),
     parentCommentId: integer("parent_comment_id"),
@@ -85,7 +93,7 @@ export const CommentVote = pgTable(
       .notNull()
       .references(() => Comment.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    authorDid: text("author_did").notNull(),
+    authorDid: did("author_did").notNull(),
     cid: text("cid").notNull().unique(),
     rkey: text("rkey").notNull(),
   },
@@ -97,7 +105,7 @@ export const CommentVote = pgTable(
 export const BetaUser = pgTable("beta_users", {
   id: serial("id").primaryKey(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  did: text("did").notNull().unique(),
+  did: did("did").notNull().unique(),
 });
 
 export const ConsumedOffset = pgTable("consumed_offsets", {

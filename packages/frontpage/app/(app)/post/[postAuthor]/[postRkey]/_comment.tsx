@@ -31,6 +31,7 @@ import {
 } from "react";
 import { VoteButton, VoteButtonState } from "../../../_components/vote-button";
 import { Spinner } from "@/lib/components/ui/spinner";
+import { DID } from "@/lib/data/atproto/did";
 
 const commentVariants = cva(undefined, {
   variants: {
@@ -51,8 +52,8 @@ export type CommentProps = VariantProps<typeof commentVariants> & {
   cid: string;
   id: number;
   postRkey: string;
-  authorDid: string;
-  postAuthorDid: string;
+  authorDid: DID;
+  postAuthorDid: DID;
   initialVoteState: VoteButtonState;
   hasAuthored: boolean;
   children: React.ReactNode;
@@ -239,7 +240,7 @@ export function NewComment({
 }: {
   parentRkey?: string;
   postRkey: string;
-  postAuthorDid: string;
+  postAuthorDid: DID;
   autoFocus?: boolean;
   onActionDone?: () => void;
   extraButton?: React.ReactNode;

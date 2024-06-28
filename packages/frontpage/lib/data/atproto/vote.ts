@@ -8,6 +8,7 @@ import {
 import { z } from "zod";
 import { PostCollection } from "./post";
 import { CommentCollection } from "./comment";
+import { DID } from "./did";
 
 const VoteSubjectCollection = z.union([
   z.literal(PostCollection),
@@ -26,7 +27,7 @@ type VoteInput = {
   subjectRkey: string;
   subjectCid: string;
   subjectCollection: string;
-  subjectAuthorDid: string;
+  subjectAuthorDid: DID;
 };
 
 export async function createVote({

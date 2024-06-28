@@ -9,6 +9,7 @@ import {
 import { DataLayerError } from "../error";
 import { z } from "zod";
 import { PostCollection } from "./post";
+import { DID } from "./did";
 
 export const CommentCollection = "fyi.unravel.frontpage.comment";
 
@@ -28,8 +29,8 @@ export const CommentRecord = z.object({
 });
 
 type CommentInput = {
-  parent?: { cid: string; rkey: string; authorDid: string };
-  post: { cid: string; rkey: string; authorDid: string };
+  parent?: { cid: string; rkey: string; authorDid: DID };
+  post: { cid: string; rkey: string; authorDid: DID };
   content: string;
 };
 
@@ -71,13 +72,7 @@ export async function deleteComment(rkey: string) {
   });
 }
 
-export async function getComment({
-  rkey,
-  repo,
-}: {
-  rkey: string;
-  repo: string;
-}) {
+export async function getComment({ rkey, repo }: { rkey: string; repo: DID }) {
   const service = await getPdsUrl(repo);
 
   if (!service) {

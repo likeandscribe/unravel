@@ -1,5 +1,6 @@
 "use server";
 
+import { DID } from "@/lib/data/atproto/did";
 import { createPost } from "@/lib/data/atproto/post";
 import { uncached_doesPostExist } from "@/lib/data/db/post";
 import { DataLayerError } from "@/lib/data/error";
@@ -38,7 +39,7 @@ export async function newPostAction(_prevState: unknown, formData: FormData) {
 }
 
 const MAX_POLLS = 10;
-async function waitForPost(authorDid: string, rkey: string) {
+async function waitForPost(authorDid: DID, rkey: string) {
   let exists = false;
   let polls = 0;
   while (!exists && polls < MAX_POLLS) {

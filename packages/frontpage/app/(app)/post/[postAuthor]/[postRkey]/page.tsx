@@ -13,10 +13,6 @@ type Params = {
 
 export default async function Post({ params }: { params: Params }) {
   const didParam = await getDidFromHandleOrDid(params.postAuthor);
-  console.log({
-    didParam,
-    author: params.postAuthor,
-  });
   if (!didParam) {
     notFound();
   }

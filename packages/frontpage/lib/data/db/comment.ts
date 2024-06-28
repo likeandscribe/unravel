@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { eq, sql, count, desc, and } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getUser } from "../user";
+import { DID } from "../atproto/did";
 
 export const getCommentsForPost = cache(async (postId: number) => {
   const votes = db
@@ -69,7 +70,7 @@ export const getCommentsForPost = cache(async (postId: number) => {
 });
 
 export const getCommentWithChildren = cache(
-  async (postId: number, authorDid: string, rkey: string) => {
+  async (postId: number, authorDid: DID, rkey: string) => {
     // We're currently fetching all rows from the database, this can be made more efficient later
     const comments = await getCommentsForPost(postId);
 
@@ -101,11 +102,11 @@ const findCommentSubtree = <
     id: number;
     parentCommentId: number | null;
     rkey: string;
-    authorDid: string;
+    authorDid: DID;
   },
 >(
   items: CommentRowWithChildren<T>[],
-  authorDid: string,
+  authorDid: DID,
   rkey: string,
 ): CommentRowWithChildren<T> | null => {
   for (const item of items) {

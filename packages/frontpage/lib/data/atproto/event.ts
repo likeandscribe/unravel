@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { CommentCollection } from "./comment";
 import { PostCollection } from "./post";
+import { isDid } from "./did";
 
 // This module refers to the event emitted by the Firehose
 
@@ -53,7 +54,7 @@ const Operation = z.union([
 
 export const Commit = z.object({
   ops: z.array(Operation),
-  repo: z.string(),
+  repo: z.string().refine(isDid),
   seq: z.string().transform((x, ctx) => {
     try {
       return BigInt(x);

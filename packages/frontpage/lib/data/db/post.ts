@@ -6,6 +6,7 @@ import { eq, sql, count, desc, and } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getBlueskyProfile, getUser } from "../user";
 import * as atprotoPost from "../atproto/post";
+import { DID } from "../atproto/did";
 
 const votesSubQuery = db
   .select({
@@ -95,7 +96,7 @@ export const getFrontpagePosts = cache(async () => {
   }));
 });
 
-export const getPost = cache(async (authorDid: string, rkey: string) => {
+export const getPost = cache(async (authorDid: DID, rkey: string) => {
   const userHasVoted = await buildUserHasVotedQuery();
 
   const rows = await db
@@ -123,7 +124,7 @@ export const getPost = cache(async (authorDid: string, rkey: string) => {
   };
 });
 
-export async function uncached_doesPostExist(authorDid: string, rkey: string) {
+export async function uncached_doesPostExist(authorDid: DID, rkey: string) {
   const row = await db
     .select({ id: schema.Post.id })
     .from(schema.Post)
@@ -137,7 +138,7 @@ export async function uncached_doesPostExist(authorDid: string, rkey: string) {
 
 type CreatePostInput = {
   post: atprotoPost.Post;
-  authorDid: string;
+  authorDid: DID;
   rkey: string;
   cid: string;
   offset: bigint;
