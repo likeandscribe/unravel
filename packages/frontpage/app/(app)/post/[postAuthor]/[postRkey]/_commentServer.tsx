@@ -58,18 +58,14 @@ export async function Comment({
         authorDid={authorDid}
         postAuthorDid={postAuthorDid}
         initialVoteState={
-          (await getUser())?.did === authorDid
-            ? "authored"
-            : isUpvoted
-              ? "voted"
-              : "unvoted"
+          hasAuthored ? "authored" : isUpvoted ? "voted" : "unvoted"
         }
       >
         <div className="flex items-center gap-2">
           <UserAvatar did={authorDid} />
           <div className="font-medium">{handle}</div>
           <Link
-            href={`/post/${postAuthorParam}/${props.postRkey}/${props.rkey}`}
+            href={`/post/${postAuthorParam}/${props.postRkey}/${handle}/${props.rkey}`}
             className="text-gray-500 text-xs dark:text-gray-400 hover:underline"
           >
             <TimeAgo createdAt={createdAt} side="bottom" />

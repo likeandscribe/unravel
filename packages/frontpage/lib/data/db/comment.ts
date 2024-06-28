@@ -69,11 +69,11 @@ export const getCommentsForPost = cache(async (postId: number) => {
 });
 
 export const getCommentWithChildren = cache(
-  async (postId: number, rkey: string) => {
+  async (postId: number, authorDid: string, rkey: string) => {
     // We're currently fetching all rows from the database, this can be made more efficient later
     const comments = await getCommentsForPost(postId);
 
-    return findCommentSubtree(comments, rkey);
+    return findCommentSubtree(comments, authorDid, rkey);
   },
 );
 
@@ -97,17 +97,24 @@ const nestCommentRows = <
     }));
 
 const findCommentSubtree = <
-  T extends { id: number; parentCommentId: number | null; rkey: string },
+  T extends {
+    id: number;
+    parentCommentId: number | null;
+    rkey: string;
+    authorDid: string;
+  },
 >(
   items: CommentRowWithChildren<T>[],
+  authorDid: string,
   rkey: string,
 ): CommentRowWithChildren<T> | null => {
+  console.log({ items, authorDid, rkey });
   for (const item of items) {
-    if (item.rkey === rkey) {
+    if (item.rkey === rkey && item.authorDid === authorDid) {
       return item;
     }
 
-    const child = findCommentSubtree(item.children, rkey);
+    const child = findCommentSubtree(item.children, authorDid, rkey);
     if (child) {
       return child;
     }
