@@ -29,28 +29,25 @@ export default async function Post({
   const user = await getUser();
 
   return (
-    <>
-      <title>{post.title}</title>
-      <main className="mx-auto max-w-4xl space-y-6">
-        <PostCard
-          author={post.authorDid}
-          createdAt={post.createdAt}
-          id={post.id}
-          commentCount={post.commentCount}
-          title={post.title}
-          url={post.url}
-          votes={post.voteCount}
-          rkey={post.rkey}
-          cid={post.cid}
-          isUpvoted={post.userHasVoted}
-        />
-        {user?.did === post.authorDid && post.status === "live" && (
-          <div className="flex justify-end">
-            <DeletePostButton rkey={post.rkey} />
-          </div>
-        )}
-        {children}
-      </main>
-    </>
+    <main className="mx-auto max-w-4xl space-y-6">
+      <PostCard
+        author={post.authorDid}
+        createdAt={post.createdAt}
+        id={post.id}
+        commentCount={post.commentCount}
+        title={post.title}
+        url={post.url}
+        votes={post.voteCount}
+        rkey={post.rkey}
+        cid={post.cid}
+        isUpvoted={post.userHasVoted}
+      />
+      {user?.did === post.authorDid && post.status === "live" && (
+        <div className="flex justify-end">
+          <DeletePostButton rkey={post.rkey} />
+        </div>
+      )}
+      {children}
+    </main>
   );
 }

@@ -4,6 +4,8 @@ import { Comment } from "../../_commentServer";
 import { getPost } from "@/lib/data/db/post";
 import Link from "next/link";
 import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
+import { Metadata } from "next";
+import { getVerifiedHandle } from "@/lib/data/user";
 
 type Params = {
   commentRkey: string;
@@ -11,6 +13,59 @@ type Params = {
   postAuthor: string;
   commentAuthor: string;
 };
+
+function truncateText(text: string, maxLength: number) {
+  if (text.length > maxLength) {
+    return text.slice(0, maxLength) + "...";
+  }
+  return text;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Params;
+}): Promise<Metadata> {
+  const [postAuthorDid, commentAuthorDid] = await Promise.all([
+    getDidFromHandleOrDid(params.postAuthor),
+    getDidFromHandleOrDid(params.commentAuthor),
+  ]);
+  if (!postAuthorDid || !commentAuthorDid) {
+    notFound();
+  }
+  const post = await getPost(commentAuthorDid, params.postRkey);
+  if (!post) {
+    notFound();
+  }
+  const comment = await getCommentWithChildren(
+    post.id,
+    postAuthorDid,
+    params.commentRkey,
+  );
+  if (!comment) {
+    notFound();
+  }
+
+  const handle = await getVerifiedHandle(comment.authorDid);
+  const path = `/post/${params.postAuthor}/${params.postRkey}/${params.commentAuthor}/${params.commentRkey}`;
+
+  return {
+    title: `${post.title} - @${handle}: "${truncateText(comment.body, 15)}..."`,
+    openGraph: {
+      title: `@${handle}'s comment on Frontpage`,
+      description: truncateText(comment.body, 47),
+      type: "article",
+      publishedTime: comment.createdAt.toISOString(),
+      authors: [`@${handle}`],
+      url: `https://frontpage.fyi${path}`,
+      images: [
+        {
+          url: `${path}/og-image`,
+        },
+      ],
+    },
+  };
+}
 
 export default async function CommentPage({ params }: { params: Params }) {
   const [postAuthorDid, commentAuthorDid] = await Promise.all([
