@@ -9,8 +9,14 @@ import {
   pgEnum,
   foreignKey,
   customType,
+  varchar,
 } from "drizzle-orm/pg-core";
 import type { DID } from "./data/atproto/did";
+import {
+  MAX_COMMENT_LENGTH,
+  MAX_POST_TITLE_LENGTH,
+  MAX_POST_URL_LENGTH,
+} from "./data/db/constants";
 
 const did = customType<{ data: DID }>({
   dataType() {
@@ -30,8 +36,12 @@ export const Post = pgTable(
     id: serial("id").primaryKey(),
     rkey: text("rkey").notNull(),
     cid: text("cid").notNull().unique(),
-    title: text("title").notNull(),
-    url: text("url").notNull(),
+    title: varchar("title", {
+      length: MAX_POST_TITLE_LENGTH,
+    }).notNull(),
+    url: varchar("url", {
+      length: MAX_POST_URL_LENGTH,
+    }).notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
@@ -68,7 +78,9 @@ export const Comment = pgTable(
     postId: integer("post_id")
       .notNull()
       .references(() => Post.id),
-    body: text("body").notNull(),
+    body: varchar("body", {
+      length: MAX_COMMENT_LENGTH,
+    }).notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out

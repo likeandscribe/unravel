@@ -35,6 +35,8 @@ import {
 } from "../../../../_components/vote-button";
 import { Spinner } from "@/lib/components/ui/spinner";
 import { DID } from "@/lib/data/atproto/did";
+import { InputLengthIndicator } from "@/lib/components/input-length-indicator";
+import { MAX_COMMENT_LENGTH } from "@/lib/data/db/constants";
 
 const commentVariants = cva(undefined, {
   variants: {
@@ -249,6 +251,7 @@ export function NewComment({
   extraButton?: React.ReactNode;
   textAreaRef?: React.RefObject<HTMLTextAreaElement>;
 }) {
+  const [input, setInput] = useState("");
   const [_, action, isPending] = useActionState(
     createCommentAction.bind(null, { parentRkey, postRkey, postAuthorDid }),
     undefined,
@@ -264,7 +267,6 @@ export function NewComment({
         action(new FormData(event.currentTarget));
         onActionDone?.();
       }}
-      className="flex items-center gap-2"
       aria-busy={isPending}
       onKeyDown={(event) => {
         const isCommentTextArea =
@@ -279,8 +281,12 @@ export function NewComment({
         }
       }}
     >
-      <div className="flex-1">
+      <div className="flex items-end gap-2">
         <Textarea
+          value={input}
+          onChange={(event) => {
+            setInput(event.target.value);
+          }}
           id={textAreaId}
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus={autoFocus}
@@ -288,12 +294,21 @@ export function NewComment({
           ref={textAreaRef}
           placeholder="Write a comment..."
           disabled={isPending}
+          className="resize-y flex-1"
         />
+        <Button
+          className="flex flex-row gap-2"
+          disabled={isPending || input.length > MAX_COMMENT_LENGTH}
+        >
+          {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />}{" "}
+          Post
+        </Button>
+        {extraButton}
       </div>
-      <Button className="flex flex-row gap-2" disabled={isPending}>
-        {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />} Post
-      </Button>
-      {extraButton}
+      <InputLengthIndicator
+        length={input.length}
+        maxLength={MAX_COMMENT_LENGTH}
+      />
     </form>
   );
 }
