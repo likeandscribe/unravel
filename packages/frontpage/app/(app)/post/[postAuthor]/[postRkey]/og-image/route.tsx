@@ -70,9 +70,14 @@ export async function GET(_req: Request, { params }: { params: Params }) {
             backgroundColor: "#00000073",
             width: "90%",
             padding: 40,
+            paddingRight: 10,
             fontSize: 72,
             fontWeight: 700,
             textWrap: "balance",
+            flexShrink: 1,
+            flexGrow: 1,
+            maskImage:
+              "linear-gradient(to bottom, #fff, #fff 40%, transparent)",
           }}
         >
           {post.title}
