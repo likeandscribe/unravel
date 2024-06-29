@@ -37,8 +37,10 @@ export function UserHoverCardClient({
       </HoverCardTrigger>
       <HoverCardContent className="w-80">
         <div className="flex gap-4">
-          <Link href={`/profile/${initialHandle}`}>{avatar}</Link>
-          <div className="flex flex-col gap-1">
+          <Link href={`/profile/${initialHandle}`} className="shrink-0">
+            {avatar}
+          </Link>
+          <div className="flex flex-col gap-1 basis-full">
             <Suspense fallback={<Fallback handle={initialHandle} />}>
               <Content did={did} />
             </Suspense>
@@ -60,20 +62,18 @@ function Content({ did }: { did: DID }) {
       <Link href={`/profile/${data.handle}`} className="text-sm font-semibold">
         @{data.handle}
       </Link>
-      <div className="flex gap-4">
-        <p
-          className="text-sm flex gap-2 items-center"
-          title={`${data.commentCount} comments`}
-        >
-          <ChatBubbleIcon /> {data.commentCount}
-        </p>
-        <p
-          className="text-sm flex gap-2 items-center"
-          title={`${data.postCount} posts`}
-        >
-          <Link1Icon /> {data.postCount}
-        </p>
-      </div>
+      <p
+        className="text-sm flex gap-2 items-center"
+        title={`${data.commentCount} comments`}
+      >
+        <ChatBubbleIcon /> {data.commentCount}
+      </p>
+      <p
+        className="text-sm flex gap-2 items-center"
+        title={`${data.postCount} posts`}
+      >
+        <Link1Icon /> {data.postCount}
+      </p>
     </>
   );
 }
@@ -81,11 +81,11 @@ function Content({ did }: { did: DID }) {
 function Fallback({ handle }: { handle: string }) {
   return (
     <>
-      <div className="space-y-1">
-        <h4 className="text-sm font-semibold">@{handle}</h4>
-      </div>
-      <Skeleton className="h-4 w-[250px]" />
-      <Skeleton className="h-4 w-[200px]" />
+      <Link href={`/profile/${handle}`} className="text-sm font-semibold">
+        @{handle}
+      </Link>
+      <Skeleton className="h-5 w-12" />
+      <Skeleton className="h-5 w-12" />
     </>
   );
 }
