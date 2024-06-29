@@ -5,6 +5,22 @@ import { Button } from "@/lib/components/ui/button";
 import { isBetaUser } from "@/lib/data/user";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "./_components/theme-toggle";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/lib/components/ui/popover";
+import { DID, getDidFromHandleOrDid } from "@/lib/data/atproto/did";
+import { UserAvatar } from "@/lib/components/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/lib/components/ui/dropdown-menu";
+import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 
 export default async function Layout({
   children,
@@ -86,6 +102,7 @@ export default async function Layout({
 async function LoginOrLogout() {
   const session = await getSession();
   if (session) {
+    const did = await getDidFromHandleOrDid(session.user.name as string);
     return (
       <form
         action={async () => {
@@ -93,7 +110,29 @@ async function LoginOrLogout() {
           await signOut();
         }}
       >
-        <button type="submit">Logout ({session.user.name})</button>
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            {did ? (
+              <UserAvatar did={did as DID} size="smedium" />
+            ) : (
+              <span>{session.user.name}</span>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" side="bottom" align="end">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              {/* <User className="mr-2 h-4 w-4" /> */}
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              {/* <LogOut className="mr-2 h-4 w-4" /> */}
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* <button type="submit">Logout ({session.user.name})</button> */}
       </form>
     );
   }
