@@ -62,8 +62,10 @@ export async function Comment({
         }
       >
         <div className="flex items-center gap-2">
-          <UserAvatar did={authorDid} />
-          <div className="font-medium">{handle}</div>
+          <Link href={`/profile/${handle}`} className="flex items-center gap-2">
+            <UserAvatar did={authorDid} />
+            <div className="font-medium">{handle}</div>
+          </Link>
           <Link
             href={`/post/${postAuthorParam}/${props.postRkey}/${handle}/${props.rkey}`}
             className="text-gray-500 text-xs dark:text-gray-400 hover:underline"

@@ -96,6 +96,48 @@ export const getFrontpagePosts = cache(async () => {
   }));
 });
 
+export const getUserPosts = cache(async (userDid: DID) => {
+  const userHasVoted = await buildUserHasVotedQuery();
+
+  const posts = await db
+    .select({
+      id: schema.Post.id,
+      rkey: schema.Post.rkey,
+      cid: schema.Post.cid,
+      title: schema.Post.title,
+      url: schema.Post.url,
+      createdAt: schema.Post.createdAt,
+      authorDid: schema.Post.authorDid,
+      voteCount: votesSubQuery.voteCount,
+      commentCount: commentCountSubQuery.commentCount,
+      userHasVoted: userHasVoted.postId,
+      status: schema.Post.status,
+    })
+    .from(schema.Post)
+    .leftJoin(
+      commentCountSubQuery,
+      eq(commentCountSubQuery.postId, schema.Post.id),
+    )
+    .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
+    .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
+    .where(
+      and(eq(schema.Post.authorDid, userDid), eq(schema.Post.status, "live")),
+    );
+
+  return posts.map((row) => ({
+    id: row.id,
+    rkey: row.rkey,
+    cid: row.cid,
+    title: row.title,
+    url: row.url,
+    createdAt: row.createdAt,
+    authorDid: row.authorDid,
+    voteCount: row.voteCount ?? 1,
+    commentCount: row.commentCount ?? 0,
+    userHasVoted: Boolean(row.userHasVoted),
+  }));
+});
+
 export const getPost = cache(async (authorDid: DID, rkey: string) => {
   const userHasVoted = await buildUserHasVotedQuery();
 
