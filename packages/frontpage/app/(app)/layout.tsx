@@ -122,7 +122,9 @@ async function LoginOrLogout() {
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               {/* <LogOut className="mr-2 h-4 w-4" /> */}
-              <button type="submit">Logout</button>
+              <button type="submit" className="w-full text-start">
+                Logout
+              </button>
             </DropdownMenuItem>
           </form>
         </DropdownMenuContent>
