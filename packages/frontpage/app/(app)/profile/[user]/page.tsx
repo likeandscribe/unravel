@@ -12,7 +12,7 @@ import {
 } from "@/lib/components/ui/tabs";
 import { getBlueskyProfile } from "@/lib/data/user";
 import { getUserComments } from "@/lib/data/db/comment";
-import { Comment } from "../../post/[postAuthor]/[postRkey]/_commentServer";
+import { Comment } from "../../post/[postAuthor]/[postRkey]/_lib/comment";
 import { Suspense } from "react";
 
 type Params = {
