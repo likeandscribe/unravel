@@ -5,7 +5,10 @@ import { DID } from "../data/atproto/did";
 import { HoverCardTrigger, HoverCardContent } from "./ui/hover-card";
 import { ReactNode, Suspense } from "react";
 import { Skeleton } from "./ui/skeleton";
-import { CalendarIcon } from "@radix-ui/react-icons";
+import { ChatBubbleIcon, Link1Icon } from "@radix-ui/react-icons";
+import { ApiRouteResponse } from "../api-route";
+import type { GET as GetHoverCardContent } from "@/app/api/hover-card-content/route";
+import Link from "next/link";
 
 type Props = {
   did: DID;
@@ -26,8 +29,8 @@ export function UserHoverCardClient({
     <>
       <HoverCardTrigger asChild={asChild}>{children}</HoverCardTrigger>
       <HoverCardContent className="w-80">
-        <div className="flex justify-between gap-x-4">
-          <div>{avatar}</div>
+        <div className="flex gap-4">
+          <Link href={`/profile/${initialHandle}`}>{avatar}</Link>
           <div className="flex flex-col gap-1">
             <Suspense fallback={<Fallback handle={initialHandle} />}>
               <Content did={did} />
@@ -46,15 +49,22 @@ function Content({ did }: { did: DID }) {
 
   return (
     <>
-      <h4 className="text-sm font-semibold">@{data.handle}</h4>
-      <p className="text-sm">
-        The React Framework – created and maintained by @vercel.
-      </p>
-      <div className="flex items-center pt-2">
-        <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />{" "}
-        <span className="text-xs text-muted-foreground">
-          Joined December 2021
-        </span>
+      <Link href={`/profile/${data.handle}`} className="text-sm font-semibold">
+        @{data.handle}
+      </Link>
+      <div className="flex gap-4">
+        <p
+          className="text-sm flex gap-2 items-center"
+          title={`${data.commentCount} comments`}
+        >
+          <ChatBubbleIcon /> {data.commentCount}
+        </p>
+        <p
+          className="text-sm flex gap-2 items-center"
+          title={`${data.postCount} posts`}
+        >
+          <Link1Icon /> {data.postCount}
+        </p>
       </div>
     </>
   );
@@ -72,6 +82,9 @@ function Fallback({ handle }: { handle: string }) {
   );
 }
 
-async function getHoverCardData(did: DID): Promise<{ handle: string }> {
-  return new Promise<number>(() => {});
+async function getHoverCardData(
+  did: DID,
+): Promise<ApiRouteResponse<typeof GetHoverCardContent>> {
+  const response = await fetch(`/api/hover-card-content?did=${did}`);
+  return response.json();
 }
