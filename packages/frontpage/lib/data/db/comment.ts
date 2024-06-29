@@ -142,3 +142,24 @@ export async function uncached_doesCommentExist(rkey: string) {
 
   return Boolean(row[0]);
 }
+
+export const getUserComments = cache(async (userDid: DID) => {
+  const posts = await db
+    .select({
+      id: schema.Comment.id,
+      rkey: schema.Comment.rkey,
+      cid: schema.Comment.cid,
+      postId: schema.Comment.postId,
+      body: schema.Comment.body,
+      createdAt: schema.Comment.createdAt,
+      authorDid: schema.Comment.authorDid,
+      status: schema.Comment.status,
+      postRkey: schema.Post.rkey,
+      postAuthorDid: schema.Post.authorDid,
+    })
+    .from(schema.Comment)
+    .leftJoin(schema.Post, eq(schema.Comment.postId, schema.Post.id))
+    .where(eq(schema.Comment.authorDid, userDid));
+
+  return posts;
+});
