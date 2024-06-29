@@ -87,7 +87,9 @@ export async function PostCard({
           <div className="flex gap-2 flex-wrap md:flex-nowrap">
             <div className="flex gap-2">
               <span aria-hidden>•</span>
-              <span>by {handle}</span>
+              <Link href={`/profile/${handle}`} className="hover:underline">
+                by {handle}
+              </Link>
             </div>
           </div>
           <div className="w-full flex items-center justify-between gap-2 md:gap-4 sm:w-auto">
