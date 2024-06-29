@@ -43,7 +43,7 @@ export default async function Profile({ params }: { params: Params }) {
 
   return (
     <>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4 mb-4">
         <UserAvatar did={did} size="medium" />
         <h1 className="text-2xl font-bold">{bskyProfile.handle}</h1>
       </div>
