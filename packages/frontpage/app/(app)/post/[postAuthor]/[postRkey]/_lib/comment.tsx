@@ -5,7 +5,7 @@ import {
 } from "./comment-client";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { TimeAgo } from "@/lib/components/time-ago";
-import { UserAvatar } from "@/lib/components/avatar";
+import { UserAvatar } from "@/lib/components/user-avatar";
 import Link from "next/link";
 import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 
