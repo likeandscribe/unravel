@@ -1,6 +1,6 @@
 "use client";
 
-import useSWR from "swr";
+import useSWR, { preload } from "swr";
 import { DID } from "../data/atproto/did";
 import { HoverCardTrigger, HoverCardContent } from "./ui/hover-card";
 import { ReactNode, Suspense } from "react";
@@ -27,7 +27,14 @@ export function UserHoverCardClient({
 }: Props) {
   return (
     <>
-      <HoverCardTrigger asChild={asChild}>{children}</HoverCardTrigger>
+      <HoverCardTrigger
+        asChild={asChild}
+        onMouseEnter={() => {
+          preload(did, getHoverCardData);
+        }}
+      >
+        {children}
+      </HoverCardTrigger>
       <HoverCardContent className="w-80">
         <div className="flex gap-4">
           <Link href={`/profile/${initialHandle}`}>{avatar}</Link>
@@ -43,8 +50,9 @@ export function UserHoverCardClient({
 }
 
 function Content({ did }: { did: DID }) {
-  const { data } = useSWR("hoverCard", () => getHoverCardData(did), {
+  const { data } = useSWR(did, getHoverCardData, {
     suspense: true,
+    revalidateOnMount: false,
   });
 
   return (
