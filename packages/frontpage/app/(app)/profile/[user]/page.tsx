@@ -31,7 +31,7 @@ export default async function Profile({ params }: { params: Params }) {
     ...userPosts.map((p) => ({ ...p, type: "post" as const })),
     ...userComments.map((p) => ({ ...p, type: "comment" as const })),
   ].sort((a, b) => {
-    return a.createdAt.getTime() - b.createdAt.getTime();
+    return b.createdAt.getTime() - a.createdAt.getTime();
   });
 
   const bskyProfile = await getBlueskyProfile(did);
