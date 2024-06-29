@@ -66,6 +66,8 @@ export const PostVote = pgTable(
   },
   (t) => ({
     unique_authr_rkey: unique().on(t.authorDid, t.rkey),
+    // Ensures you can only vote once per post
+    unique_author_postId: unique().on(t.authorDid, t.postId),
   }),
 );
 
@@ -111,6 +113,8 @@ export const CommentVote = pgTable(
   },
   (t) => ({
     unique_authr_rkey: unique().on(t.authorDid, t.rkey),
+    // Ensures you can only vote once per post
+    unique_author_commentId: unique().on(t.authorDid, t.commentId),
   }),
 );
 
