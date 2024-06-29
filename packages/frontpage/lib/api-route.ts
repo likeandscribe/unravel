@@ -7,7 +7,7 @@ export type Context = {
 export type ApiRouteHandler<JsonBody> = (
   request: Request,
   ctx: Context,
-) => JsonBody | (Promise<JsonBody> & { _t: JsonBody });
+) => JsonBody | Promise<JsonBody>;
 
 export type ApiRouteResponse<Handler extends ApiRouteHandler<unknown>> =
   Handler extends ApiRouteHandler<infer JsonBody> ? JsonBody : never;
