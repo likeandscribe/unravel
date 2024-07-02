@@ -9,8 +9,14 @@ export type ApiRouteHandler<JsonBody> = (
   ctx: Context,
 ) => JsonBody | Promise<JsonBody>;
 
-export type ApiRouteResponse<Handler extends ApiRouteHandler<unknown>> =
-  Handler extends ApiRouteHandler<infer JsonBody> ? JsonBody : never;
+type TypedResponse<JsonBody> = Response & { _t: JsonBody };
+
+export type ApiRouteResponse<
+  ApiRoute extends (req: Request) => Promise<TypedResponse<unknown>>,
+> =
+  Awaited<ReturnType<ApiRoute>> extends TypedResponse<infer JsonBody>
+    ? JsonBody
+    : never;
 
 class ResponseError {
   constructor(public response: Response) {}
@@ -22,7 +28,7 @@ export function badRequest(message: string, init?: RequestInit): never {
 
 export function createApiRoute<JsonBody>(
   handler: (request: Request, ctx: Context) => JsonBody | Promise<JsonBody>,
-): ApiRouteHandler<JsonBody> {
+) {
   return async function (request: Request) {
     const headers = new Headers();
     let body;
@@ -30,7 +36,7 @@ export function createApiRoute<JsonBody>(
       body = await handler(request, { headers });
     } catch (error) {
       if (error instanceof ResponseError) {
-        return error.response;
+        return error.response as TypedResponse<JsonBody>;
       }
       throw error;
     }
@@ -38,7 +44,6 @@ export function createApiRoute<JsonBody>(
     headers.set("Content-Type", "application/json");
     return new Response(JSON.stringify(body), {
       headers,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
+    }) as TypedResponse<JsonBody>;
+  };
 }
