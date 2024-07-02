@@ -6,7 +6,7 @@ import { isBetaUser } from "@/lib/data/user";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "./_components/theme-toggle";
 import { DID, getDidFromHandleOrDid } from "@/lib/data/atproto/did";
-import { UserAvatar } from "@/lib/components/avatar";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
 } from "@/lib/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { UserAvatar } from "@/lib/components/user-avatar";
 
 export default async function Layout({
   children,
