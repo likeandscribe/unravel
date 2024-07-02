@@ -5,7 +5,7 @@ import { cache } from "react";
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { db } from "../db";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import * as schema from "../schema";
 import { DID, getVerifiedDid, parseDid } from "./atproto/did";
 
@@ -152,13 +152,20 @@ export const getTotalSubmissions = cache(async (did: DID) => {
         postCount: count(schema.Post.id),
       })
       .from(schema.Post)
-      .where(eq(schema.Post.authorDid, did)),
+      .where(
+        and(eq(schema.Post.authorDid, did), eq(schema.Post.status, "live")),
+      ),
     db
       .select({
         commentCount: count(schema.Comment.id),
       })
       .from(schema.Comment)
-      .where(eq(schema.Comment.authorDid, did)),
+      .where(
+        and(
+          eq(schema.Comment.authorDid, did),
+          eq(schema.Comment.status, "live"),
+        ),
+      ),
   ]);
 
   return {
