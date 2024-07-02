@@ -5,7 +5,7 @@ import { cache } from "react";
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import * as schema from "../schema";
 import { DID, getVerifiedDid, parseDid } from "./atproto/did";
 
@@ -143,4 +143,33 @@ export const getBlueskyProfile = cache(async (did: DID) => {
   ).then((res) => res.json());
 
   return ProfileResponse.parse(json);
+});
+
+export const getTotalSubmissions = cache(async (did: DID) => {
+  const [[postRow], [commentRow]] = await Promise.all([
+    db
+      .select({
+        postCount: count(schema.Post.id),
+      })
+      .from(schema.Post)
+      .where(
+        and(eq(schema.Post.authorDid, did), eq(schema.Post.status, "live")),
+      ),
+    db
+      .select({
+        commentCount: count(schema.Comment.id),
+      })
+      .from(schema.Comment)
+      .where(
+        and(
+          eq(schema.Comment.authorDid, did),
+          eq(schema.Comment.status, "live"),
+        ),
+      ),
+  ]);
+
+  return {
+    postCount: postRow?.postCount ?? 0,
+    commentCount: commentRow?.commentCount ?? 0,
+  };
 });
