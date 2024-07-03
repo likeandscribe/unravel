@@ -20,26 +20,28 @@ type Params = {
 };
 
 export default async function Profile({ params }: { params: Params }) {
+  unstable_noStore();
   const did = await getDidFromHandleOrDid(params.user);
   if (!did) {
     notFound();
   }
-  const userPosts = await getUserPosts(did);
-  const userComments = await getUserComments(did);
+
+  const [userPosts, userComments, bskyProfile] = await Promise.all([
+    getUserPosts(did),
+    getUserComments(did),
+    getBlueskyProfile(did),
+  ]);
+
+  if (!bskyProfile) {
+    notFound();
+  }
 
   const overview = [
     ...userPosts.map((p) => ({ ...p, type: "post" as const })),
     ...userComments.map((p) => ({ ...p, type: "comment" as const })),
   ].sort((a, b) => {
-    return a.createdAt.getTime() - b.createdAt.getTime();
+    return b.createdAt.getTime() - a.createdAt.getTime();
   });
-
-  const bskyProfile = await getBlueskyProfile(did);
-  if (!bskyProfile) {
-    notFound();
-  }
-
-  unstable_noStore();
 
   return (
     <>
