@@ -159,7 +159,12 @@ export const getUserComments = cache(async (userDid: DID) => {
     })
     .from(schema.Comment)
     .leftJoin(schema.Post, eq(schema.Comment.postId, schema.Post.id))
-    .where(eq(schema.Comment.authorDid, userDid));
+    .where(
+      and(
+        eq(schema.Comment.authorDid, userDid),
+        eq(schema.Comment.status, "live"),
+      ),
+    );
 
   return posts;
 });
