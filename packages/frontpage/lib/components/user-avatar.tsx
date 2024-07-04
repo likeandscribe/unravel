@@ -24,17 +24,18 @@ export async function UserAvatar(props: UserAvatarProps) {
   );
 }
 
-function AvatarFallback({ size }: { size: UserAvatarProps["size"] }) {
+export function AvatarFallback({ size }: { size: UserAvatarProps["size"] }) {
   const sizePx = userAvatarSizes[size ?? "small"];
   return (
     <svg
+      className="text-slate-500"
       width={sizePx}
       height={sizePx}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <circle cx="12" cy="12" r="12" fill="#fff" />
+      <circle cx="12" cy="12" r="12" fill="currentColor" />
     </svg>
   );
 }

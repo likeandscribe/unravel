@@ -1,10 +1,42 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { eq, sql, count, desc, and } from "drizzle-orm";
+import { eq, sql, count, desc, and, InferSelectModel } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getUser } from "../user";
 import { DID } from "../atproto/did";
+import { Prettify } from "@/lib/utils";
+
+type CommentRow = InferSelectModel<typeof schema.Comment>;
+
+type CommentExtras = {
+  children?: CommentModel[];
+  userHasVoted: boolean;
+  rank?: number;
+  voteCount: number;
+  postAuthorDid?: DID;
+  postRkey?: string;
+};
+
+type LiveComment = CommentRow & CommentExtras & { status: "live" };
+
+type HiddenComment = Omit<CommentRow, "status" | "body"> &
+  CommentExtras & {
+    status: Exclude<CommentRow["status"], "live">;
+    body: null;
+  };
+
+export type CommentModel = Prettify<LiveComment | HiddenComment>;
+
+const buildUserHasVotedQuery = cache(async () => {
+  const user = await getUser();
+
+  return db
+    .select({ commentId: schema.CommentVote.commentId })
+    .from(schema.CommentVote)
+    .where(user ? eq(schema.CommentVote.authorDid, user.did) : sql`false`)
+    .as("hasVoted");
+});
 
 export const getCommentsForPost = cache(async (postId: number) => {
   const votes = db
@@ -27,15 +59,11 @@ export const getCommentsForPost = cache(async (postId: number) => {
         ) / 3600
       ) + 2
     ) ^ 1.8
-  `.as("rank");
+  `
+    .mapWith(Number)
+    .as("rank");
 
-  const user = await getUser();
-
-  const hasVoted = db
-    .select({ commentId: schema.CommentVote.commentId })
-    .from(schema.CommentVote)
-    .where(user ? eq(schema.CommentVote.authorDid, user.did) : sql`false`)
-    .as("hasVoted");
+  const hasVoted = await buildUserHasVotedQuery();
 
   const rows = await db
     .select({
@@ -46,6 +74,7 @@ export const getCommentsForPost = cache(async (postId: number) => {
       body: schema.Comment.body,
       createdAt: schema.Comment.createdAt,
       authorDid: schema.Comment.authorDid,
+      status: schema.Comment.status,
       voteCount: sql`coalesce(${votes.voteCount}, 0) + 1`
         .mapWith(Number)
         .as("voteCount"),
@@ -54,19 +83,12 @@ export const getCommentsForPost = cache(async (postId: number) => {
       parentCommentId: schema.Comment.parentCommentId,
     })
     .from(schema.Comment)
-    .where(
-      and(eq(schema.Comment.postId, postId), eq(schema.Comment.status, "live")),
-    )
+    .where(eq(schema.Comment.postId, postId))
     .leftJoin(votes, eq(votes.commentId, schema.Comment.id))
     .leftJoin(hasVoted, eq(hasVoted.commentId, schema.Comment.id))
     .orderBy(desc(commentRank));
 
-  return nestCommentRows(
-    rows.map((row) => ({
-      ...row,
-      userHasVoted: row.userHasVoted !== null,
-    })),
-  );
+  return nestCommentRows(rows);
 });
 
 export const getCommentWithChildren = cache(
@@ -78,41 +100,60 @@ export const getCommentWithChildren = cache(
   },
 );
 
-type CommentRowWithChildren<
-  T extends { id: number; parentCommentId: number | null },
-> = T & {
-  children: CommentRowWithChildren<T>[];
+const nestCommentRows = (
+  items: (CommentRow & {
+    userHasVoted?: number | null;
+    voteCount?: number;
+    rank?: number;
+  })[],
+  id: number | null = null,
+): CommentModel[] => {
+  const comments: CommentModel[] = [];
+
+  for (const item of items) {
+    if (item.parentCommentId !== id) {
+      continue;
+    }
+
+    const children = nestCommentRows(items, item.id);
+    const transformed = {
+      userHasVoted: item.userHasVoted !== null,
+      voteCount: item.voteCount ?? 0,
+    };
+    if (item.status === "live") {
+      comments.push({
+        ...item,
+        ...transformed,
+        // Explicit copy is required to avoid TS error
+        status: item.status,
+        children,
+      });
+    } else {
+      comments.push({
+        ...item,
+        ...transformed,
+        // Explicit copy is required to avoid TS error
+        status: item.status,
+        body: null,
+        children,
+      });
+    }
+  }
+
+  return comments;
 };
 
-const nestCommentRows = <
-  T extends { id: number; parentCommentId: number | null },
->(
-  items: T[],
-  id: number | null = null,
-): CommentRowWithChildren<T>[] =>
-  items
-    .filter((item) => item.parentCommentId === id)
-    .map((item) => ({
-      ...item,
-      children: nestCommentRows(items, item.id),
-    }));
-
-const findCommentSubtree = <
-  T extends {
-    id: number;
-    parentCommentId: number | null;
-    rkey: string;
-    authorDid: DID;
-  },
->(
-  items: CommentRowWithChildren<T>[],
+const findCommentSubtree = (
+  items: CommentModel[],
   authorDid: DID,
   rkey: string,
-): CommentRowWithChildren<T> | null => {
+): CommentModel | null => {
   for (const item of items) {
     if (item.rkey === rkey && item.authorDid === authorDid) {
       return item;
     }
+
+    if (!item.children) return null;
 
     const child = findCommentSubtree(item.children, authorDid, rkey);
     if (child) {
@@ -144,7 +185,8 @@ export async function uncached_doesCommentExist(rkey: string) {
 }
 
 export const getUserComments = cache(async (userDid: DID) => {
-  const posts = await db
+  const hasVoted = await buildUserHasVotedQuery();
+  const comments = await db
     .select({
       id: schema.Comment.id,
       rkey: schema.Comment.rkey,
@@ -156,15 +198,26 @@ export const getUserComments = cache(async (userDid: DID) => {
       status: schema.Comment.status,
       postRkey: schema.Post.rkey,
       postAuthorDid: schema.Post.authorDid,
+      parentCommentId: schema.Comment.parentCommentId,
+      userHasVoted: hasVoted.commentId,
     })
     .from(schema.Comment)
-    .leftJoin(schema.Post, eq(schema.Comment.postId, schema.Post.id))
     .where(
       and(
         eq(schema.Comment.authorDid, userDid),
         eq(schema.Comment.status, "live"),
       ),
-    );
+    )
+    .leftJoin(schema.Post, eq(schema.Comment.postId, schema.Post.id))
+    .leftJoin(hasVoted, eq(hasVoted.commentId, schema.Comment.id));
 
-  return posts;
+  return nestCommentRows(comments);
 });
+
+export function shouldHideComment(comment: CommentModel) {
+  return (
+    comment.status !== "live" &&
+    comment.children &&
+    comment.children.length === 0
+  );
+}
