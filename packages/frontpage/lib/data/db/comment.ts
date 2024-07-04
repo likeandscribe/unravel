@@ -1,7 +1,15 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { eq, sql, count, desc, and, InferSelectModel } from "drizzle-orm";
+import {
+  eq,
+  sql,
+  count,
+  desc,
+  and,
+  InferSelectModel,
+  isNotNull,
+} from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getUser } from "../user";
 import { DID } from "../atproto/did";
@@ -12,8 +20,9 @@ type CommentRow = InferSelectModel<typeof schema.Comment>;
 type CommentExtras = {
   children?: CommentModel[];
   userHasVoted: boolean;
+  // These properties are returned from some methods but not others
   rank?: number;
-  voteCount: number;
+  voteCount?: number;
   postAuthorDid?: DID;
   postRkey?: string;
 };
@@ -32,7 +41,13 @@ const buildUserHasVotedQuery = cache(async () => {
   const user = await getUser();
 
   return db
-    .select({ commentId: schema.CommentVote.commentId })
+    .select({
+      commentId: schema.CommentVote.commentId,
+      // This is not entirely type safe but there isn't a better way to do this in drizzle right now
+      userHasVoted: sql<boolean>`${isNotNull(schema.CommentVote.commentId)}`.as(
+        "userHasVoted",
+      ),
+    })
     .from(schema.CommentVote)
     .where(user ? eq(schema.CommentVote.authorDid, user.did) : sql`false`)
     .as("hasVoted");
@@ -79,7 +94,7 @@ export const getCommentsForPost = cache(async (postId: number) => {
         .mapWith(Number)
         .as("voteCount"),
       rank: commentRank,
-      userHasVoted: hasVoted.commentId,
+      userHasVoted: hasVoted.userHasVoted,
       parentCommentId: schema.Comment.parentCommentId,
     })
     .from(schema.Comment)
@@ -102,7 +117,7 @@ export const getCommentWithChildren = cache(
 
 const nestCommentRows = (
   items: (CommentRow & {
-    userHasVoted?: number | null;
+    userHasVoted: boolean;
     voteCount?: number;
     rank?: number;
   })[],
@@ -199,7 +214,7 @@ export const getUserComments = cache(async (userDid: DID) => {
       postRkey: schema.Post.rkey,
       postAuthorDid: schema.Post.authorDid,
       parentCommentId: schema.Comment.parentCommentId,
-      userHasVoted: hasVoted.commentId,
+      userHasVoted: hasVoted.userHasVoted,
     })
     .from(schema.Comment)
     .where(
@@ -211,7 +226,7 @@ export const getUserComments = cache(async (userDid: DID) => {
     .leftJoin(schema.Post, eq(schema.Comment.postId, schema.Post.id))
     .leftJoin(hasVoted, eq(hasVoted.commentId, schema.Comment.id));
 
-  return nestCommentRows(comments);
+  return comments as LiveComment[];
 });
 
 export function shouldHideComment(comment: CommentModel) {
