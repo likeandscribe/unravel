@@ -56,7 +56,7 @@ export default async function CommentPage({
     <>
       <div className="flex justify-end">
         <Link
-          href={`/post/${params.postRkey}`}
+          href={`/post/${params.postAuthor}/${params.postRkey}`}
           className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
         >
           See all comments
