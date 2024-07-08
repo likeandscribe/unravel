@@ -1,46 +1,79 @@
 import { getUser, getVerifiedHandle } from "@/lib/data/user";
-import {
-  CommentClientWrapperWithToolbar,
-  CommentProps,
-} from "./comment-client";
-import { getCommentsForPost } from "@/lib/data/db/comment";
+import { CommentClientWrapperWithToolbar } from "./comment-client";
+import { CommentModel } from "@/lib/data/db/comment";
 import { TimeAgo } from "@/lib/components/time-ago";
-import { UserAvatar } from "@/lib/components/user-avatar";
+import { AvatarFallback, UserAvatar } from "@/lib/components/user-avatar";
 import Link from "next/link";
 import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
+import { VariantProps, cva } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
-type ServerCommentProps = Omit<
-  CommentProps,
-  // Client only props
-  | "voteAction"
-  | "unvoteAction"
-  | "initialVoteState"
-  | "hasAuthored"
-  | "children"
-  | "postAuthorDid"
-> & {
-  // Server only props
-  cid: string;
-  isUpvoted: boolean;
-  childComments: Awaited<ReturnType<typeof getCommentsForPost>>;
-  comment: string;
-  createdAt: Date;
+const commentVariants = cva(undefined, {
+  variants: {
+    level: {
+      0: "",
+      1: "pl-8",
+      2: "pl-16",
+      3: "pl-24",
+    },
+  },
+  defaultVariants: {
+    level: 0,
+  },
+});
+
+type CommentProps = VariantProps<typeof commentVariants> & {
+  comment: CommentModel;
   postAuthorParam: string;
+  postRkey: string;
 };
 
-export async function Comment({
-  authorDid,
-  isUpvoted,
-  childComments,
+export function Comment({ comment, level, ...props }: CommentProps) {
+  if (
+    comment.status !== "live" &&
+    comment.children &&
+    comment.children.length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <NestComment level={level}>
+      {comment.status === "live" ? (
+        <LiveComment {...props} level={level} comment={comment} />
+      ) : (
+        <DeletedComment {...props} level={level} comment={comment} />
+      )}
+    </NestComment>
+  );
+}
+
+function NestComment({
+  children,
+  level,
+  className,
+}: {
+  children: React.ReactNode;
+  level: CommentProps["level"];
+  className?: string;
+}) {
+  return (
+    <article className={cn(className, commentVariants({ level }))}>
+      {children}
+    </article>
+  );
+}
+
+async function LiveComment({
   comment,
-  createdAt,
+  level,
   postAuthorParam,
-  ...props
-}: ServerCommentProps) {
+  postRkey,
+}: CommentProps) {
   const [postAuthorDid, handle] = await Promise.all([
     getDidFromHandleOrDid(postAuthorParam),
-    getVerifiedHandle(authorDid),
+    getVerifiedHandle(comment.authorDid),
   ]);
 
   if (!postAuthorDid) {
@@ -49,58 +82,93 @@ export async function Comment({
   }
 
   const user = await getUser();
-  const hasAuthored = user?.did === authorDid;
+  const hasAuthored = user?.did === comment.authorDid;
+
+  const childCommentLevel = getChildCommentLevel(level);
 
   return (
     <>
       <CommentClientWrapperWithToolbar
-        {...props}
-        hasAuthored={hasAuthored}
-        authorDid={authorDid}
+        postRkey={postRkey}
         postAuthorDid={postAuthorDid}
+        hasAuthored={hasAuthored}
+        rkey={comment.rkey}
+        cid={comment.cid}
+        id={comment.id}
+        authorDid={comment.authorDid}
         initialVoteState={
-          hasAuthored ? "authored" : isUpvoted ? "voted" : "unvoted"
+          hasAuthored ? "authored" : comment.userHasVoted ? "voted" : "unvoted"
         }
       >
         <div className="flex items-center gap-2">
-          <UserHoverCard asChild did={authorDid}>
+          <UserHoverCard asChild did={comment.authorDid}>
             <Link
               href={`/profile/${handle}`}
               className="flex items-center gap-2"
             >
-              <UserAvatar did={authorDid} />
-              <div className="font-medium">{handle}</div>
+              <UserAvatar did={comment.authorDid} />
+              <div className="font-medium">@{handle}</div>
             </Link>
           </UserHoverCard>
           <Link
-            href={`/post/${postAuthorParam}/${props.postRkey}/${handle}/${props.rkey}`}
+            href={`/post/${postAuthorParam}/${postRkey}/${handle}/${comment.rkey}`}
             className="text-gray-500 text-xs dark:text-gray-400 hover:underline"
           >
-            <TimeAgo createdAt={createdAt} side="bottom" />
+            <TimeAgo createdAt={comment.createdAt} side="bottom" />
           </Link>
         </div>
-        <div className="prose prose-stone">
-          <p>{comment}</p>
-        </div>
+        <p>{comment.body}</p>
       </CommentClientWrapperWithToolbar>
 
-      {childComments?.map((comment) => (
+      {comment.children?.map((comment) => (
         <Comment
           key={comment.id}
-          id={comment.id}
-          cid={comment.cid}
-          rkey={comment.rkey}
-          postRkey={props.postRkey}
-          authorDid={comment.authorDid}
-          comment={comment.body}
-          createdAt={comment.createdAt}
-          childComments={comment.children}
-          isUpvoted={comment.userHasVoted}
+          level={childCommentLevel}
+          comment={comment}
           postAuthorParam={postAuthorParam}
-          // TODO: Show deeper levels behind a parent permalink. For now we just show them all at the max level
-          level={Math.min((props.level ?? 0) + 1, 3) as CommentProps["level"]}
+          postRkey={postRkey}
         />
       ))}
     </>
   );
+}
+
+function DeletedComment({
+  comment,
+  postAuthorParam,
+  postRkey,
+  level,
+}: CommentProps) {
+  const childCommentLevel = getChildCommentLevel(level);
+
+  return (
+    <NestComment level={level} className="flex flex-col gap-2 flex-1 p-1">
+      <div className="flex flex-col gap-2 opacity-60">
+        <div className="flex items-center gap-2">
+          <AvatarFallback size="small" />
+          <div className="font-medium" aria-hidden>
+            @deleted
+          </div>
+          <div className="text-gray-500 text-xs dark:text-gray-400">
+            <TimeAgo createdAt={comment.createdAt} side="bottom" />
+          </div>
+        </div>
+        <p>Deleted comment</p>
+      </div>
+      {comment.children?.map((comment) => (
+        <Comment
+          key={comment.id}
+          comment={comment}
+          postRkey={postRkey}
+          postAuthorParam={postAuthorParam}
+          level={childCommentLevel}
+        />
+      ))}
+    </NestComment>
+  );
+}
+
+function getChildCommentLevel(level: number | null | undefined) {
+  // TODO: Show deeper levels behind a parent permalink. For now we just show them all at the max level
+  return Math.min((level ?? 0) + 1, 3) as CommentProps["level"];
 }

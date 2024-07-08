@@ -10,6 +10,8 @@ import {
 } from "@/lib/og";
 import { CommentPageParams, getCommentPageData } from "../_lib/page-data";
 import { getBlueskyProfile } from "@/lib/data/user";
+import { shouldHideComment } from "@/lib/data/db/comment";
+import { notFound } from "next/navigation";
 
 export const dynamic = "force-static";
 export const revalidate = 60 * 60; // 1 hour
@@ -19,6 +21,10 @@ export async function GET(
   { params }: { params: CommentPageParams },
 ) {
   const { comment } = await getCommentPageData(params);
+  if (shouldHideComment(comment) || comment.status !== "live") {
+    notFound();
+  }
+
   const { avatar, handle } = await getBlueskyProfile(comment.authorDid);
 
   return frontpageOgImageResponse(
@@ -72,8 +78,8 @@ export async function GET(
         <OgBox style={{ alignItems: "center", gap: 12 }}>
           <OgCommentIcon />
           <OgBox>
-            {comment.children.length}{" "}
-            {comment.children.length === 1 ? "reply" : "replies"}
+            {comment.children!.length}{" "}
+            {comment.children!.length === 1 ? "reply" : "replies"}
           </OgBox>
         </OgBox>
       </OgBottomBar>

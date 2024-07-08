@@ -78,18 +78,10 @@ export default async function Profile({ params }: { params: Params }) {
               if (entity.type === "comment") {
                 return (
                   <Comment
-                    comment={entity.body}
-                    isUpvoted
-                    rkey={entity.rkey}
-                    cid={entity.cid}
-                    id={entity.id}
                     key={entity.id}
-                    level={1}
-                    postRkey={entity.postRkey as string}
-                    authorDid={entity.authorDid}
-                    createdAt={entity.createdAt}
-                    childComments={[]}
+                    comment={entity}
                     postAuthorParam={entity.postAuthorDid as DID}
+                    postRkey={entity.postRkey as string}
                   />
                 );
               }
@@ -125,18 +117,10 @@ export default async function Profile({ params }: { params: Params }) {
               {userComments.map((comment) => {
                 return (
                   <Comment
-                    comment={comment.body}
-                    isUpvoted
-                    rkey={comment.rkey}
-                    cid={comment.cid}
-                    id={comment.id}
                     key={comment.id}
-                    level={1}
-                    postRkey={comment.postRkey as string}
-                    authorDid={comment.authorDid}
-                    createdAt={comment.createdAt}
-                    childComments={[]}
+                    comment={comment}
                     postAuthorParam={comment.postAuthorDid as DID}
+                    postRkey={comment.postRkey as string}
                   />
                 );
               })}

@@ -21,7 +21,6 @@ import {
   deleteCommentAction,
 } from "./actions";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
-import { VariantProps, cva } from "class-variance-authority";
 import {
   useActionState,
   useRef,
@@ -37,27 +36,13 @@ import { Spinner } from "@/lib/components/ui/spinner";
 import { DID } from "@/lib/data/atproto/did";
 import { InputLengthIndicator } from "@/lib/components/input-length-indicator";
 import { MAX_COMMENT_LENGTH } from "@/lib/data/db/constants";
+import type { CommentModel } from "@/lib/data/db/comment";
 
-const commentVariants = cva(undefined, {
-  variants: {
-    level: {
-      0: "",
-      1: "pl-8",
-      2: "pl-16",
-      3: "pl-24",
-    },
-  },
-  defaultVariants: {
-    level: 0,
-  },
-});
-
-export type CommentProps = VariantProps<typeof commentVariants> & {
-  rkey: string;
-  cid: string;
-  id: number;
+export type CommentClientProps = Pick<
+  CommentModel,
+  "rkey" | "cid" | "id" | "authorDid"
+> & {
   postRkey: string;
-  authorDid: DID;
   postAuthorDid: DID;
   initialVoteState: VoteButtonState;
   hasAuthored: boolean;
@@ -71,19 +56,18 @@ export function CommentClientWrapperWithToolbar({
   postRkey,
   authorDid,
   postAuthorDid,
-  level,
   initialVoteState,
   hasAuthored,
   children,
-}: CommentProps) {
+}: CommentClientProps) {
   const [showNewComment, setShowNewComment] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
   const newCommentTextAreaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   return (
-    <article className={commentVariants({ level })}>
+    <>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
-      <div className="grid gap-2 flex-1 p-1" tabIndex={0} ref={commentRef}>
+      <div className="flex flex-col gap-2 p-1" tabIndex={0} ref={commentRef}>
         {children}
         <div className="flex items-center gap-4">
           <SimpleTooltip content="Vote" side="bottom">
@@ -173,7 +157,7 @@ export function CommentClientWrapperWithToolbar({
           }
         />
       ) : null}
-    </article>
+    </>
   );
 }
 

@@ -22,23 +22,26 @@ export async function generateMetadata({
   const path = `/post/${params.postAuthor}/${params.postRkey}/${params.commentAuthor}/${params.commentRkey}`;
 
   return {
-    title: `${post.title} - @${handle}: "${truncateText(comment.body, 15)}..."`,
+    title: `${post.title} - ${comment.status === "live" ? `@${handle}: "${truncateText(comment.body, 15)}..."` : "Deleted comment"}`,
     alternates: {
       canonical: `https://frontpage.fyi${path}`,
     },
-    openGraph: {
-      title: `@${handle}'s comment on Frontpage`,
-      description: truncateText(comment.body, 47),
-      type: "article",
-      publishedTime: comment.createdAt.toISOString(),
-      authors: [`@${handle}`],
-      url: `https://frontpage.fyi${path}`,
-      images: [
-        {
-          url: `${path}/og-image`,
-        },
-      ],
-    },
+    openGraph:
+      comment.status === "live"
+        ? {
+            title: `@${handle}'s comment on Frontpage`,
+            description: truncateText(comment.body, 47),
+            type: "article",
+            publishedTime: comment.createdAt.toISOString(),
+            authors: [`@${handle}`],
+            url: `https://frontpage.fyi${path}`,
+            images: [
+              {
+                url: `${path}/og-image`,
+              },
+            ],
+          }
+        : undefined,
   };
 }
 
@@ -53,24 +56,16 @@ export default async function CommentPage({
     <>
       <div className="flex justify-end">
         <Link
-          href={`/post/${params.postRkey}`}
+          href={`/post/${params.postAuthor}/${params.postRkey}`}
           className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
         >
           See all comments
         </Link>
       </div>
       <Comment
-        isUpvoted={false}
-        key={comment.id}
-        cid={comment.cid}
-        rkey={comment.rkey}
+        comment={comment}
         postAuthorParam={params.postAuthor}
         postRkey={post.rkey}
-        authorDid={comment.authorDid}
-        createdAt={comment.createdAt}
-        id={comment.id}
-        comment={comment.body}
-        childComments={comment.children}
       />
     </>
   );
