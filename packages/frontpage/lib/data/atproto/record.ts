@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { ensureUser } from "../user";
 import { DataLayerError } from "../error";
+import { Prettify } from "@/lib/utils";
 
 export const AtUri = z.string().transform((value, ctx) => {
   const match = value.match(/^at:\/\/(.+?)(\/.+?)?(\/.+?)?$/);
@@ -29,11 +30,6 @@ export const AtUri = z.string().transform((value, ctx) => {
     value,
   };
 });
-
-type Prettify<T> = {
-  [K in keyof T]: T[K];
-  // eslint-disable-next-line @typescript-eslint/ban-types
-} & {};
 
 export function createAtUriParser<TCollection extends z.ZodType>(
   collectionSchema: TCollection,

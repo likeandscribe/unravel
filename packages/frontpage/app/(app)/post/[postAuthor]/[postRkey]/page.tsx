@@ -56,17 +56,11 @@ export default async function Post({ params }: { params: PostPageParams }) {
       <div className="grid gap-6">
         {comments.map((comment) => (
           <Comment
-            isUpvoted={comment.userHasVoted}
             key={comment.id}
-            cid={comment.cid}
-            rkey={comment.rkey}
-            postRkey={post.rkey}
-            authorDid={comment.authorDid}
+            comment={comment}
+            level={0}
             postAuthorParam={params.postAuthor}
-            createdAt={comment.createdAt}
-            id={comment.id}
-            comment={comment.body}
-            childComments={comment.children}
+            postRkey={post.rkey}
           />
         ))}
       </div>

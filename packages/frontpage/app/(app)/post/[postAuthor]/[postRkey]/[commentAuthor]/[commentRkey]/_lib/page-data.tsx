@@ -1,6 +1,9 @@
 import "server-only";
 import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
-import { getCommentWithChildren } from "@/lib/data/db/comment";
+import {
+  getCommentWithChildren,
+  shouldHideComment,
+} from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
 import { notFound } from "next/navigation";
 
@@ -30,6 +33,10 @@ export async function getCommentPageData(params: CommentPageParams) {
     params.commentRkey,
   );
   if (!comment) {
+    notFound();
+  }
+
+  if (shouldHideComment(comment)) {
     notFound();
   }
 
