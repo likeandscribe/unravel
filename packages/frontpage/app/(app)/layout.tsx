@@ -102,7 +102,7 @@ async function LoginOrLogout() {
       <DropdownMenu>
         <DropdownMenuTrigger>
           {did ? (
-            <UserAvatar did={did as DID} size="smedium" />
+            <UserAvatar did={did} size="smedium" />
           ) : (
             <span>{session.user.name}</span>
           )}
