@@ -117,12 +117,15 @@ async function LoginOrLogout() {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              {/* <User className="mr-2 h-4 w-4" /> */}
-              <Link href={`/profile/${session.user.name}`}>Profile</Link>
+              <Link
+                href={`/profile/${session.user.name}`}
+                className="cursor-pointer"
+              >
+                Profile
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              {/* <LogOut className="mr-2 h-4 w-4" /> */}
               <button type="submit" className="w-full text-start">
                 Logout
               </button>
