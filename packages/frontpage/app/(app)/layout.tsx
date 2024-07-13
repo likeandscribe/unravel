@@ -5,7 +5,7 @@ import { Button } from "@/lib/components/ui/button";
 import { isBetaUser } from "@/lib/data/user";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "./_components/theme-toggle";
-import { DID, getDidFromHandleOrDid } from "@/lib/data/atproto/did";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
 
 import {
   DropdownMenu,
