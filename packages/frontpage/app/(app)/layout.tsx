@@ -128,7 +128,10 @@ async function LoginOrLogout() {
             }}
           >
             <DropdownMenuItem asChild>
-              <button type="submit" className="w-full text-start">
+              <button
+                type="submit"
+                className="w-full text-start cursor-pointer"
+              >
                 Logout
               </button>
             </DropdownMenuItem>
