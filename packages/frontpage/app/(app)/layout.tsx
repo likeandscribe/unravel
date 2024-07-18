@@ -108,24 +108,26 @@ async function LoginOrLogout() {
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" side="bottom" align="end">
+          <DropdownMenuLabel className="truncate">
+            {session.user.name}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link
+              href={`/profile/${session.user.name}`}
+              className="cursor-pointer"
+            >
+              Profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <form
             action={async () => {
               "use server";
               await signOut();
             }}
           >
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link
-                href={`/profile/${session.user.name}`}
-                className="cursor-pointer"
-              >
-                Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
               <button type="submit" className="w-full text-start">
                 Logout
               </button>
