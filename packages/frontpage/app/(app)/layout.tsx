@@ -5,6 +5,17 @@ import { Button } from "@/lib/components/ui/button";
 import { isBetaUser } from "@/lib/data/user";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "./_components/theme-toggle";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/lib/components/ui/dropdown-menu";
+import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { UserAvatar } from "@/lib/components/user-avatar";
 
 export default async function Layout({
   children,
@@ -86,15 +97,47 @@ export default async function Layout({
 async function LoginOrLogout() {
   const session = await getSession();
   if (session) {
+    const did = await getDidFromHandleOrDid(session.user.name as string);
     return (
-      <form
-        action={async () => {
-          "use server";
-          await signOut();
-        }}
-      >
-        <button type="submit">Logout ({session.user.name})</button>
-      </form>
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          {did ? (
+            <UserAvatar did={did} size="smedium" />
+          ) : (
+            <span>{session.user.name}</span>
+          )}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" side="bottom" align="end">
+          <DropdownMenuLabel className="truncate">
+            {session.user.name}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link
+              href={`/profile/${session.user.name}`}
+              className="cursor-pointer"
+            >
+              Profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <form
+            action={async () => {
+              "use server";
+              await signOut();
+            }}
+          >
+            <DropdownMenuItem asChild>
+              <button
+                type="submit"
+                className="w-full text-start cursor-pointer"
+              >
+                Logout
+              </button>
+            </DropdownMenuItem>
+          </form>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 
