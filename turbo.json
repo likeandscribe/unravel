@@ -9,6 +9,10 @@
         "DISCORD_WEBHOOK_URL"
       ]
     },
-    "type-check": {}
-  }
+    "type-check": {},
+    "test": {
+      "dependsOn": ["^build"]
+    }
+  },
+  "globalEnv": ["CI"]
 }
