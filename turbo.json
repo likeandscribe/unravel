@@ -13,5 +13,6 @@
     "test": {
       "dependsOn": ["^build"]
     }
-  }
+  },
+  "globalEnv": ["CI"]
 }

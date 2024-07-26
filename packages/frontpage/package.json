@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "test": "vitest run"
+    "test": "vitest"
   },
   "dependencies": {
     "@next/env": "^14.2.4",
