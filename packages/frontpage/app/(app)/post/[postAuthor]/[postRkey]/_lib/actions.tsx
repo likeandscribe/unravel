@@ -22,7 +22,9 @@ import {
   LexicalNode,
   $isTextNode,
   $isElementNode,
+  RootNode,
 } from "lexical";
+import { $dfs } from "@lexical/utils";
 import { revalidatePath } from "next/cache";
 
 export async function createCommentAction(input: {
@@ -52,6 +54,7 @@ export async function createCommentAction(input: {
   }
 
   const state = createHeadlessEditor().parseEditorState(input.content);
+  editorStateToCommentContent(state);
 
   // const { rkey } = await createComment({
   //   content,
@@ -79,19 +82,49 @@ async function waitForComment(rkey: string) {
 function editorStateToCommentContent(editorState: EditorState) {
   return editorState.read(() => {
     const root = $getRoot();
-    root.getChildren().forEach((child) => {});
-
+    const content = $nodeToCommentContent(root);
     const text = root.getTextContent();
   });
 }
 
-function $nodeToFacets(node: LexicalNode) {
-  if ($isTextNode(node)) {
-    if (node.hasFormat("bold")) {
-      return node.selectStart;
+const FORMATS = ["bold", "italic", "strikethrough"] as const;
+
+type CommentFacet =
+  | {
+      $type: "fyi.frontpage.richtext.facet#format";
+      format: (typeof FORMATS)[number];
     }
+  | {
+      $type: "fyi.frontpage.richtext.facet#link";
+      uri: string;
+    };
+
+type CommentContent =
+  | string
+  | { content: CommentContent; facets: CommentFacet[] }
+  | CommentContent[];
+
+function $nodeToCommentContent(node: LexicalNode): CommentContent {
+  if ($isTextNode(node)) {
+    console.log("text node", node);
+    const formats = FORMATS.filter((format) => node.hasFormat(format));
+    if (formats.length === 0) {
+      return node.getTextContent();
+    }
+
+    return {
+      content: node.getTextContent(),
+      facets: formats.map((format) => ({
+        $type: "fyi.frontpage.richtext.facet#format",
+        format,
+      })),
+    };
+  } else if ($isElementNode(node)) {
+    console.log("element node", node);
+    return node.getChildren().map($nodeToCommentContent);
+  } else {
+    throw new Error("Unknown node type");
   }
-  if ($isElementNode(node) && node.isEmpty()) return [];
 }
 
 export async function deletePostAction(rkey: string) {
@@ -126,4 +159,7 @@ export async function commentUnvoteAction(commentId: number) {
   }
 
   await deleteVote(vote.rkey);
+}
+function $getDepth(node: RootNode) {
+  throw new Error("Function not implemented.");
 }

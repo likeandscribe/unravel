@@ -133,7 +133,7 @@ function EditableTextArea({
           <AutoLinkPlugin matchers={AUTOLINK_MATCHES} />
         </div>
         <Toolbar />
-        <TreeViewPlugin />
+        {/* <TreeViewPlugin /> */}
         <EditorRefPlugin
           editorRef={(e) => {
             if (ref) {
