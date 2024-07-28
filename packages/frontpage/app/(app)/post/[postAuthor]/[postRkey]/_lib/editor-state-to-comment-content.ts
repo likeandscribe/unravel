@@ -26,29 +26,33 @@ type CommentFacet =
       uri: string;
     };
 
-type CommentContent =
-  | string
-  | { content: CommentContent; facets: CommentFacet[] }
-  | CommentContent[];
+type CommentContent = string | { content: string; facets: CommentFacet[] };
 
-function $nodeToCommentContent(node: LexicalNode): CommentContent {
+function $nodeToCommentContent(node: LexicalNode): CommentContent[] {
   if ($isTextNode(node)) {
-    console.log("text node", node);
     const formats = FORMATS.filter((format) => node.hasFormat(format));
     if (formats.length === 0) {
-      return node.getTextContent();
+      return [node.getTextContent()];
     }
 
-    return {
-      content: node.getTextContent(),
-      facets: formats.map((format) => ({
-        $type: "fyi.frontpage.richtext.facet#format",
-        format,
-      })),
-    };
+    return [
+      {
+        content: node.getTextContent(),
+        facets: formats.map((format) => ({
+          $type: "fyi.frontpage.richtext.facet#format",
+          format,
+        })),
+      },
+    ];
   } else if ($isElementNode(node)) {
-    console.log("element node", node);
-    return node.getChildren().map($nodeToCommentContent);
+    const children = node.getChildren();
+    if (children.length === 0) {
+      return [];
+    }
+    if (children.length === 1) {
+      return $nodeToCommentContent(children[0]!);
+    }
+    return children.map($nodeToCommentContent).flat();
   } else {
     throw new Error("Unknown node type");
   }
