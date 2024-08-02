@@ -72,8 +72,6 @@ pub struct SubscribeReposCommitOperation {
 
 #[derive(Debug, Deserialize)]
 pub struct SubscribeReposCommit {
-    #[serde(with = "serde_bytes")]
-    pub blocks: Vec<u8>,
     pub commit: Cid,
     #[serde(rename(deserialize = "ops"))]
     pub operations: Vec<SubscribeReposCommitOperation>,

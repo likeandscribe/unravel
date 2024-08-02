@@ -168,6 +168,17 @@ async fn main() {
 
     db::run_migrations(&mut ctx.db_connection).expect("Failed to run migrations");
 
+    let metrics_monitor = tokio_metrics::TaskMonitor::new();
+    {
+        let metrics_monitor = metrics_monitor.clone();
+        tokio::spawn(async move {
+            for interval in metrics_monitor.intervals() {
+                println!("{:?} per second", interval.instrumented_count as f64 / 5.0,);
+                tokio::time::sleep(Duration::from_millis(5000)).await;
+            }
+        });
+    }
+
     let cursor = db::get_seq(&mut ctx.db_connection).expect("Failed to get sequence");
 
     loop {
@@ -178,17 +189,6 @@ async fn main() {
         .await
         {
             Ok((mut socket, _response)) => {
-                let metrics_monitor = tokio_metrics::TaskMonitor::new();
-                {
-                    let metrics_monitor = metrics_monitor.clone();
-                    tokio::spawn(async move {
-                        for interval in metrics_monitor.intervals() {
-                            println!("{:?} per second", interval.instrumented_count as f64 / 5.0);
-                            tokio::time::sleep(Duration::from_millis(5000)).await;
-                        }
-                    });
-                }
-
                 println!("Connected to bgs.bsky-sandbox.dev.");
                 while let Some(Ok(Message::Binary(message))) = socket.next().await {
                     match metrics_monitor.instrument(process(message, &mut ctx)).await {
