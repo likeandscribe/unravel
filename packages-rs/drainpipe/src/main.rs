@@ -182,30 +182,49 @@ async fn main() {
     let cursor = db::get_seq(&mut ctx.db_connection).expect("Failed to get sequence");
 
     loop {
-        match tokio_tungstenite::connect_async(format!(
+        let connect_result = tokio_tungstenite::connect_async(format!(
             "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
             cursor
         ))
-        .await
-        {
-            Ok((mut socket, _response)) => {
-                println!("Connected to bgs.bsky-sandbox.dev.");
-                while let Some(Ok(Message::Binary(message))) = socket.next().await {
-                    match metrics_monitor.instrument(process(message, &mut ctx)).await {
-                        Ok(seq) => {
-                            update_seq(&mut ctx.db_connection, seq)
-                                .map_err(|_| eprintln!("Failed to update sequence"))
-                                .ok();
-                        }
-                        Err(error) => {
-                            eprintln!("Error processing message: {error:?}");
-                            record_dead_letter(&mut ctx.db_connection, &error)
-                                .map_err(|e| eprintln!("Failed to record dead letter {e:?}"))
-                                .ok();
+        .await;
+        match connect_result {
+            Ok((mut socket, _response)) => loop {
+                match socket.next().await {
+                    Some(Ok(Message::Binary(message))) => {
+                        match metrics_monitor.instrument(process(message, &mut ctx)).await {
+                            Ok(seq) => {
+                                update_seq(&mut ctx.db_connection, seq)
+                                    .map_err(|_| eprintln!("Failed to update sequence"))
+                                    .ok();
+                            }
+                            Err(error) => {
+                                eprintln!("Error processing message: {error:?}");
+                                record_dead_letter(&mut ctx.db_connection, &error)
+                                    .map_err(|e| eprintln!("Failed to record dead letter {e:?}"))
+                                    .ok();
+                            }
                         }
                     }
+
+                    err => {
+                        let cursor = db::get_seq(&mut ctx.db_connection).unwrap_or(-1);
+                        match err {
+                            Some(Ok(_)) => {
+                                eprintln!("Received non-binary message. At sequence {cursor}");
+                            }
+                            Some(Err(error)) => {
+                                eprintln!(
+                                    "Error receiving message: {error:?}. At sequence {cursor}"
+                                );
+                            }
+                            None => {
+                                eprintln!("Connection closed. At sequence {cursor}");
+                            }
+                        }
+                        break;
+                    }
                 }
-            }
+            },
             Err(error) => {
                 eprintln!(
                     "Error connecting to bgs.bsky-sandbox.dev. Waiting to reconnect: {error:?}"
