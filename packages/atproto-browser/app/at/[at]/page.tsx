@@ -80,8 +80,6 @@ function naiveAtUriCheck(atUri: string) {
 }
 
 function JSONString({ data }: { data: string }) {
-  const child = <>&quot;{data}&quot;</>;
-
   return (
     <pre
       style={{
