@@ -1,9 +1,18 @@
-import { DidResolver, getPds, HandleResolver } from "@atproto/identity";
+import {
+  DidResolver,
+  getHandle,
+  getPds,
+  HandleResolver,
+} from "@atproto/identity";
 import { AtUri, isValidHandle } from "@atproto/syntax";
 import { isDid } from "@atproto/did";
-import { Fragment } from "react";
+import { cache, Fragment, Suspense } from "react";
 import Link from "next/link";
-import { AtUriForm } from "@/app/aturi-form";
+
+const didResolver = new DidResolver({});
+const resolveDid = cache((did: string) => didResolver.resolve(did));
+const handleResolver = new HandleResolver({});
+const resolveHandle = cache((handle: string) => handleResolver.resolve(handle));
 
 export default async function AtPage({
   searchParams,
@@ -14,8 +23,7 @@ export default async function AtPage({
 
   let didStr;
   if (isValidHandle(uri.hostname)) {
-    const handleResolver = new HandleResolver({});
-    didStr = await handleResolver.resolve(uri.hostname);
+    didStr = await resolveHandle(uri.hostname);
     if (!didStr) {
       return <div>Could not resolve handle from did: {uri.hostname}</div>;
     }
@@ -26,14 +34,70 @@ export default async function AtPage({
     didStr = uri.hostname;
   }
 
-  const didResolver = new DidResolver({});
-  const didDocument = await didResolver.resolve(didStr);
+  const didDocument = await resolveDid(didStr);
   if (!didDocument) {
     return <div>Could not resolve DID: {didStr}</div>;
   }
   const pds = getPds(didDocument);
   if (!pds) {
     return <div>No PDS found for DID: {didDocument.id}</div>;
+  }
+
+  const handle = getHandle(didDocument) ?? `<invalid handle>`;
+
+  if (uri.pathname === "/" || uri.pathname === "") {
+    return (
+      <>
+        <h1>
+          {handle} ({didDocument.id})
+        </h1>
+        <Author did={didStr} />
+      </>
+    );
+  }
+
+  if (!uri.rkey) {
+    const listRecordsUrl = new URL(`${pds}/xrpc/com.atproto.repo.listRecords`);
+    listRecordsUrl.searchParams.set("repo", didDocument.id);
+    listRecordsUrl.searchParams.set("collection", uri.collection);
+
+    // TODO: pagination
+    const response = await fetch(listRecordsUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      return (
+        <div>
+          Failed to fetch records: {response.statusText}. URL:{" "}
+          {listRecordsUrl.toString()}
+        </div>
+      );
+    }
+
+    const { records, cursor } = await response.json();
+
+    return (
+      <div>
+        <h1>
+          {handle}&apos;s {uri.collection} records
+        </h1>
+        <ul>
+          {records.map((record: any) => {
+            const uri = new AtUri(record.uri);
+            return (
+              <li key={record.uri}>
+                <Link href={`/at?u=${record.uri}`}>{uri.rkey}</Link>
+              </li>
+            );
+          })}
+        </ul>
+        {!!cursor && <p>And more records (pagination coming soon...)</p>}
+      </div>
+    );
   }
 
   const getRecordUrl = new URL(`${pds}/xrpc/com.atproto.repo.getRecord`);
@@ -57,16 +121,77 @@ export default async function AtPage({
     );
   }
 
-  const data = (await response.json()) as JSONType;
+  const record = (await response.json()) as JSONType;
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 12 }}>
-        <Link href="/">🏠</Link>
-        <AtUriForm defaultUri={uri.toString()} style={{ flexGrow: 1 }} />
-      </div>
-      <JSONValue data={data} />
+      <details>
+        <summary>
+          Author: {handle} (<Link href={`/at?u=at://${didStr}/`}>{didStr}</Link>
+          )
+        </summary>
+        <Suspense>
+          <Author did={didStr} />
+        </Suspense>
+      </details>
+      <h2>Record</h2>
+      <JSONValue data={record} />
     </div>
+  );
+}
+
+async function Author({ did }: { did: string }) {
+  const didDocument = await resolveDid(did);
+  if (!didDocument) {
+    throw new Error(`Could not resolve DID: ${did}`);
+  }
+  const pds = getPds(didDocument);
+  if (!pds) {
+    throw new Error(`No PDS found for DID: ${didDocument.id}`);
+  }
+
+  const describeRepoUrl = new URL(`${pds}/xrpc/com.atproto.repo.describeRepo`);
+  describeRepoUrl.searchParams.set("repo", didDocument.id);
+  const response = await fetch(describeRepoUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    return (
+      <div>
+        Failed to fetch collections: {response.statusText}. URL:{" "}
+        {describeRepoUrl.toString()}
+      </div>
+    );
+  }
+
+  const { collections } = (await response.json()) as {
+    collections: string[];
+  };
+
+  return (
+    <dl>
+      <dt>PDS</dt>
+      <dd>{pds}</dd>
+
+      <dt>Collections</dt>
+      <dd>
+        {collections.length === 0
+          ? "No collections."
+          : collections.map((nsid) => {
+              const collectionUri = `at://${[did, nsid].join("/")}`;
+
+              return (
+                <li key={nsid}>
+                  <Link href={`/at?u=${collectionUri}`}>{nsid}</Link>
+                </li>
+              );
+            })}
+      </dd>
+    </dl>
   );
 }
 

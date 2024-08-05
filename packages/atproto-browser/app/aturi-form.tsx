@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { navigateUri } from "./actions";
 
 export function AtUriForm({
   defaultUri,
@@ -8,14 +8,7 @@ export function AtUriForm({
   style?: React.CSSProperties;
 }) {
   return (
-    <form
-      action={async (formData) => {
-        "use server";
-        const uri = formData.get("uri") as string;
-        redirect(`/at?u=${uri}`);
-      }}
-      style={{ ...style, display: "flex" }}
-    >
+    <form action={navigateUri} style={{ ...style, display: "flex" }}>
       <input
         style={{ flexGrow: 1 }}
         type="text"
