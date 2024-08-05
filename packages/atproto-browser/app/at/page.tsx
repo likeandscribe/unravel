@@ -5,12 +5,12 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { AtUriForm } from "@/app/aturi-form";
 
-type Params = {
-  at: string;
-};
-
-export default async function AtPage({ params }: { params: Params }) {
-  const uri = new AtUri(decodeURIComponent(params.at));
+export default async function AtPage({
+  searchParams,
+}: {
+  searchParams: Record<string, string>;
+}) {
+  const uri = new AtUri(searchParams.u!);
 
   let didStr;
   if (isValidHandle(uri.hostname)) {
@@ -88,7 +88,7 @@ function JSONString({ data }: { data: string }) {
     >
       {naiveAtUriCheck(data) ? (
         <>
-          &quot;<Link href={`/at/${encodeURIComponent(data)}`}>{data}</Link>
+          &quot;<Link href={`/at?u=${data}`}>{data}</Link>
           &quot;
         </>
       ) : URL.canParse(data) ? (

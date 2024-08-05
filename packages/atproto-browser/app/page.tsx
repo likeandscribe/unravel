@@ -12,10 +12,7 @@ export default function Home() {
         <AtUriForm />
       </div>
       <p>
-        eg.{" "}
-        <Link href={`/at/${encodeURIComponent(EXAMPLE_URI)}`}>
-          {EXAMPLE_URI}
-        </Link>
+        eg. <Link href={`/at?u=${EXAMPLE_URI}`}>{EXAMPLE_URI}</Link>
       </p>
     </main>
   );

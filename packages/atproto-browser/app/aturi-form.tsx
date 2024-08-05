@@ -12,7 +12,7 @@ export function AtUriForm({
       action={async (formData) => {
         "use server";
         const uri = formData.get("uri") as string;
-        redirect(`/at/${uri}`);
+        redirect(`/at?u=${uri}`);
       }}
       style={{ ...style, display: "flex" }}
     >
@@ -20,6 +20,7 @@ export function AtUriForm({
         style={{ flexGrow: 1 }}
         type="text"
         name="uri"
+        key={defaultUri}
         defaultValue={defaultUri}
       />
       <button type="submit">Go</button>
