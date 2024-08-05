@@ -78,7 +78,10 @@ export default async function AtPage({
       );
     }
 
-    const { records, cursor } = await response.json();
+    const { records, cursor } = (await response.json()) as {
+      records: { uri: string }[];
+      cursor: string | null;
+    };
 
     return (
       <div>
@@ -86,7 +89,7 @@ export default async function AtPage({
           {handle}&apos;s {uri.collection} records
         </h1>
         <ul>
-          {records.map((record: any) => {
+          {records.map((record) => {
             const uri = new AtUri(record.uri);
             return (
               <li key={record.uri}>
