@@ -186,7 +186,7 @@ async function RecordVerificationBadge({
 
   try {
     await verifyRecords(car, did, key);
-    return <span title="Valid record">✅</span>;
+    return <span title="Valid record">🔒</span>;
   } catch (e) {
     if (e instanceof Error) {
       return <span title={`Invalid record (${e.message})`}>❌</span>;
