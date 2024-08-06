@@ -9,7 +9,6 @@ import { isDid } from "@atproto/did";
 import { cache, Suspense } from "react";
 import Link from "next/link";
 import { AtBlob } from "./_lib/at-blob";
-import { BlobImage } from "./_lib/blob-image";
 import { CollectionItems } from "./_lib/collection";
 import { SWRConfig } from "swr";
 import { listRecords } from "@/lib/atproto";
@@ -124,7 +123,7 @@ export default async function AtPage({
         </Suspense>
       </details>
       <h2>Record</h2>
-      <JSONValue data={record} />
+      <JSONValue data={record} repo={didDocument.id} />
     </div>
   );
 }
@@ -167,7 +166,7 @@ async function Author({ did }: { did: string }) {
         <h2>DID Doc</h2>
       </dt>
       <dd>
-        <JSONValue data={didDocument as JSONType} />
+        <JSONValue data={didDocument as JSONType} repo={did} />
       </dd>
 
       <dt>
@@ -267,7 +266,13 @@ function JSONNull() {
   );
 }
 
-function JSONObject({ data }: { data: { [x: string]: JSONType } }) {
+function JSONObject({
+  data,
+  repo,
+}: {
+  data: { [x: string]: JSONType };
+  repo: string;
+}) {
   const rawObj = (
     <dl>
       {Object.entries(data).map(([key, value]) => (
@@ -276,7 +281,7 @@ function JSONObject({ data }: { data: { [x: string]: JSONType } }) {
             <pre>{key}:</pre>
           </dt>
           <dd style={{ margin: 0 }}>
-            <JSONValue data={value} />
+            <JSONValue data={value} repo={repo} />
           </dd>
         </div>
       ))}
@@ -290,7 +295,12 @@ function JSONObject({ data }: { data: { [x: string]: JSONType } }) {
   ) {
     return (
       <>
-        <BlobImage blob={parseBlobResult.data} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`https://cdn.bsky.app/img/feed_thumbnail/plain/${repo}/${parseBlobResult.data.ref.$link}@jpeg`}
+          alt=""
+          width={200}
+        />
         <details>
           <summary>View blob content</summary>
           {rawObj}
@@ -302,20 +312,20 @@ function JSONObject({ data }: { data: { [x: string]: JSONType } }) {
   return rawObj;
 }
 
-function JSONArray({ data }: { data: JSONType[] }) {
+function JSONArray({ data, repo }: { data: JSONType[]; repo: string }) {
   return (
     <ul>
       {data.map((value, index) => (
         // eslint-disable-next-line react/no-array-index-key
         <li key={index}>
-          <JSONValue data={value} />
+          <JSONValue data={value} repo={repo} />
         </li>
       ))}
     </ul>
   );
 }
 
-function JSONValue({ data }: { data: JSONType }) {
+function JSONValue({ data, repo }: { data: JSONType; repo: string }) {
   if (typeof data === "string") {
     return <JSONString data={data} />;
   }
@@ -329,9 +339,9 @@ function JSONValue({ data }: { data: JSONType }) {
     return <JSONNull />;
   }
   if (Array.isArray(data)) {
-    return <JSONArray data={data} />;
+    return <JSONArray data={data} repo={repo} />;
   }
-  return <JSONObject data={data} />;
+  return <JSONObject data={data} repo={repo} />;
 }
 
 type JSONType =
