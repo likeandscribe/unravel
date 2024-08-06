@@ -8,6 +8,9 @@ import { AtUri, isValidHandle } from "@atproto/syntax";
 import { isDid } from "@atproto/did";
 import { cache, Fragment, Suspense } from "react";
 import Link from "next/link";
+import { z } from "zod";
+import { AtBlob } from "./_lib/at-blob";
+import { BlobImage } from "./_lib/blob-image";
 
 const didResolver = new DidResolver({});
 const resolveDid = cache((did: string) => didResolver.resolve(did));
@@ -276,7 +279,7 @@ function JSONNull() {
 }
 
 function JSONObject({ data }: { data: { [x: string]: JSONType } }) {
-  return (
+  const rawObj = (
     <dl>
       {Object.entries(data).map(([key, value]) => (
         <Fragment key={key}>
@@ -290,6 +293,24 @@ function JSONObject({ data }: { data: { [x: string]: JSONType } }) {
       ))}
     </dl>
   );
+
+  const parseBlobResult = AtBlob.safeParse(data);
+  if (
+    parseBlobResult.success &&
+    parseBlobResult.data.mimeType.startsWith("image/")
+  ) {
+    return (
+      <>
+        <BlobImage blob={parseBlobResult.data} />
+        <details>
+          <summary>View blob content</summary>
+          {rawObj}
+        </details>
+      </>
+    );
+  }
+
+  return rawObj;
 }
 
 function JSONArray({ data }: { data: JSONType[] }) {

@@ -38,6 +38,9 @@ importers:
       swr:
         specifier: 2.2.6-beta.4
         version: 2.2.6-beta.4(react@19.0.0-rc-f994737d14-20240522)
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*

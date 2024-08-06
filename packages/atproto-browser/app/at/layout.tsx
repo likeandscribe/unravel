@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { UriBar } from "./uri-bar";
+import { UriBar } from "./_lib/uri-bar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

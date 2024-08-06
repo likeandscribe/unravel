@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { AtUriForm } from "../aturi-form";
+import { AtUriForm } from "../../aturi-form";
 
 export function UriBar() {
   const searchParams = useSearchParams();
