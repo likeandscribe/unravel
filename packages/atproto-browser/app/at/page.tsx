@@ -304,13 +304,14 @@ function JSONObject({ data }: { data: { [x: string]: JSONType } }) {
 
 function JSONArray({ data }: { data: JSONType[] }) {
   return (
-    <div>
+    <ul>
       {data.map((value, index) => (
-        <div key={index}>
+        // eslint-disable-next-line react/no-array-index-key
+        <li key={index}>
           <JSONValue data={value} />
-        </div>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
