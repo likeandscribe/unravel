@@ -5,7 +5,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "fc315829568c403788332c6f16ba678b"}'
+        />
+      </body>
     </html>
   );
 }
