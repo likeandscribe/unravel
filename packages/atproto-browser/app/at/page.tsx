@@ -163,10 +163,16 @@ async function Author({ did }: { did: string }) {
 
   return (
     <dl>
-      <dt>PDS</dt>
-      <dd>{pds}</dd>
+      <dt>
+        <h2>DID Doc</h2>
+      </dt>
+      <dd>
+        <JSONValue data={didDocument as JSONType} />
+      </dd>
 
-      <dt>Collections</dt>
+      <dt>
+        <h2>Collections</h2>
+      </dt>
       <dd>
         {collections.length === 0
           ? "No collections."
