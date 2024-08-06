@@ -1,3 +1,5 @@
+"use client";
+import { useActionState } from "react";
 import { navigateUri } from "./actions";
 
 export function AtUriForm({
@@ -7,8 +9,9 @@ export function AtUriForm({
   defaultUri?: string;
   style?: React.CSSProperties;
 }) {
+  const [_state, action, isPending] = useActionState(navigateUri, undefined);
   return (
-    <form action={navigateUri} style={{ ...style, display: "flex" }}>
+    <form action={action} style={{ ...style, display: "flex" }}>
       <input
         style={{ flexGrow: 1 }}
         type="text"
@@ -16,7 +19,9 @@ export function AtUriForm({
         key={defaultUri}
         defaultValue={defaultUri}
       />
-      <button type="submit">Go</button>
+      <button type="submit" disabled={isPending}>
+        Go
+      </button>
     </form>
   );
 }
