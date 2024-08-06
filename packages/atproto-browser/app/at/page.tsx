@@ -8,7 +8,6 @@ import { AtUri, isValidHandle } from "@atproto/syntax";
 import { isDid } from "@atproto/did";
 import { cache, Fragment, Suspense } from "react";
 import Link from "next/link";
-import { z } from "zod";
 import { AtBlob } from "./_lib/at-blob";
 import { BlobImage } from "./_lib/blob-image";
 
