@@ -281,14 +281,14 @@ function JSONObject({ data }: { data: { [x: string]: JSONType } }) {
   const rawObj = (
     <dl>
       {Object.entries(data).map(([key, value]) => (
-        <Fragment key={key}>
+        <div key={key} style={{ display: "flex", gap: 10 }}>
           <dt>
             <pre>{key}:</pre>
           </dt>
-          <dd>
+          <dd style={{ margin: 0 }}>
             <JSONValue data={value} />
           </dd>
-        </Fragment>
+        </div>
       ))}
     </dl>
   );
