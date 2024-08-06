@@ -219,6 +219,11 @@ function JSONString({ data }: { data: string }) {
           &quot;<Link href={`/at?u=${data}`}>{data}</Link>
           &quot;
         </>
+      ) : isDid(data) ? (
+        <>
+          &quot;<Link href={`/at?u=at://${data}`}>{data}</Link>
+          &quot;
+        </>
       ) : URL.canParse(data) ? (
         <>
           &quot;

@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { AtUriForm } from "./aturi-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "ATProto Browser",
+  description: "Browse the atmosphere.",
+};
 
 const EXAMPLE_URI =
   "at://did:plc:2xau7wbgdq4phuou2ypwuen7/app.bsky.feed.like/3kyutnrmg3s2r";
