@@ -6,10 +6,13 @@ import {
 } from "@atproto/identity";
 import { AtUri, isValidHandle } from "@atproto/syntax";
 import { isDid } from "@atproto/did";
-import { cache, Fragment, Suspense } from "react";
+import { cache, Suspense } from "react";
 import Link from "next/link";
 import { AtBlob } from "./_lib/at-blob";
 import { BlobImage } from "./_lib/blob-image";
+import { CollectionItems } from "./_lib/collection";
+import { SWRConfig } from "swr";
+import { listRecords } from "@/lib/atproto";
 
 const didResolver = new DidResolver({});
 const resolveDid = cache((did: string) => didResolver.resolve(did));
@@ -59,48 +62,29 @@ export default async function AtPage({
   }
 
   if (!uri.rkey) {
-    const listRecordsUrl = new URL(`${pds}/xrpc/com.atproto.repo.listRecords`);
-    listRecordsUrl.searchParams.set("repo", didDocument.id);
-    listRecordsUrl.searchParams.set("collection", uri.collection);
-
-    // TODO: pagination
-    const response = await fetch(listRecordsUrl, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      return (
-        <div>
-          Failed to fetch records: {response.statusText}. URL:{" "}
-          {listRecordsUrl.toString()}
-        </div>
-      );
-    }
-
-    const { records, cursor } = (await response.json()) as {
-      records: { uri: string }[];
-      cursor: string | null;
-    };
-
+    const fetchKey =
+      `listCollections/collection:${uri.collection}/cursor:none` as const;
     return (
       <div>
         <h1>
           {handle}&apos;s {uri.collection} records
         </h1>
         <ul>
-          {records.map((record) => {
-            const uri = new AtUri(record.uri);
-            return (
-              <li key={record.uri}>
-                <Link href={`/at?u=${record.uri}`}>{uri.rkey}</Link>
-              </li>
-            );
-          })}
+          <SWRConfig
+            value={{
+              fallback: {
+                [fetchKey]: listRecords(pds, didDocument.id, uri.collection),
+              },
+            }}
+          >
+            <CollectionItems
+              collection={uri.collection}
+              pds={pds}
+              repo={didDocument.id}
+              fetchKey={fetchKey}
+            />
+          </SWRConfig>
         </ul>
-        {!!cursor && <p>And more records (pagination coming soon...)</p>}
       </div>
     );
   }
