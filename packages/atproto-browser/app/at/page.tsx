@@ -161,31 +161,26 @@ async function Author({ did }: { did: string }) {
   };
 
   return (
-    <dl>
-      <dt>
-        <h2>DID Doc</h2>
-      </dt>
-      <dd>
-        <JSONValue data={didDocument as JSONType} repo={did} />
-      </dd>
+    <>
+      <h2>Collections</h2>
+      <ul>
+        {collections.length === 0 ? (
+          <p>No collections.</p>
+        ) : (
+          collections.map((nsid) => {
+            const collectionUri = `at://${[did, nsid].join("/")}`;
 
-      <dt>
-        <h2>Collections</h2>
-      </dt>
-      <dd>
-        {collections.length === 0
-          ? "No collections."
-          : collections.map((nsid) => {
-              const collectionUri = `at://${[did, nsid].join("/")}`;
-
-              return (
-                <li key={nsid}>
-                  <Link href={`/at?u=${collectionUri}`}>{nsid}</Link>
-                </li>
-              );
-            })}
-      </dd>
-    </dl>
+            return (
+              <li key={nsid}>
+                <Link href={`/at?u=${collectionUri}`}>{nsid}</Link>
+              </li>
+            );
+          })
+        )}
+      </ul>
+      <h2>DID Doc</h2>
+      <JSONValue data={didDocument as JSONType} repo={did} />
+    </>
   );
 }
 
