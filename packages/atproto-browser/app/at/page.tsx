@@ -1,6 +1,7 @@
 import {
   DidResolver,
   getHandle,
+  getKey,
   getPds,
   HandleResolver,
 } from "@atproto/identity";
@@ -12,6 +13,7 @@ import { AtBlob } from "./_lib/at-blob";
 import { CollectionItems } from "./_lib/collection";
 import { SWRConfig } from "swr";
 import { listRecords } from "@/lib/atproto";
+import { verifyRecords } from "@atproto/repo";
 
 const didResolver = new DidResolver({});
 const resolveDid = cache((did: string) => didResolver.resolve(did));
@@ -122,10 +124,76 @@ export default async function AtPage({
           <Author did={didStr} />
         </Suspense>
       </details>
-      <h2>Record</h2>
+      <h2>
+        Record
+        <Suspense
+          fallback={
+            <span title="Verifying record..." aria-busy>
+              🤔
+            </span>
+          }
+        >
+          <RecordVerificationBadge
+            did={didStr}
+            collection={uri.collection}
+            rkey={uri.rkey}
+          />
+        </Suspense>
+      </h2>
       <JSONValue data={record} repo={didDocument.id} />
     </div>
   );
+}
+
+async function RecordVerificationBadge({
+  did,
+  collection,
+  rkey,
+}: {
+  did: string;
+  collection: string;
+  rkey: string;
+}) {
+  const didDoc = (await resolveDid(did))!;
+  const pds = getPds(didDoc);
+  if (!pds) {
+    return <span title="Invalid record (no pds)">❌</span>;
+  }
+
+  const verifyRecordsUrl = new URL(`${pds}/xrpc/com.atproto.sync.getRecord`);
+  verifyRecordsUrl.searchParams.set("did", did);
+  verifyRecordsUrl.searchParams.set("collection", collection);
+  verifyRecordsUrl.searchParams.set("rkey", rkey);
+
+  const response = await fetch(verifyRecordsUrl, {
+    headers: {
+      accept: "application/vnd.ipld.car",
+    },
+  });
+
+  if (!response.ok) {
+    return (
+      <span title={`Invalid record (failed to fetch ${await response.text()})`}>
+        ❌
+      </span>
+    );
+  }
+  const car = new Uint8Array(await response.arrayBuffer());
+  const key = getKey(didDoc);
+  if (!key) {
+    return <span title="Invalid record (no key)">❌</span>;
+  }
+
+  try {
+    await verifyRecords(car, did, key);
+    return <span title="Valid record">🔒</span>;
+  } catch (e) {
+    if (e instanceof Error) {
+      return <span title={`Invalid record (${e.message})`}>❌</span>;
+    } else {
+      return <span title="Invalid record (unknown)">❌</span>;
+    }
+  }
 }
 
 async function Author({ did }: { did: string }) {

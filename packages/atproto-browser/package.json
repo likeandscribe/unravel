@@ -11,6 +11,7 @@
   "dependencies": {
     "@atproto/did": "^0.1.0",
     "@atproto/identity": "^0.4.0",
+    "@atproto/repo": "^0.4.1",
     "@atproto/syntax": "^0.3.0",
     "next": "15.0.0-rc.0",
     "react": "19.0.0-rc-f994737d14-20240522",
@@ -26,6 +27,7 @@
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "15.0.0-rc.0",
+    "tsx": "^4.16.5",
     "typescript": "^5"
   }
 }
