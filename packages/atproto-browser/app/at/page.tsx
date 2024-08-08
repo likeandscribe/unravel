@@ -14,6 +14,7 @@ import { CollectionItems } from "./_lib/collection";
 import { SWRConfig } from "swr";
 import { listRecords } from "@/lib/atproto";
 import { verifyRecords } from "@atproto/repo";
+import { ErrorBoundary } from "react-error-boundary";
 
 const didResolver = new DidResolver({});
 const resolveDid = cache((did: string) => didResolver.resolve(did));
@@ -57,7 +58,14 @@ export default async function AtPage({
         <h1>
           {handle} ({didDocument.id})
         </h1>
-        <Author did={didStr} />
+        <DidSummary did={didStr} />
+
+        <Suspense fallback={<p>Loading history...</p>}>
+          <ErrorBoundary fallback={<p>Failed to fetch history.</p>}>
+            <h2>History</h2>
+            <DidHistory did={didStr} />
+          </ErrorBoundary>
+        </Suspense>
       </>
     );
   }
@@ -117,11 +125,10 @@ export default async function AtPage({
     <div>
       <details>
         <summary>
-          Author: {handle} (<Link href={`/at?u=at://${didStr}/`}>{didStr}</Link>
-          )
+          Author: {handle} (<Link href={`/at?u=at://${didStr}`}>{didStr}</Link>)
         </summary>
         <Suspense>
-          <Author did={didStr} />
+          <DidSummary did={didStr} />
         </Suspense>
       </details>
       <h2>
@@ -196,7 +203,27 @@ async function RecordVerificationBadge({
   }
 }
 
-async function Author({ did }: { did: string }) {
+async function DidSummary({ did }: { did: string }) {
+  return (
+    <>
+      <ErrorBoundary
+        fallback={<div>Failed to fetch collections for {did}.</div>}
+      >
+        <h2>Collections</h2>
+        <DidCollections did={did} />
+      </ErrorBoundary>
+      <h2>DID Doc</h2>
+      <DidDoc did={did} />
+    </>
+  );
+}
+
+async function DidDoc({ did }: { did: string }) {
+  const didDocument = await resolveDid(did);
+  return <JSONValue data={didDocument as JSONType} repo={did} />;
+}
+
+async function DidCollections({ did }: { did: string }) {
   const didDocument = await resolveDid(did);
   if (!didDocument) {
     throw new Error(`Could not resolve DID: ${did}`);
@@ -216,11 +243,8 @@ async function Author({ did }: { did: string }) {
   });
 
   if (!response.ok) {
-    return (
-      <div>
-        Failed to fetch collections: {response.statusText}. URL:{" "}
-        {describeRepoUrl.toString()}
-      </div>
+    throw new Error(
+      `Failed to fetch collections: ${response.statusText}. URL: ${describeRepoUrl.toString()}`,
     );
   }
 
@@ -229,27 +253,33 @@ async function Author({ did }: { did: string }) {
   };
 
   return (
-    <>
-      <h2>Collections</h2>
-      <ul>
-        {collections.length === 0 ? (
-          <p>No collections.</p>
-        ) : (
-          collections.map((nsid) => {
-            const collectionUri = `at://${[did, nsid].join("/")}`;
+    <ul>
+      {collections.length === 0 ? (
+        <p>No collections.</p>
+      ) : (
+        collections.map((nsid) => {
+          const collectionUri = `at://${[did, nsid].join("/")}`;
 
-            return (
-              <li key={nsid}>
-                <Link href={`/at?u=${collectionUri}`}>{nsid}</Link>
-              </li>
-            );
-          })
-        )}
-      </ul>
-      <h2>DID Doc</h2>
-      <JSONValue data={didDocument as JSONType} repo={did} />
-    </>
+          return (
+            <li key={nsid}>
+              <Link href={`/at?u=${collectionUri}`}>{nsid}</Link>
+            </li>
+          );
+        })
+      )}
+    </ul>
   );
+}
+
+async function DidHistory({ did }: { did: string }) {
+  const response = await fetch(`https://plc.directory/${did}/log/audit`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch history: ${response.statusText}`);
+  }
+
+  const history = (await response.json()) as JSONType;
+
+  return <JSONValue data={history} repo={did} />;
 }
 
 function naiveAtUriCheck(atUri: string) {
