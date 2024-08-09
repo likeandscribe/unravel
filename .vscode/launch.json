@@ -15,7 +15,7 @@
       },
       "args": [],
       "cwd": "${workspaceFolder}/packages-rs/drainpipe",
-      "envFile": "${workspaceFolder}/packages-rs/drainpipe/.env" 
+      "envFile": "${workspaceFolder}/packages-rs/drainpipe/.env"
     },
     {
       "type": "lldb",
@@ -30,6 +30,13 @@
       },
       "args": [],
       "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Frontpage: debug full stack",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "command": "pnpm --filter=frontpage run dev"
     }
   ]
 }

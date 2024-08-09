@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  CommentCollection,
-  createComment,
-  deleteComment,
-} from "@/lib/data/atproto/comment";
+import { CommentCollection, deleteComment } from "@/lib/data/atproto/comment";
 import { DID } from "@/lib/data/atproto/did";
 import { deletePost } from "@/lib/data/atproto/post";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
@@ -12,16 +8,17 @@ import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
 import { getVoteForComment } from "@/lib/data/db/vote";
 import { ensureUser } from "@/lib/data/user";
-import { revalidatePath } from "next/cache";
+import { createHeadlessEditor } from "@lexical/headless";
+import { SerializedEditorState, RootNode } from "lexical";
+import { editorStateToCommentContent } from "./editor-state-to-comment-content";
 
-export async function createCommentAction(
-  input: { parentRkey?: string; postRkey: string; postAuthorDid: DID },
-  _prevState: unknown,
-  formData: FormData,
-) {
-  const content = formData.get("comment") as string;
+export async function createCommentAction(input: {
+  parentRkey?: string;
+  postRkey: string;
+  postAuthorDid: DID;
+  content: SerializedEditorState;
+}) {
   const user = await ensureUser();
-  console.log(input);
 
   const [post, comment] = await Promise.all([
     getPost(input.postAuthorDid, input.postRkey),
@@ -41,13 +38,16 @@ export async function createCommentAction(
     throw new Error(`[naughty] Cannot comment on deleted post. ${user.did}`);
   }
 
-  const { rkey } = await createComment({
-    content,
-    post,
-    parent: comment,
-  });
-  await waitForComment(rkey);
-  revalidatePath(`/post`);
+  const state = createHeadlessEditor().parseEditorState(input.content);
+  editorStateToCommentContent(state);
+
+  // const { rkey } = await createComment({
+  //   content,
+  //   post,
+  //   parent: comment,
+  // });
+  // await waitForComment(rkey);
+  // revalidatePath(`/post`);
 }
 
 const MAX_POLLS = 15;
@@ -96,4 +96,7 @@ export async function commentUnvoteAction(commentId: number) {
   }
 
   await deleteVote(vote.rkey);
+}
+function $getDepth(node: RootNode) {
+  throw new Error("Function not implemented.");
 }
