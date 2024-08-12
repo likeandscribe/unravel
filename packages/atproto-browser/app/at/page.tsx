@@ -7,7 +7,7 @@ import {
 } from "@atproto/identity";
 import { AtUri, isValidHandle } from "@atproto/syntax";
 import { isDid } from "@atproto/did";
-import { cache, Suspense } from "react";
+import { cache, Fragment, Suspense } from "react";
 import Link from "next/link";
 import { AtBlob } from "./_lib/at-blob";
 import { CollectionItems } from "./_lib/collection";
@@ -15,6 +15,7 @@ import { SWRConfig } from "swr";
 import { listRecords } from "@/lib/atproto";
 import { verifyRecords } from "@atproto/repo";
 import { ErrorBoundary } from "react-error-boundary";
+import { z } from "zod";
 
 const didResolver = new DidResolver({});
 const resolveDid = cache((did: string) => didResolver.resolve(did));
@@ -271,15 +272,264 @@ async function DidCollections({ did }: { did: string }) {
   );
 }
 
+const PlcLogAuditResponse = z.array(
+  z.object({
+    createdAt: z
+      .string()
+      .datetime()
+      .transform((x) => new Date(x)),
+    operation: z.object({
+      sig: z.string(),
+      prev: z.string().nullable(),
+      type: z.literal("plc_operation"),
+      services: z.record(
+        z.object({
+          type: z.string(),
+          endpoint: z.string(),
+        }),
+      ),
+      alsoKnownAs: z.array(z.string()),
+      rotationKeys: z.array(z.string()),
+      verificationMethods: z.record(z.string()),
+    }),
+  }),
+);
+
+const utcDateFormatter = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "UTC",
+});
+
+function isNotNull<T>(x: T | null): x is T {
+  return x !== null;
+}
+
 async function DidHistory({ did }: { did: string }) {
   const response = await fetch(`https://plc.directory/${did}/log/audit`);
   if (!response.ok) {
     throw new Error(`Failed to fetch history: ${response.statusText}`);
   }
 
-  const history = (await response.json()) as JSONType;
+  const auditLog = PlcLogAuditResponse.parse(await response.json());
 
-  return <JSONValue data={history} repo={did} />;
+  return (
+    <ol>
+      {auditLog.map((previous, index) => {
+        const entry = auditLog[index + 1];
+        if (!entry) {
+          return null;
+        }
+
+        const alsoKnownAsAdded = entry.operation.alsoKnownAs.filter(
+          (x) => !previous.operation.alsoKnownAs.includes(x),
+        );
+        const alsoKnownAsRemoved = previous.operation.alsoKnownAs.filter(
+          (x) => !entry.operation.alsoKnownAs.includes(x),
+        );
+
+        const servicesChanged = Object.entries(entry.operation.services)
+          .map(([id, service]) => {
+            const previousService = previous.operation.services[id];
+            if (!previousService) return null;
+            return {
+              id,
+              type:
+                service.type !== previousService.type
+                  ? {
+                      from: previousService.type,
+                      to: service.type,
+                    }
+                  : null,
+              endpoint:
+                service.endpoint !== previousService.endpoint
+                  ? {
+                      from: previousService.endpoint,
+                      to: service.endpoint,
+                    }
+                  : null,
+            };
+          })
+          .filter(isNotNull);
+
+        const servicesAdded = Object.entries(entry.operation.services).filter(
+          ([id]) => !previous.operation.services[id],
+        );
+        const servicesRemoved = Object.entries(
+          previous.operation.services,
+        ).filter(([id]) => !entry.operation.services[id]);
+
+        const rotationKeysAdded = entry.operation.rotationKeys.filter(
+          (x) => !previous.operation.rotationKeys.includes(x),
+        );
+        const rotationKeysRemoved = previous.operation.rotationKeys.filter(
+          (x) => !entry.operation.rotationKeys.includes(x),
+        );
+
+        const verificationMethodsChanged = Object.entries(
+          entry.operation.verificationMethods,
+        )
+          .map(([id, key]) => {
+            const previousKey = previous.operation.verificationMethods[id];
+            if (!previousKey) return null;
+            if (key === previousKey) return null;
+            return {
+              id,
+              from: previousKey,
+              to: key,
+            };
+          })
+          .filter(isNotNull);
+        const verificationMethodsAdded = Object.entries(
+          entry.operation.verificationMethods,
+        ).filter(([id]) => !previous.operation.verificationMethods[id]);
+        const verificationMethodsRemoved = Object.entries(
+          previous.operation.verificationMethods,
+        ).filter(([id]) => !entry.operation.verificationMethods[id]);
+
+        return (
+          // eslint-disable-next-line react/no-array-index-key
+          <li key={index}>
+            <p>
+              Change created at {utcDateFormatter.format(entry.createdAt)} (UTC)
+            </p>
+            <ul>
+              {alsoKnownAsAdded.length === 1 &&
+              alsoKnownAsRemoved.length === 1 ? (
+                <li>
+                  Alias changed from{" "}
+                  <Link href={`/at?u=${alsoKnownAsRemoved[0]}`}>
+                    {alsoKnownAsRemoved[0]}
+                  </Link>{" "}
+                  to{" "}
+                  <Link href={`/at?u=${alsoKnownAsAdded[0]}`}>
+                    {alsoKnownAsAdded[0]}
+                  </Link>
+                </li>
+              ) : (
+                <>
+                  {alsoKnownAsAdded.length > 0 && (
+                    <li>
+                      Alias added:{" "}
+                      {alsoKnownAsAdded.flatMap((aka) => [
+                        <Link key={aka} href={`/at?u=${aka}`}>
+                          {aka}
+                        </Link>,
+                        ", ",
+                      ])}
+                    </li>
+                  )}
+                  {alsoKnownAsRemoved.length > 0 && (
+                    <li>
+                      Alias removed:{" "}
+                      {alsoKnownAsRemoved.flatMap((aka) => [
+                        <Link key={aka} href={`/at?u=at://${aka}`}>
+                          {aka}
+                        </Link>,
+                        ", ",
+                      ])}
+                    </li>
+                  )}
+                </>
+              )}
+              {servicesChanged.length > 0 &&
+                servicesChanged.map((service) => (
+                  <Fragment key={service.id}>
+                    {!!service.type && (
+                      <li key={service.id}>
+                        Service &quot;{service.id}&quot; changed type from
+                        &quot;
+                        {service.type.from}&quot; to &quot;{service.type.to}
+                        &quot;
+                      </li>
+                    )}
+                    {!!service.endpoint && (
+                      <li key={service.id}>
+                        Service &quot;{service.id}&quot; changed endpoint from{" "}
+                        <a href={service.endpoint.from}>
+                          {service.endpoint.from}
+                        </a>{" "}
+                        to{" "}
+                        <a href={service.endpoint.to}>{service.endpoint.to}</a>
+                      </li>
+                    )}
+                  </Fragment>
+                ))}
+              {servicesAdded.length > 0 && (
+                <li>
+                  Services added:{" "}
+                  {servicesAdded.flatMap(([id, service]) => [
+                    <Link key={id} href={service.endpoint}>
+                      {id} ({service.type})
+                    </Link>,
+                    ", ",
+                  ])}
+                </li>
+              )}
+              {servicesRemoved.length > 0 && (
+                <li>
+                  Services removed:{" "}
+                  {servicesRemoved.flatMap(([id, service]) => [
+                    <Link key={id} href={service.endpoint}>
+                      {id} ({service.type})
+                    </Link>,
+                    ", ",
+                  ])}
+                </li>
+              )}
+              {rotationKeysAdded.length > 0 && (
+                <li>
+                  Rotation keys added:{" "}
+                  {rotationKeysAdded.flatMap((key) => [
+                    <code key={key}>{key}</code>,
+                    ", ",
+                  ])}
+                </li>
+              )}
+              {rotationKeysRemoved.length > 0 && (
+                <li>
+                  Rotation keys removed:{" "}
+                  {rotationKeysRemoved.flatMap((key) => [
+                    <code key={key}>{key}</code>,
+                    ", ",
+                  ])}
+                </li>
+              )}
+              {verificationMethodsChanged.length > 0 &&
+                verificationMethodsChanged.map((method) => (
+                  <li key={method.id}>
+                    Verification method &quot;{method.id}&quot; changed from{" "}
+                    <code>{method.from}</code> to <code>{method.to}</code>
+                  </li>
+                ))}
+              {verificationMethodsAdded.length > 0 && (
+                <li>
+                  Verification methods added:{" "}
+                  {verificationMethodsAdded.flatMap(([id, key]) => [
+                    <Fragment key={id}>
+                      <code>{key}</code> (&quot;{id}&quot;)
+                    </Fragment>,
+                    ", ",
+                  ])}
+                </li>
+              )}
+              {verificationMethodsRemoved.length > 0 && (
+                <li>
+                  Verification methods removed:{" "}
+                  {verificationMethodsRemoved.flatMap(([id, key]) => [
+                    <Fragment key={id}>
+                      <code>{key}</code> (&quot;{id}&quot;)
+                    </Fragment>,
+                    ", ",
+                  ])}
+                </li>
+              )}
+            </ul>
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 
 function naiveAtUriCheck(atUri: string) {
