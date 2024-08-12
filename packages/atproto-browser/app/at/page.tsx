@@ -278,20 +278,32 @@ const PlcLogAuditResponse = z.array(
       .string()
       .datetime()
       .transform((x) => new Date(x)),
-    operation: z.object({
-      sig: z.string(),
-      prev: z.string().nullable(),
-      type: z.literal("plc_operation"),
-      services: z.record(
-        z.object({
-          type: z.string(),
-          endpoint: z.string(),
-        }),
-      ),
-      alsoKnownAs: z.array(z.string()),
-      rotationKeys: z.array(z.string()),
-      verificationMethods: z.record(z.string()),
-    }),
+    operation: z.union([
+      z.object({
+        type: z.literal("plc_operation"),
+        sig: z.string(),
+        prev: z.string().nullable(),
+        services: z.record(
+          z.object({
+            type: z.string(),
+            endpoint: z.string(),
+          }),
+        ),
+        alsoKnownAs: z.array(z.string()),
+        rotationKeys: z.array(z.string()),
+        verificationMethods: z.record(z.string()),
+      }),
+      z.object({
+        type: z.literal("create"),
+        signingKey: z.string(),
+        recoveryKey: z.string(),
+        handle: z.string(),
+        service: z.string(),
+      }),
+      z.object({
+        type: z.literal("plc_tombstone"),
+      }),
+    ]),
   }),
 );
 
@@ -316,21 +328,35 @@ async function DidHistory({ did }: { did: string }) {
   return (
     <ol>
       {auditLog.map((previous, index) => {
+        const previousOperation = previous.operation;
+        if (previousOperation.type !== "plc_operation") {
+          return (
+            // eslint-disable-next-line react/no-array-index-key
+            <li key={index}>
+              Change created at {utcDateFormatter.format(previous.createdAt)}{" "}
+              (UTC) of type &quot;{previousOperation.type}&quot;.
+            </li>
+          );
+        }
         const entry = auditLog[index + 1];
         if (!entry) {
           return null;
         }
+        const entryOperation = entry.operation;
+        if (entryOperation.type !== "plc_operation") {
+          return null;
+        }
 
-        const alsoKnownAsAdded = entry.operation.alsoKnownAs.filter(
-          (x) => !previous.operation.alsoKnownAs.includes(x),
+        const alsoKnownAsAdded = entryOperation.alsoKnownAs.filter(
+          (x) => !previousOperation.alsoKnownAs.includes(x),
         );
-        const alsoKnownAsRemoved = previous.operation.alsoKnownAs.filter(
-          (x) => !entry.operation.alsoKnownAs.includes(x),
+        const alsoKnownAsRemoved = previousOperation.alsoKnownAs.filter(
+          (x) => !entryOperation.alsoKnownAs.includes(x),
         );
 
-        const servicesChanged = Object.entries(entry.operation.services)
+        const servicesChanged = Object.entries(entryOperation.services)
           .map(([id, service]) => {
-            const previousService = previous.operation.services[id];
+            const previousService = previousOperation.services[id];
             if (!previousService) return null;
             return {
               id,
@@ -352,25 +378,25 @@ async function DidHistory({ did }: { did: string }) {
           })
           .filter(isNotNull);
 
-        const servicesAdded = Object.entries(entry.operation.services).filter(
-          ([id]) => !previous.operation.services[id],
+        const servicesAdded = Object.entries(entryOperation.services).filter(
+          ([id]) => !previousOperation.services[id],
         );
         const servicesRemoved = Object.entries(
-          previous.operation.services,
-        ).filter(([id]) => !entry.operation.services[id]);
+          previousOperation.services,
+        ).filter(([id]) => !entryOperation.services[id]);
 
-        const rotationKeysAdded = entry.operation.rotationKeys.filter(
-          (x) => !previous.operation.rotationKeys.includes(x),
+        const rotationKeysAdded = entryOperation.rotationKeys.filter(
+          (x) => !previousOperation.rotationKeys.includes(x),
         );
-        const rotationKeysRemoved = previous.operation.rotationKeys.filter(
-          (x) => !entry.operation.rotationKeys.includes(x),
+        const rotationKeysRemoved = previousOperation.rotationKeys.filter(
+          (x) => !entryOperation.rotationKeys.includes(x),
         );
 
         const verificationMethodsChanged = Object.entries(
-          entry.operation.verificationMethods,
+          entryOperation.verificationMethods,
         )
           .map(([id, key]) => {
-            const previousKey = previous.operation.verificationMethods[id];
+            const previousKey = previousOperation.verificationMethods[id];
             if (!previousKey) return null;
             if (key === previousKey) return null;
             return {
@@ -381,11 +407,11 @@ async function DidHistory({ did }: { did: string }) {
           })
           .filter(isNotNull);
         const verificationMethodsAdded = Object.entries(
-          entry.operation.verificationMethods,
-        ).filter(([id]) => !previous.operation.verificationMethods[id]);
+          entryOperation.verificationMethods,
+        ).filter(([id]) => !previousOperation.verificationMethods[id]);
         const verificationMethodsRemoved = Object.entries(
-          previous.operation.verificationMethods,
-        ).filter(([id]) => !entry.operation.verificationMethods[id]);
+          previousOperation.verificationMethods,
+        ).filter(([id]) => !entryOperation.verificationMethods[id]);
 
         return (
           // eslint-disable-next-line react/no-array-index-key
