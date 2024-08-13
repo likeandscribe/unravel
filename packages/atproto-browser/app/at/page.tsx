@@ -16,11 +16,37 @@ import { listRecords } from "@/lib/atproto";
 import { verifyRecords } from "@atproto/repo";
 import { ErrorBoundary } from "react-error-boundary";
 import { z } from "zod";
+import { unstable_cache as nextCache } from "next/cache";
+
+const timeoutWith = <T, U>(
+  timeout: number,
+  promise: Promise<T>,
+  fallback: U,
+): Promise<T | U> => {
+  return Promise.race([
+    promise,
+    new Promise<U>((resolve) => setTimeout(() => resolve(fallback), timeout)),
+  ]);
+};
 
 const didResolver = new DidResolver({});
-const resolveDid = cache((did: string) => didResolver.resolve(did));
+const resolveDid = nextCache(
+  cache((did: string) => timeoutWith(1000, didResolver.resolve(did), null)),
+  ["did"],
+  {
+    revalidate: 10,
+  },
+);
 const handleResolver = new HandleResolver({});
-const resolveHandle = cache((handle: string) => handleResolver.resolve(handle));
+const resolveHandle = nextCache(
+  cache((handle: string) =>
+    timeoutWith(1000, handleResolver.resolve(handle), undefined),
+  ),
+  ["handle"],
+  {
+    revalidate: 10,
+  },
+);
 
 export default async function AtPage({
   searchParams,
