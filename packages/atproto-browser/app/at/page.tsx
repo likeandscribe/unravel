@@ -72,6 +72,26 @@ export default async function AtPage({
   if (!didDocument) {
     return <div>Could not resolve DID: {didStr}</div>;
   }
+
+  if (
+    isValidHandle(uri.hostname) &&
+    !didDocument.alsoKnownAs?.includes(`at://${uri.hostname}`)
+  ) {
+    return (
+      <div>
+        Handle not found in alsoKnownAs:{" "}
+        <Link href={`/at?u=at://${uri.hostname}`}>{uri.hostname}</Link> not in [
+        {didDocument.alsoKnownAs?.flatMap((aka) => [
+          <Link key={aka} href={`/at?u=${aka}`}>
+            {aka}
+          </Link>,
+          ", ",
+        ])}
+        ]
+      </div>
+    );
+  }
+
   const pds = getPds(didDocument);
   if (!pds) {
     return <div>No PDS found for DID: {didDocument.id}</div>;
