@@ -35,7 +35,7 @@ export const getPublicJwk = cache(async () => {
   return jwk;
 });
 
-export const getClientConfig = cache(() => {
+export const getClientMetadata = cache(() => {
   const appUrl =
     process.env.NODE_ENV === "development"
       ? `https://${headers().get("host")}`
@@ -92,7 +92,7 @@ export async function signIn(handle: string) {
     };
   }
 
-  const client = getClientConfig();
+  const client = getClientMetadata();
 
   const [secretJwk, kid] = await Promise.all([
     getPrivateJwk().then(exportJWK),

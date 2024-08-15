@@ -1,5 +1,5 @@
-import { getClientConfig } from "@/lib/auth";
+import { getClientMetadata } from "@/lib/auth";
 
 export async function GET(): Promise<Response> {
-  return Response.json(getClientConfig());
+  return Response.json(getClientMetadata());
 }
