@@ -15,6 +15,12 @@ import {
 } from "oauth4webapi";
 import { headers } from "next/headers";
 import type { KeyObject } from "node:crypto";
+import {
+  OAuthClientMetadata,
+  oauthParResponseSchema,
+  oauthProtectedResourceMetadataSchema,
+} from "@atproto/oauth-types";
+import { redirect } from "next/navigation";
 
 export const getPrivateJwk = cache(() =>
   importJWK<KeyObject>(JSON.parse(process.env.PRIVATE_JWK!)),
@@ -50,7 +56,7 @@ export const getClientConfig = cache(() => {
     redirect_uris: [`${appUrl}/oauth/callback`] as const,
     client_uri: appUrl,
     jwks_uri: `${appUrl}/oauth/jwks.json`,
-  };
+  } satisfies OAuthClientMetadata;
 });
 
 export async function signIn(handle: string) {
@@ -66,7 +72,7 @@ export async function signIn(handle: string) {
     return meta;
   }
 
-  const authServerUrl = meta.data.authorization_servers[0];
+  const authServerUrl = meta.data.authorization_servers?.[0];
   if (!authServerUrl) {
     return {
       error: "NO_AUTH_SERVER",
@@ -77,6 +83,14 @@ export async function signIn(handle: string) {
     new URL(authServerUrl),
     await discoveryRequest(new URL(authServerUrl)),
   );
+
+  // Check this early, we'll need it later
+  const authorizationEndpiont = authServer.authorization_endpoint;
+  if (!authorizationEndpiont) {
+    return {
+      error: "NO_AUTHORIZATION_ENDPOINT",
+    };
+  }
 
   const client = getClientConfig();
 
@@ -126,13 +140,26 @@ export async function signIn(handle: string) {
     },
   );
 
-  console.log(parResponse.status);
-  console.log(await parResponse.text());
-}
+  if (!parResponse.ok) {
+    return {
+      error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
+    };
+  }
 
-const OauthProtectedResource = z.object({
-  authorization_servers: z.array(z.string()),
-});
+  const parResult = oauthParResponseSchema.safeParse(await parResponse.json());
+  if (!parResult.success) {
+    return {
+      error: "INVALID_PAR_RESPONSE",
+      cause: parResult.error,
+    };
+  }
+
+  // TODO: Save oauth request and state to DB for later verification
+  const redirectUrl = new URL(authServer.authorization_endpoint);
+  redirectUrl.searchParams.set("request_uri", parResult.data.request_uri);
+  redirectUrl.searchParams.set("client_id", client.client_id);
+  redirect(redirectUrl.toString());
+}
 
 async function getOauthResourceMetadata(did: DID) {
   const pds = await getPdsUrl(did);
@@ -151,7 +178,7 @@ async function getOauthResourceMetadata(did: DID) {
 
   const data = await response.json();
 
-  const result = OauthProtectedResource.safeParse(data);
+  const result = oauthProtectedResourceMetadataSchema.safeParse(data);
   if (!result.success) {
     return {
       error: "INVALID_METADATA" as const,
