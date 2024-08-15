@@ -92,6 +92,7 @@ export async function signIn(handle: string) {
   }
 
   const client = getClientMetadata();
+  console.log("Client metadata: ", client);
 
   const [secretJwk, kid] = await Promise.all([
     getPrivateJwk().then(exportJWK),
