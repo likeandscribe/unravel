@@ -11,6 +11,7 @@ import {
   calculatePKCECodeChallenge,
   generateRandomCodeVerifier,
   generateRandomNonce,
+  generateKeyPair,
 } from "oauth4webapi";
 import { headers } from "next/headers";
 import type { KeyObject } from "node:crypto";
@@ -98,7 +99,6 @@ export async function signIn(handle: string) {
   }
 
   const client = getClientMetadata();
-  console.log("Client metadata: ", client);
 
   const [secretJwk, kid] = await Promise.all([
     getPrivateJwk().then(exportJWK),
@@ -110,6 +110,10 @@ export async function signIn(handle: string) {
   const nonce = generateRandomNonce();
   const state = generateRandomState();
   const pkceVerifier = generateRandomCodeVerifier();
+
+  const dpopKeyPair = await generateKeyPair("RS256", {
+    extractable: true,
+  });
 
   const parResponse = await pushedAuthorizationRequest(
     authServer,
@@ -130,11 +134,8 @@ export async function signIn(handle: string) {
       login_hint: handle,
     },
     {
-      // TODO: Implement dpop but webcrypto doesn't support ECDSA...
-      // DPoP: {
-      //   privateKey,
-      //   publicKey,
-      // },
+      // TODO: Add DPoP. It doesn't work right now because atproto complains about missing exp claim
+      // DPoP: dpopKeyPair,
       clientPrivateKey: {
         key: await crypto.subtle.importKey(
           "jwk",
@@ -170,7 +171,12 @@ export async function signIn(handle: string) {
     nonce,
     state,
     pkceVerifier,
-    dpopPrivateJwk: JSON.stringify(secretJwk),
+    dpopPrivateJwk: JSON.stringify(
+      await crypto.subtle.exportKey("jwk", dpopKeyPair.privateKey),
+    ),
+    dpopPublicJwk: JSON.stringify(
+      await crypto.subtle.exportKey("jwk", dpopKeyPair.publicKey),
+    ),
   });
 
   const redirectUrl = new URL(authServer.authorization_endpoint);
