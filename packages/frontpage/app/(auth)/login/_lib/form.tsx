@@ -8,7 +8,7 @@ import { Button } from "@/lib/components/ui/button";
 // import { Alert } from "@/lib/components/ui/alert";
 
 export function LoginForm() {
-  const [_, action] = useActionState(loginAction, null);
+  const [_, action, isPending] = useActionState(loginAction, null);
 
   return (
     <form
@@ -24,7 +24,7 @@ export function LoginForm() {
         <Input id="handle" name="handle" required placeholder="example.com" />
       </div>
       <div>
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isPending}>
           Sign in
         </Button>
         {/* {state?.error ? (
