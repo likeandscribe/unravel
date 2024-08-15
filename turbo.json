@@ -10,7 +10,9 @@
         "VERCEL_PROJECT_PRODUCTION_URL",
         "NODE_ENV",
         "PRIVATE_JWK",
-        "PUBLIC_JWK"
+        "PUBLIC_JWK",
+        "VERCEL_BRANCH_URL",
+        "VERCEL_ENV"
       ]
     },
     "type-check": {},

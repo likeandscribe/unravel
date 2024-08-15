@@ -38,7 +38,9 @@ export const getClientMetadata = cache(() => {
   const host =
     process.env.NODE_ENV === "development"
       ? headers().get("host")
-      : process.env.VERCEL_PROJECT_PRODUCTION_URL!;
+      : process.env.VERCEL_ENV === "production"
+        ? process.env.VERCEL_PROJECT_PRODUCTION_URL!
+        : process.env.VERCEL_BRANCH_URL!;
 
   const appUrl = `https://${host}`;
 
