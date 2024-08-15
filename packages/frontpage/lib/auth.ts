@@ -140,6 +140,7 @@ export async function signIn(handle: string) {
   );
 
   if (!parResponse.ok) {
+    console.error("PAR error: ", await parResponse.text());
     return {
       error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
     };
