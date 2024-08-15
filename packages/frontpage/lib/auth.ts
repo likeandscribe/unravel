@@ -30,12 +30,10 @@ export const getPublicJwk = cache(async () => {
 });
 
 export const getClientConfig = cache(() => {
-  let appUrl;
-  if (process.env.NODE_ENV === "development") {
-    appUrl = `https://${headers().get("host")}`;
-  }
-
-  appUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL!;
+  const appUrl =
+    process.env.NODE_ENV === "development"
+      ? `https://${headers().get("host")}`
+      : process.env.VERCEL_PROJECT_PRODUCTION_URL!;
 
   return {
     client_id: `frontpage-${process.env.NODE_ENV === "production" ? "prod" : "nonprod"}`,
