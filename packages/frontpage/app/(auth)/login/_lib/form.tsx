@@ -5,10 +5,10 @@ import { loginAction } from "./action";
 import { Label } from "@/lib/components/ui/label";
 import { Input } from "@/lib/components/ui/input";
 import { Button } from "@/lib/components/ui/button";
-import { Alert } from "@/lib/components/ui/alert";
+// import { Alert } from "@/lib/components/ui/alert";
 
 export function LoginForm() {
-  const [state, action] = useActionState(loginAction, null);
+  const [_, action] = useActionState(loginAction, null);
 
   return (
     <form
@@ -27,9 +27,9 @@ export function LoginForm() {
         <Button type="submit" className="w-full">
           Sign in
         </Button>
-        {state?.error ? (
+        {/* {state?.error ? (
           <Alert variant="destructive">{state.error}</Alert>
-        ) : null}
+        ) : null} */}
       </div>
     </form>
   );

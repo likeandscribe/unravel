@@ -190,6 +190,7 @@ async function getOauthResourceMetadata(did: DID) {
 
 export async function signOut() {}
 
-export function getSession() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getSession(): any {
   return null;
 }
