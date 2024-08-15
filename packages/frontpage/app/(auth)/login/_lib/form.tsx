@@ -20,24 +20,8 @@ export function LoginForm() {
       }}
     >
       <div>
-        <Label htmlFor="identifier">Handle</Label>
-        <Input
-          id="identifier"
-          name="identifier"
-          required
-          placeholder="@example.com"
-        />
-      </div>
-      <div>
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          placeholder="Password"
-        />
+        <Label htmlFor="handle">Handle</Label>
+        <Input id="handle" name="handle" required placeholder="example.com" />
       </div>
       <div>
         <Button type="submit" className="w-full">

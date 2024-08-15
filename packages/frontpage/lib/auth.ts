@@ -1,157 +1,181 @@
 import "server-only";
-import NextAuth, { DefaultSession, NextAuthResult } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import { exportJWK, importJWK, JWK } from "jose";
 import { cache } from "react";
+import { DID, getDidFromHandleOrDid } from "./data/atproto/did";
+import { getPdsUrl } from "./data/user";
 import { z } from "zod";
-import { decodeJwt } from "jose";
+import {
+  discoveryRequest,
+  processDiscoveryResponse,
+  pushedAuthorizationRequest,
+  generateRandomState,
+  calculatePKCECodeChallenge,
+  generateRandomCodeVerifier,
+  generateRandomNonce,
+} from "oauth4webapi";
+import { headers } from "next/headers";
+import type { KeyObject } from "node:crypto";
 
-declare module "next-auth" {
-  /**
-   * Returned by `auth`, `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
-   */
-  interface Session {
-    user: {
-      refreshJwt: string;
-      accessJwt: string;
-    } & DefaultSession["user"];
+export const getPrivateJwk = cache(() =>
+  importJWK<KeyObject>(JSON.parse(process.env.PRIVATE_JWK!)),
+);
+
+export const getPublicJwk = cache(async () => {
+  const jwk = await importJWK(JSON.parse(process.env.PUBLIC_JWK!));
+  if ("d" in jwk) {
+    throw new Error("Expected public JWK, got private JWK");
   }
 
-  interface User {
-    refreshJwt: string;
-    accessJwt: string;
+  return jwk;
+});
+
+export const getClientConfig = cache(() => {
+  let appUrl;
+  if (process.env.NODE_ENV === "development") {
+    appUrl = `https://${headers().get("host")}`;
   }
+
+  appUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL!;
+
+  return {
+    client_id: `frontpage-${process.env.NODE_ENV === "production" ? "prod" : "nonprod"}`,
+    dpop_bound_access_tokens: true,
+    application_type: "web",
+    subject_type: "public",
+    grant_types: ["authorization_code", "refresh_token"],
+    response_types: ["code"], // TODO: "code id_token"?
+    scope: "openid profile offline_access",
+    client_name: "Frontpage",
+    token_endpoint_auth_method: "none",
+    redirect_uris: [`${appUrl}/oauth/callback`] as const,
+    client_uri: appUrl,
+    jwks_uri: `${appUrl}/oauth/jwks.json`,
+  };
+});
+
+export async function signIn(handle: string) {
+  const did = await getDidFromHandleOrDid(handle);
+  if (!did) {
+    return {
+      error: "DID_NOT_FOUND",
+    };
+  }
+
+  const meta = await getOauthResourceMetadata(did);
+  if ("error" in meta) {
+    return meta;
+  }
+
+  const authServerUrl = meta.data.authorization_servers[0];
+  if (!authServerUrl) {
+    return {
+      error: "NO_AUTH_SERVER",
+    };
+  }
+
+  const authServer = await processDiscoveryResponse(
+    new URL(authServerUrl),
+    await discoveryRequest(new URL(authServerUrl)),
+  );
+
+  const client = getClientConfig();
+
+  const [secretJwk, kid] = await Promise.all([
+    getPrivateJwk().then(exportJWK),
+    getPublicJwk()
+      .then(exportJWK)
+      .then((jwk) => jwk.kid),
+  ]);
+
+  console.log(authServer);
+
+  const parResponse = await pushedAuthorizationRequest(
+    authServer,
+    {
+      client_id: client.client_id,
+      token_endpoint_auth_method: "private_key_jwt",
+    },
+    {
+      response_type: "code",
+      code_challenge: await calculatePKCECodeChallenge(
+        generateRandomCodeVerifier(),
+      ),
+      code_challenge_method: "S256",
+      client_id: client.client_id,
+      state: generateRandomState(),
+      nonce: generateRandomNonce(),
+      redirect_uri: client.redirect_uris[0],
+      // TODO: Tweak these?
+      scope: "openid profile offline_access",
+      login_hint: handle,
+    },
+    {
+      // TODO: Implement dpop but webcrypto doesn't support ECDSA...
+      // DPoP: {
+      //   privateKey,
+      //   publicKey,
+      // },
+      clientPrivateKey: {
+        key: await crypto.subtle.importKey(
+          "jwk",
+          secretJwk,
+          { name: "ECDSA", namedCurve: "P-256" },
+          true,
+          ["sign"],
+        ),
+        kid,
+      },
+    },
+  );
+
+  console.log(parResponse.status);
+  console.log(await parResponse.text());
 }
 
-const Credentials = z.object({
-  identifier: z.string(),
-  password: z.string(),
-});
-
-const auth = NextAuth({
-  providers: [
-    CredentialsProvider({
-      credentials: {
-        identifier: {},
-        password: {},
-      },
-      authorize: async (unsafeCredentials) => {
-        console.log("authorizing...");
-        const credentials = Credentials.parse(unsafeCredentials);
-        const session = await atprotoCreateSession({
-          password: credentials.password,
-          identifier:
-            // Remove @ from start if it's there
-            credentials.identifier.replace(/^@/, ""),
-        });
-
-        return {
-          id: session.did,
-          name: session.handle,
-          email: session.email,
-          refreshJwt: session.refreshJwt,
-          accessJwt: session.accessJwt,
-        };
-      },
-    }),
-  ],
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    jwt: async ({ token, user: authorizedInfo }) => {
-      if (authorizedInfo) {
-        //first login/sign up
-        const accessTokenDecoded = decodeJwt(authorizedInfo.accessJwt);
-
-        return {
-          ...token,
-          accessJwt: authorizedInfo.accessJwt,
-          expiresAt: accessTokenDecoded.exp! * 1000,
-          refreshJwt: authorizedInfo.refreshJwt,
-          sub: authorizedInfo.id,
-        };
-      } else if (
-        Date.now() + 500 <
-        // @ts-expect-error it's unknown but we know it's a number
-        token.expiresAt
-      ) {
-        return token;
-      }
-
-      if (!token.refreshJwt) throw new Error("No refresh token");
-
-      console.log("here");
-      //do some refreshing
-      try {
-        const session = await atprotoRefreshSession(token.refreshJwt as string);
-        return {
-          ...token,
-          accessJwt: session.accessJwt,
-          expiresAt: decodeJwt(session.accessJwt).exp! * 1000,
-          refreshJwt: session.refreshJwt,
-        };
-      } catch (e) {
-        console.error("Error refreshing token", e);
-        return null;
-      }
-    },
-    session: async ({ session, token }) => {
-      session.user.refreshJwt = token.refreshJwt as string;
-      session.user.accessJwt = token.accessJwt as string;
-      return session;
-    },
-  },
-});
-
-export const signIn = async (formData: FormData) => {
-  await auth.signIn("credentials", formData);
-};
-export const signOut = async () => {
-  await auth.signOut();
-};
-// TODO: Use this in middleware.ts. Wasn't working in next 15 with turbo
-// See https://github.com/vercel/next.js/issues/66162#issuecomment-2135529800
-export const middleware: NextAuthResult["auth"] = auth.auth;
-export const getSession = cache(() => {
-  return auth.auth();
-});
-
-const AtprotoSession = z.object({
-  accessJwt: z.string(),
-  refreshJwt: z.string(),
-  handle: z.string(),
-  did: z.string(),
-  //email only exists on createSession but no refreshSession
-  email: z.string().optional(),
-});
-
-const atprotoCreateSession = async ({
-  identifier,
-  password,
-}: z.infer<typeof Credentials>) => {
-  return AtprotoSession.parse(
-    await fetch("https://bsky.social/xrpc/com.atproto.server.createSession", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        identifier: identifier,
-        password: password,
-      }),
-    }).then((res) => res.json()),
+function importJwkForPar(jwk: JWK) {
+  return crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "ECDSA", namedCurve: "P-256" },
+    true,
+    ["sign"],
   );
-};
+}
 
-const atprotoRefreshSession = async (refreshJwt: string) => {
-  console.log("refreshing...");
-  return AtprotoSession.parse(
-    await fetch("https://bsky.social/xrpc/com.atproto.server.refreshSession", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${refreshJwt}`,
-      },
-    }).then((res) => res.json()),
-  );
-};
+const OauthProtectedResource = z.object({
+  authorization_servers: z.array(z.string()),
+});
+
+async function getOauthResourceMetadata(did: DID) {
+  const pds = await getPdsUrl(did);
+  if (!pds) {
+    return {
+      error: "PDS_NOT_FOUND" as const,
+    };
+  }
+
+  const response = await fetch(`${pds}/.well-known/oauth-protected-resource`);
+  if (response.status !== 200) {
+    return {
+      error: "FAILED_TO_FETCH_METADATA" as const,
+    };
+  }
+
+  const data = await response.json();
+
+  const result = OauthProtectedResource.safeParse(data);
+  if (!result.success) {
+    return {
+      error: "INVALID_METADATA" as const,
+      cause: result.error,
+    };
+  }
+
+  return { data: result.data };
+}
+
+export async function signOut() {}
+
+export function getSession() {
+  return null;
+}

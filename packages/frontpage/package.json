@@ -33,8 +33,8 @@
     "drizzle-orm": "^0.31.2",
     "jose": "^5.4.0",
     "next": "15.0.0-rc.0",
-    "next-auth": "5.0.0-beta.19",
     "next-themes": "^0.3.0",
+    "oauth4webapi": "^2.11.1",
     "react": "19.0.0-rc-f994737d14-20240522",
     "react-dom": "19.0.0-rc-f994737d14-20240522",
     "server-only": "^0.0.1",
@@ -58,6 +58,7 @@
     "jsdom": "^24.1.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.16.5",
     "typescript": "^5",
     "vite-tsconfig-paths": "^4.3.2",
     "vitest": "^2.0.4"

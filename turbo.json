@@ -6,7 +6,11 @@
       "env": [
         "DRAINPIPE_CONSUMER_SECRET",
         "POSTGRES_URL",
-        "DISCORD_WEBHOOK_URL"
+        "DISCORD_WEBHOOK_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+        "NODE_ENV",
+        "PRIVATE_JWK",
+        "PUBLIC_JWK"
       ]
     },
     "type-check": {},
