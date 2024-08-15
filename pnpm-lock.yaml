@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  oauth4webapi@2.11.1:
+    hash: baix4ugbs5fc655j6453lu7qpq
+    path: patches/oauth4webapi@2.11.1.patch
+
 importers:
 
   .:
@@ -170,7 +175,7 @@ importers:
         version: 0.3.0(react-dom@19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522))(react@19.0.0-rc-f994737d14-20240522)
       oauth4webapi:
         specifier: ^2.11.1
-        version: 2.11.1
+        version: 2.11.1(patch_hash=baix4ugbs5fc655j6453lu7qpq)
       react:
         specifier: 19.0.0-rc-f994737d14-20240522
         version: 19.0.0-rc-f994737d14-20240522
@@ -9390,7 +9395,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.14.1(eslint@8.57.0)(typescript@5.5.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.14.1(eslint@8.57.0)(typescript@5.5.2))(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
       hasown: 2.0.2
       is-core-module: 2.13.1
       is-glob: 4.0.3
@@ -10521,7 +10526,7 @@ snapshots:
 
   nwsapi@2.2.12: {}
 
-  oauth4webapi@2.11.1: {}
+  oauth4webapi@2.11.1(patch_hash=baix4ugbs5fc655j6453lu7qpq): {}
 
   object-assign@4.1.1: {}
 

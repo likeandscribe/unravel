@@ -5,5 +5,10 @@
   "devDependencies": {
     "prettier": "^3.3.0",
     "turbo": "2.0.3"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "oauth4webapi@2.11.1": "patches/oauth4webapi@2.11.1.patch"
+    }
   }
 }

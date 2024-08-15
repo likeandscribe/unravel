@@ -1,0 +1,13 @@
+diff --git a/build/index.js b/build/index.js
+index 4a178ba05262a04b75ad9f73035ed1b80c8aa872..d41b9ce7a2c0d556fb9f67431db1057cacadb45b 100644
+--- a/build/index.js
++++ b/build/index.js
+@@ -896,7 +896,7 @@ export async function processUserInfoResponse(as, client, expectedSubject, respo
+ }
+ async function authenticatedRequest(as, client, method, url, body, headers, options) {
+     await clientAuthentication(as, client, body, headers, options?.clientPrivateKey);
+-    headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
++    headers.set('content-type', 'application/x-www-form-urlencoded');
+     return (options?.[customFetch] || fetch)(url.href, {
+         body,
+         headers: Object.fromEntries(headers.entries()),
