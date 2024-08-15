@@ -129,3 +129,24 @@ export const ConsumedOffset = pgTable("consumed_offsets", {
     mode: "bigint",
   }).primaryKey(),
 });
+
+export const OauthAuthRequest = pgTable("oauth_auth_requests", {
+  state: text("state").notNull().unique(),
+  iss: text("iss").notNull(),
+  did: did("did").notNull(),
+  username: text("username").notNull(),
+  nonce: text("nonce").notNull(),
+  pkceVerifier: text("pkce_verifier").notNull(),
+  dpopPrivateJwk: text("dpop_private_jwk").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const OauthSession = pgTable("oauth_sessions", {
+  did: did("did").notNull().primaryKey(),
+  username: text("username").notNull(),
+  iss: text("iss").notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  dpopNonce: text("dpop_nonce").notNull(),
+  dpopPrivateJwk: text("dpop_private_jwk").notNull(),
+});

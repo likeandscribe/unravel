@@ -20,6 +20,8 @@ import {
   oauthProtectedResourceMetadataSchema,
 } from "@atproto/oauth-types";
 import { redirect } from "next/navigation";
+import { db } from "./db";
+import * as schema from "./schema";
 
 export const getPrivateJwk = cache(() =>
   importJWK<KeyObject>(JSON.parse(process.env.PRIVATE_JWK!)),
@@ -105,6 +107,10 @@ export async function signIn(handle: string) {
       .then((jwk) => jwk.kid),
   ]);
 
+  const nonce = generateRandomNonce();
+  const state = generateRandomState();
+  const pkceVerifier = generateRandomCodeVerifier();
+
   const parResponse = await pushedAuthorizationRequest(
     authServer,
     {
@@ -113,13 +119,11 @@ export async function signIn(handle: string) {
     },
     {
       response_type: "code",
-      code_challenge: await calculatePKCECodeChallenge(
-        generateRandomCodeVerifier(),
-      ),
+      code_challenge: await calculatePKCECodeChallenge(pkceVerifier),
       code_challenge_method: "S256",
       client_id: client.client_id,
-      state: generateRandomState(),
-      nonce: generateRandomNonce(),
+      state,
+      nonce,
       redirect_uri: client.redirect_uris[0],
       // TODO: Tweak these?
       scope: "openid profile offline_access",
@@ -159,7 +163,16 @@ export async function signIn(handle: string) {
     };
   }
 
-  // TODO: Save oauth request and state to DB for later verification
+  await db.insert(schema.OauthAuthRequest).values({
+    did: did,
+    iss: authServer.issuer,
+    username: handle,
+    nonce,
+    state,
+    pkceVerifier,
+    dpopPrivateJwk: JSON.stringify(secretJwk),
+  });
+
   const redirectUrl = new URL(authServer.authorization_endpoint);
   redirectUrl.searchParams.set("request_uri", parResult.data.request_uri);
   redirectUrl.searchParams.set("client_id", client.client_id);
