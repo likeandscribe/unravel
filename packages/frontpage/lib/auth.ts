@@ -35,10 +35,12 @@ export const getPublicJwk = cache(async () => {
 });
 
 export const getClientMetadata = cache(() => {
-  const appUrl =
+  const host =
     process.env.NODE_ENV === "development"
-      ? `https://${headers().get("host")}`
+      ? headers().get("host")
       : process.env.VERCEL_PROJECT_PRODUCTION_URL!;
+
+  const appUrl = `https://${host}`;
 
   return {
     // Client ID is the URL of the client metadata
