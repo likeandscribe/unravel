@@ -1,5 +1,5 @@
 import "server-only";
-import { exportJWK, importJWK, JWK } from "jose";
+import { exportJWK, importJWK } from "jose";
 import { cache } from "react";
 import { DID, getDidFromHandleOrDid } from "./data/atproto/did";
 import { getPdsUrl } from "./data/user";
@@ -85,8 +85,6 @@ export async function signIn(handle: string) {
       .then((jwk) => jwk.kid),
   ]);
 
-  console.log(authServer);
-
   const parResponse = await pushedAuthorizationRequest(
     authServer,
     {
@@ -128,16 +126,6 @@ export async function signIn(handle: string) {
 
   console.log(parResponse.status);
   console.log(await parResponse.text());
-}
-
-function importJwkForPar(jwk: JWK) {
-  return crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    { name: "ECDSA", namedCurve: "P-256" },
-    true,
-    ["sign"],
-  );
 }
 
 const OauthProtectedResource = z.object({
