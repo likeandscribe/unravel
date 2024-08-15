@@ -138,6 +138,7 @@ export const OauthAuthRequest = pgTable("oauth_auth_requests", {
   nonce: text("nonce").notNull(),
   pkceVerifier: text("pkce_verifier").notNull(),
   dpopPrivateJwk: text("dpop_private_jwk").notNull(),
+  dpopPublicJwk: text("dpop_public_jwk").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -149,4 +150,5 @@ export const OauthSession = pgTable("oauth_sessions", {
   refreshToken: text("refresh_token").notNull(),
   dpopNonce: text("dpop_nonce").notNull(),
   dpopPrivateJwk: text("dpop_private_jwk").notNull(),
+  dpopPublicJwk: text("dpop_public_jwk").notNull(),
 });
