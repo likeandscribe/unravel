@@ -3,7 +3,6 @@ import { exportJWK, importJWK } from "jose";
 import { cache } from "react";
 import { DID, getDidFromHandleOrDid } from "./data/atproto/did";
 import { getPdsUrl } from "./data/user";
-import { z } from "zod";
 import {
   discoveryRequest,
   processDiscoveryResponse,
