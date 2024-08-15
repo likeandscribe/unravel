@@ -207,6 +207,25 @@ async function getOauthResourceMetadata(did: DID) {
   return { data: result.data };
 }
 
+// This is to mimic next-auth's API, hopefully we can upstream later
+export const handlers = {
+  GET: async (request: Request) => {
+    const url = new URL(request.url);
+
+    if (url.pathname.endsWith("/client-metadata.json")) {
+      return Response.json(getClientMetadata());
+    }
+
+    if (url.pathname.endsWith("/jwks.json")) {
+      return Response.json({
+        keys: [await exportJWK(await getPublicJwk())],
+      });
+    }
+
+    return new Response("Not found", { status: 404 });
+  },
+};
+
 export async function signOut() {}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
