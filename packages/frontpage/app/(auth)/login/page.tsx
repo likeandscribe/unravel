@@ -16,7 +16,7 @@ export default function Component() {
             >
               Sign up on Bluesky
             </a>
-            , create an application password, then return here to login.
+            , then return here to login.
           </p>
         </div>
         <LoginForm />
