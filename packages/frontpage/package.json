@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -33,7 +33,7 @@
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.31.2",
     "jose": "^5.4.0",
-    "next": "15.0.0-rc.0",
+    "next": "15.0.0-canary.117",
     "next-themes": "^0.3.0",
     "oauth4webapi": "^2.11.1",
     "react": "19.0.0-rc-f994737d14-20240522",

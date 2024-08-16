@@ -134,8 +134,13 @@ export async function signIn(handle: string) {
       login_hint: handle,
     },
     {
-      // TODO: Add DPoP. It doesn't work right now because atproto complains about missing exp claim
-      // DPoP: dpopKeyPair,
+      // TODO: Add DPoP. It doesn't work right now because atproto complains about missing nonce even when it's passed here
+      // DPoP: {
+      //   privateKey: dpopKeyPair.privateKey,
+      //   publicKey: dpopKeyPair.publicKey,
+      //   expiresIn: 30,
+      //   nonce,
+      // },
       clientPrivateKey: {
         key: await crypto.subtle.importKey(
           "jwk",
