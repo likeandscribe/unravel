@@ -115,7 +115,16 @@ export async function signIn(handle: string) {
     extractable: true,
   });
 
-  const parResponse = await pushedAuthorizationRequest(
+  const clientPrivateKey = await crypto.subtle.importKey(
+    "jwk",
+    secretJwk,
+    { name: "ECDSA", namedCurve: "P-256" },
+    true,
+    ["sign"],
+  );
+
+  const makeParRequest = async (dpopNonce?: string) => {
+    return pushedAuthorizationRequest(
     authServer,
     {
       client_id: client.client_id,
@@ -134,25 +143,38 @@ export async function signIn(handle: string) {
       login_hint: handle,
     },
     {
-      // TODO: Add DPoP. It doesn't work right now because atproto complains about missing nonce even when it's passed here
-      // DPoP: {
-      //   privateKey: dpopKeyPair.privateKey,
-      //   publicKey: dpopKeyPair.publicKey,
-      //   expiresIn: 30,
-      //   nonce,
-      // },
+        DPoP: {
+          privateKey: dpopKeyPair.privateKey,
+          publicKey: dpopKeyPair.publicKey,
+          expiresIn: 30,
+          nonce: dpopNonce,
+        },
       clientPrivateKey: {
-        key: await crypto.subtle.importKey(
-          "jwk",
-          secretJwk,
-          { name: "ECDSA", namedCurve: "P-256" },
-          true,
-          ["sign"],
-        ),
+          key: clientPrivateKey,
         kid,
       },
     },
   );
+  };
+
+  // Make the PAR request without dpop nonce
+  const parDpopNonceDiscoveryResponse = await makeParRequest();
+  // We expect a 400 response here because we didn't include a DPoP nonce
+  if (parDpopNonceDiscoveryResponse.status !== 400) {
+    console.error("PAR error: ", await parDpopNonceDiscoveryResponse.text());
+    return {
+      error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
+    };
+  }
+
+  const dpopNonce = parDpopNonceDiscoveryResponse.headers.get("DPoP-Nonce");
+  if (!dpopNonce) {
+    return {
+      error: "MISSING_PAR_DPOP_NONCE",
+    };
+  }
+
+  const parResponse = await makeParRequest(dpopNonce);
 
   if (!parResponse.ok) {
     console.error("PAR error: ", await parResponse.text());
