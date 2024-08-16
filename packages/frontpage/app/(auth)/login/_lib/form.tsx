@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { startTransition, useActionState } from "react";
 import { loginAction } from "./action";
 import { Label } from "@/lib/components/ui/label";
 import { Input } from "@/lib/components/ui/input";
@@ -16,7 +16,9 @@ export function LoginForm() {
       action={action}
       onSubmit={(event) => {
         event.preventDefault();
-        action(new FormData(event.currentTarget));
+        startTransition(() => {
+          action(new FormData(event.currentTarget));
+        });
       }}
     >
       <div>
