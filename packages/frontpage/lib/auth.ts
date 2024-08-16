@@ -125,36 +125,36 @@ export async function signIn(handle: string) {
 
   const makeParRequest = async (dpopNonce?: string) => {
     return pushedAuthorizationRequest(
-    authServer,
-    {
-      client_id: client.client_id,
-      token_endpoint_auth_method: "private_key_jwt",
-    },
-    {
-      response_type: "code",
-      code_challenge: await calculatePKCECodeChallenge(pkceVerifier),
-      code_challenge_method: "S256",
-      client_id: client.client_id,
-      state,
-      nonce,
-      redirect_uri: client.redirect_uris[0],
-      // TODO: Tweak these?
-      scope: "openid profile offline_access",
-      login_hint: handle,
-    },
-    {
+      authServer,
+      {
+        client_id: client.client_id,
+        token_endpoint_auth_method: "private_key_jwt",
+      },
+      {
+        response_type: "code",
+        code_challenge: await calculatePKCECodeChallenge(pkceVerifier),
+        code_challenge_method: "S256",
+        client_id: client.client_id,
+        state,
+        nonce,
+        redirect_uri: client.redirect_uris[0],
+        // TODO: Tweak these?
+        scope: "openid profile offline_access",
+        login_hint: handle,
+      },
+      {
         DPoP: {
           privateKey: dpopKeyPair.privateKey,
           publicKey: dpopKeyPair.publicKey,
           expiresIn: 30,
           nonce: dpopNonce,
         },
-      clientPrivateKey: {
+        clientPrivateKey: {
           key: clientPrivateKey,
-        kid,
+          kid,
+        },
       },
-    },
-  );
+    );
   };
 
   // Make the PAR request without dpop nonce
