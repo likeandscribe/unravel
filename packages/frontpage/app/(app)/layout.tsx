@@ -97,24 +97,24 @@ export default async function Layout({
 async function LoginOrLogout() {
   const session = await getSession();
   if (session) {
-    const did = await getDidFromHandleOrDid(session.user.name as string);
+    const did = await getDidFromHandleOrDid(session.user.username);
     return (
       <DropdownMenu>
         <DropdownMenuTrigger>
           {did ? (
             <UserAvatar did={did} size="smedium" />
           ) : (
-            <span>{session.user.name}</span>
+            <span>{session.user.username}</span>
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" side="bottom" align="end">
           <DropdownMenuLabel className="truncate">
-            {session.user.name}
+            {session.user.username}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link
-              href={`/profile/${session.user.name}`}
+              href={`/profile/${session.user.username}`}
               className="cursor-pointer"
             >
               Profile

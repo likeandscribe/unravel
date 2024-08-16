@@ -1,13 +1,12 @@
 import "server-only";
 import { getSession } from "@/lib/auth";
-import { decodeJwt } from "jose";
 import { cache } from "react";
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { db } from "../db";
 import { and, count, eq } from "drizzle-orm";
 import * as schema from "../schema";
-import { DID, getVerifiedDid, parseDid } from "./atproto/did";
+import { DID, getVerifiedDid } from "./atproto/did";
 
 /**
  * Returns null when not logged in. If you want to ensure that the user is logged in, use `ensureUser` instead.
@@ -18,30 +17,14 @@ export const getUser = cache(async () => {
     return null;
   }
 
-  if (!session.user) {
-    throw new Error("Invalid session");
-  }
-
-  const token = decodeJwt(session.user.accessJwt);
-
-  if (!token.sub) {
-    throw new Error("Invalid token. Missing sub");
-  }
-
-  const did = parseDid(token.sub);
-  if (!did) {
-    throw new Error("Invalid DID");
-  }
-
-  const pdsUrl = await getPdsUrl(did);
+  const pdsUrl = await getPdsUrl(session.user.did);
   if (!pdsUrl) {
     throw new Error("No AtprotoPersonalDataServer service found");
   }
 
   return {
     pdsUrl,
-    did,
-    accessJwt: session.user.accessJwt,
+    did: session.user.did,
   };
 });
 

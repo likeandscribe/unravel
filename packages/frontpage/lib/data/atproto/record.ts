@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ensureUser } from "../user";
 import { DataLayerError } from "../error";
 import { Prettify } from "@/lib/utils";
+import { fetchAuthenticatedAtproto } from "@/lib/auth";
 
 export const AtUri = z.string().transform((value, ctx) => {
   const match = value.match(/^at:\/\/(.+?)(\/.+?)?(\/.+?)?$/);
@@ -76,11 +77,10 @@ export async function atprotoCreateRecord({
   const pdsUrl = new URL(user.pdsUrl);
   pdsUrl.pathname = "/xrpc/com.atproto.repo.createRecord";
 
-  const response = await fetch(pdsUrl.toString(), {
+  const response = await fetchAuthenticatedAtproto(pdsUrl.toString(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${user.accessJwt}`,
     },
     body: JSON.stringify({
       repo: user.did,
@@ -110,11 +110,10 @@ export async function atprotoDeleteRecord({
   const pdsUrl = new URL(user.pdsUrl);
   pdsUrl.pathname = "/xrpc/com.atproto.repo.deleteRecord";
 
-  const response = await fetch(pdsUrl.toString(), {
+  const response = await fetchAuthenticatedAtproto(pdsUrl.toString(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${user.accessJwt}`,
     },
     body: JSON.stringify({
       repo: user.did,
