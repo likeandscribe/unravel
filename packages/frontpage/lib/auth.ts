@@ -1,7 +1,7 @@
 import "server-only";
-import { exportJWK, importJWK, SignJWT } from "jose";
+import { exportJWK, importJWK, SignJWT, jwtVerify } from "jose";
 import { cache } from "react";
-import { DID, getDidFromHandleOrDid } from "./data/atproto/did";
+import { DID, getDidFromHandleOrDid, parseDid } from "./data/atproto/did";
 import { getPdsUrl } from "./data/user";
 import {
   discoveryRequest,
@@ -14,6 +14,9 @@ import {
   generateKeyPair,
   authorizationCodeGrantRequest,
   validateAuthResponse,
+  protectedResourceRequest,
+  revocationRequest,
+  Client as OauthClient,
 } from "oauth4webapi";
 import { cookies, headers } from "next/headers";
 import type { KeyObject } from "node:crypto";
@@ -23,7 +26,7 @@ import {
   oauthProtectedResourceMetadataSchema,
   oauthTokenResponseSchema,
 } from "@atproto/oauth-types";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { db } from "./db";
 import * as schema from "./schema";
 import { eq } from "drizzle-orm";
@@ -69,14 +72,28 @@ export const getClientMetadata = cache(() => {
   } satisfies OAuthClientMetadata;
 });
 
+export const getOauthClientOptions = () =>
+  ({
+    client_id: getClientMetadata().client_id,
+    token_endpoint_auth_method: "private_key_jwt",
+  }) satisfies OauthClient;
+
 async function getClientPrivateKey() {
-  return crypto.subtle.importKey(
+  const jwk = await getPublicJwk().then(exportJWK);
+  const kid = jwk.kid;
+  if (!kid) {
+    // TODO: Fix this somehow? Maybe use webcrypto everywhere?
+    console.warn("Missing kid, fix this!");
+  }
+  const key = await crypto.subtle.importKey(
     "jwk",
     await exportJWK(await getPrivateJwk()),
     { name: "ECDSA", namedCurve: "P-256" },
     true,
     ["sign"],
   );
+
+  return { key, kid };
 }
 
 export async function signIn(handle: string) {
@@ -114,13 +131,6 @@ export async function signIn(handle: string) {
 
   const client = getClientMetadata();
 
-  const [clientPrivateKey, kid] = await Promise.all([
-    getClientPrivateKey(),
-    getPublicJwk()
-      .then(exportJWK)
-      .then((jwk) => jwk.kid),
-  ]);
-
   const nonce = generateRandomNonce();
   const state = generateRandomState();
   const pkceVerifier = generateRandomCodeVerifier();
@@ -132,14 +142,12 @@ export async function signIn(handle: string) {
   const makeParRequest = async (dpopNonce?: string) => {
     return pushedAuthorizationRequest(
       authServer,
-      {
-        client_id: client.client_id,
-        token_endpoint_auth_method: "private_key_jwt",
-      },
+      getOauthClientOptions(),
       {
         response_type: "code",
         code_challenge: await calculatePKCECodeChallenge(pkceVerifier),
         code_challenge_method: "S256",
+        // TODO: Do we need this? It's included in the oauth client options
         client_id: client.client_id,
         state,
         nonce,
@@ -155,10 +163,7 @@ export async function signIn(handle: string) {
           expiresIn: 30,
           nonce: dpopNonce,
         },
-        clientPrivateKey: {
-          key: clientPrivateKey,
-          kid,
-        },
+        clientPrivateKey: await getClientPrivateKey(),
       },
     );
   };
@@ -167,7 +172,11 @@ export async function signIn(handle: string) {
   const parDpopNonceDiscoveryResponse = await makeParRequest();
   // We expect a 400 response here because we didn't include a DPoP nonce
   if (parDpopNonceDiscoveryResponse.status !== 400) {
-    console.error("PAR error: ", await parDpopNonceDiscoveryResponse.text());
+    // TODO: This sometimes actually returns a 201, it shouldn't. I've reached out to the bsky team about this
+    console.error(
+      `PAR error:  received ${parDpopNonceDiscoveryResponse.status} status`,
+      await parDpopNonceDiscoveryResponse.text(),
+    );
     return {
       error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
     };
@@ -246,6 +255,8 @@ async function getOauthResourceMetadata(did: DID) {
   return { data: result.data };
 }
 
+const AUTH_COOKIE_NAME = "__auth_sesion";
+
 // This is to mimic next-auth's API, hopefully we can upstream later
 export const handlers = {
   GET: async (request: Request) => {
@@ -302,10 +313,7 @@ export const handlers = {
       const client = getClientMetadata();
       const params = validateAuthResponse(
         authServer,
-        {
-          client_id: client.client_id,
-          token_endpoint_auth_method: "private_key_jwt",
-        },
+        getOauthClientOptions(),
         url.searchParams,
         row.state,
       );
@@ -315,28 +323,14 @@ export const handlers = {
         return new Response("Invalid params", { status: 400 });
       }
 
-      const privateDpopKey = await crypto.subtle.importKey(
-        "jwk",
-        JSON.parse(row.dpopPrivateJwk),
-        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-        true,
-        ["sign"],
-      );
-
-      const publicDpopKey = await crypto.subtle.importKey(
-        "jwk",
-        JSON.parse(row.dpopPublicJwk),
-        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-        true,
-        ["verify"],
-      );
+      const { privateDpopKey, publicDpopKey } = await importDpopJwks({
+        privateJwk: row.dpopPrivateJwk,
+        publicJwk: row.dpopPublicJwk,
+      });
 
       const authCodeResponse = await authorizationCodeGrantRequest(
         authServer,
-        {
-          client_id: client.client_id,
-          token_endpoint_auth_method: "private_key_jwt",
-        },
+        getOauthClientOptions(),
         params,
         client.redirect_uris[0],
         row.pkceVerifier,
@@ -373,39 +367,181 @@ export const handlers = {
         throw new Error("Missing refresh");
       }
 
-      await db.insert(schema.OauthSession).values({
-        did: row.did,
-        username: row.username,
-        iss: row.iss,
-        accessToken: tokensResult.data.access_token,
-        refreshToken: tokensResult.data.refresh_token,
-        dpopNonce,
-        dpopPrivateJwk: row.dpopPrivateJwk,
-        dpopPublicJwk: row.dpopPublicJwk,
-      });
+      await db
+        .insert(schema.OauthSession)
+        .values({
+          did: row.did,
+          username: row.username,
+          iss: row.iss,
+          accessToken: tokensResult.data.access_token,
+          refreshToken: tokensResult.data.refresh_token,
+          dpopNonce,
+          dpopPrivateJwk: row.dpopPrivateJwk,
+          dpopPublicJwk: row.dpopPublicJwk,
+        })
+        .onConflictDoUpdate({
+          target: schema.OauthSession.did,
+          set: {
+            accessToken: tokensResult.data.access_token,
+            refreshToken: tokensResult.data.refresh_token,
+            dpopNonce,
+            dpopPrivateJwk: row.dpopPrivateJwk,
+            dpopPublicJwk: row.dpopPublicJwk,
+          },
+        });
 
-      const userToken = await new SignJWT({ sub: row.did })
+      const userToken = await new SignJWT()
+        .setSubject(row.did)
         .setProtectedHeader({ alg: "ES256" })
         .setIssuedAt()
-        .sign(await getPrivateJwk());
+        .sign(
+          // TODO: This probably ought to be a different key
+          await getPrivateJwk(),
+        );
 
-      cookies().set("user", userToken, {
+      cookies().set(AUTH_COOKIE_NAME, userToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
+        sameSite: "lax",
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
       });
 
-      redirect("/");
+      return redirect("/", RedirectType.replace);
     }
 
     return new Response("Not found", { status: 404 });
   },
 };
 
-export async function signOut() {}
+export async function signOut() {
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Not authenticated");
+  }
+  cookies().delete(AUTH_COOKIE_NAME);
+  const authServer = await processDiscoveryResponse(
+    new URL(session.user.iss),
+    await discoveryRequest(new URL(session.user.iss)),
+  );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getSession(): any {
-  return null;
+  await revocationRequest(
+    authServer,
+    getOauthClientOptions(),
+    session.user.accessToken,
+    {
+      clientPrivateKey: await getClientPrivateKey(),
+    },
+  );
+
+  await db
+    .delete(schema.OauthSession)
+    .where(eq(schema.OauthSession.did, session.user.did));
+  redirect("/");
+}
+
+export const getSession = cache(async () => {
+  const tokenCookie = cookies().get(AUTH_COOKIE_NAME);
+  if (!tokenCookie) {
+    return null;
+  }
+
+  let token;
+  try {
+    token = await jwtVerify(tokenCookie.value, await getPublicJwk(), {});
+  } catch (e) {
+    console.error("Failed to verify token", e);
+    return null;
+  }
+
+  if (!token.payload.sub) {
+    return null;
+  }
+
+  const did = parseDid(token.payload.sub);
+  if (!did) {
+    return null;
+  }
+
+  const [session] = await db
+    .select()
+    .from(schema.OauthSession)
+    .where(eq(schema.OauthSession.did, did));
+
+  if (!session) {
+    return null;
+  }
+
+  return {
+    user: session,
+  };
+});
+
+async function importDpopJwks({
+  privateJwk,
+  publicJwk,
+}: {
+  privateJwk: string;
+  publicJwk: string;
+}) {
+  const [privateDpopKey, publicDpopKey] = await Promise.all([
+    crypto.subtle.importKey(
+      "jwk",
+      JSON.parse(privateJwk),
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      true,
+      ["sign"],
+    ),
+    crypto.subtle.importKey(
+      "jwk",
+      JSON.parse(publicJwk),
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      true,
+      ["verify"],
+    ),
+  ]);
+
+  return {
+    publicDpopKey,
+    privateDpopKey,
+  };
+}
+
+export async function fetchAuthenticatedAtproto(
+  input: RequestInfo,
+  init?: RequestInit,
+) {
+  const request = new Request(input, init);
+  const session = await getSession();
+
+  if (!session) {
+    throw new Error("Not authenticated");
+  }
+
+  const { privateDpopKey, publicDpopKey } = await importDpopJwks({
+    privateJwk: session.user.dpopPrivateJwk,
+    publicJwk: session.user.dpopPublicJwk,
+  });
+
+  const response = await protectedResourceRequest(
+    session.user.accessToken,
+    request.method,
+    new URL(request.url),
+    request.headers,
+    request.body,
+    {
+      DPoP: {
+        privateKey: privateDpopKey,
+        publicKey: publicDpopKey,
+        expiresIn: 30,
+        nonce: session.user.dpopNonce,
+      },
+    },
+  );
+
+  console.log(
+    "Protected resource headers",
+    Object.fromEntries(response.headers),
+  );
+
+  return response;
 }
