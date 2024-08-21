@@ -18,18 +18,18 @@ import { ErrorBoundary } from "react-error-boundary";
 import { z } from "zod";
 import { unstable_cache as nextCache } from "next/cache";
 
-const timeoutWith = <T, U>(
+function timeoutWith<T>(
   timeout: number,
   promise: Promise<T>,
   errorMessage: string,
-): Promise<T> => {
+): Promise<T> {
   return Promise.race([
     promise,
     new Promise<never>((_res, reject) =>
       setTimeout(() => reject(new Error(errorMessage)), timeout),
     ),
   ]);
-};
+}
 
 const didResolver = new DidResolver({});
 const resolveDid = cache(
@@ -64,7 +64,7 @@ export default async function AtPage({
 
   let didStr;
   if (isValidHandle(uri.hostname)) {
-    didStr = await resolveHandle(uri.hostname);
+    didStr = await resolveHandle(uri.hostname).catch(() => undefined);
     if (!didStr) {
       return <div>Could not resolve did from handle: {uri.hostname}</div>;
     }
