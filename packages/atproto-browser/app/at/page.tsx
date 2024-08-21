@@ -21,33 +21,40 @@ import { unstable_cache as nextCache } from "next/cache";
 const timeoutWith = <T, U>(
   timeout: number,
   promise: Promise<T>,
-  fallback: U,
-): Promise<T | U> => {
+  errorMessage: string,
+): Promise<T> => {
   return Promise.race([
     promise,
-    new Promise<U>((resolve) => setTimeout(() => resolve(fallback), timeout)),
+    new Promise<never>((_res, reject) =>
+      setTimeout(() => reject(new Error(errorMessage)), timeout),
+    ),
   ]);
 };
 
 const didResolver = new DidResolver({});
-const resolveDid = nextCache(
-  cache((did: string) => timeoutWith(1000, didResolver.resolve(did), null)),
-  ["did"],
-  {
-    revalidate: 10,
-  },
+const resolveDid = cache(
+  nextCache(
+    cache((did: string) =>
+      timeoutWith(1000, didResolver.resolve(did), "DID timeout"),
+    ),
+    ["did-doc"],
+    {
+      revalidate: 10,
+    },
+  ),
 );
 const handleResolver = new HandleResolver({});
-const resolveHandle = nextCache(
-  cache((handle: string) =>
-    timeoutWith(1000, handleResolver.resolve(handle), undefined),
+const resolveHandle = cache(
+  nextCache(
+    cache((handle: string) =>
+      timeoutWith(3000, handleResolver.resolve(handle), "Handle timeout"),
+    ),
+    ["handle-from-did"],
+    {
+      revalidate: 10,
+    },
   ),
-  ["handle"],
-  {
-    revalidate: 10,
-  },
 );
-
 export default async function AtPage({
   searchParams,
 }: {
