@@ -59,7 +59,7 @@ export default async function AtPage({
   if (isValidHandle(uri.hostname)) {
     didStr = await resolveHandle(uri.hostname);
     if (!didStr) {
-      return <div>Could not resolve handle from did: {uri.hostname}</div>;
+      return <div>Could not resolve did from handle: {uri.hostname}</div>;
     }
   } else {
     if (!isDid(uri.hostname)) {
