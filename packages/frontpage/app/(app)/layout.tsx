@@ -16,6 +16,7 @@ import {
 } from "@/lib/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { UserAvatar } from "@/lib/components/user-avatar";
+import { FRONTPAGE_ATPROTO_HANDLE } from "@/lib/constants";
 
 export default async function Layout({
   children,
@@ -50,7 +51,7 @@ export default async function Layout({
                 Thanks for joining the beta! There will be bugs! Please the
                 report them to{" "}
                 <a
-                  href="https://bsky.app/profile/unravel.fyi"
+                  href={`https://bsky.app/profile/${FRONTPAGE_ATPROTO_HANDLE}`}
                   className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                 >
                   @unravel.fyi <OpenInNewWindowIcon className="inline" />
@@ -80,7 +81,7 @@ export default async function Layout({
         <p>
           Made by{" "}
           <a
-            href="https://bsky.app/profile/unravel.fyi"
+            href={`https://bsky.app/profile/${FRONTPAGE_ATPROTO_HANDLE}`}
             className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
           >
             @unravel.fyi <OpenInNewWindowIcon className="inline" />

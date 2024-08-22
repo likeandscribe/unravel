@@ -1,3 +1,4 @@
+import { FRONTPAGE_ATPROTO_HANDLE } from "@/lib/constants";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 
 export default function ClosedBeta() {
@@ -15,7 +16,7 @@ export default function ClosedBeta() {
         <p>
           Please DM us on Bluesky{" "}
           <a
-            href="https://bsky.app/profile/unravel.fyi"
+            href={`https://bsky.app/profile/${FRONTPAGE_ATPROTO_HANDLE}`}
             className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
           >
             @unravel.fyi <OpenInNewWindowIcon className="inline" />
