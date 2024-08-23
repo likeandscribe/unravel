@@ -1,16 +1,12 @@
+import { sql } from "drizzle-orm";
 import {
+  sqliteTable,
   text,
-  pgTable,
-  serial,
   integer,
-  timestamp,
-  bigint,
-  unique,
-  pgEnum,
-  foreignKey,
   customType,
-  varchar,
-} from "drizzle-orm/pg-core";
+  unique,
+  foreignKey,
+} from "drizzle-orm/sqlite-core";
 import type { DID } from "./data/atproto/did";
 import {
   MAX_COMMENT_LENGTH,
@@ -24,42 +20,42 @@ const did = customType<{ data: DID }>({
   },
 });
 
-export const submissionStatus = pgEnum("submission_status", [
-  "live",
-  "deleted",
-  "moderator_hidden",
-]);
-
-export const Post = pgTable(
+export const Post = sqliteTable(
   "posts",
   {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey(),
     rkey: text("rkey").notNull(),
     cid: text("cid").notNull().unique(),
-    title: varchar("title", {
+    title: text("title", {
       length: MAX_POST_TITLE_LENGTH,
     }).notNull(),
-    url: varchar("url", {
+    url: text("url", {
       length: MAX_POST_URL_LENGTH,
     }).notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: text("created_at")
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
-    status: submissionStatus("status").default("live"),
+    status: text("status", {
+      enum: ["live", "deleted", "moderator_hidden"],
+    }).default("live"),
   },
   (t) => ({
     unique_author_rkey: unique().on(t.authorDid, t.rkey),
   }),
 );
 
-export const PostVote = pgTable(
+export const PostVote = sqliteTable(
   "post_votes",
   {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey(),
     postId: integer("post_id")
       .notNull()
       .references(() => Post.id),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: text("created_at")
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
     authorDid: did("author_did").notNull(),
     cid: text("cid").notNull().unique(),
     rkey: text("rkey").notNull(),
@@ -71,22 +67,26 @@ export const PostVote = pgTable(
   }),
 );
 
-export const Comment = pgTable(
+export const Comment = sqliteTable(
   "comments",
   {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey(),
     rkey: text("rkey").notNull(),
     cid: text("cid").notNull().unique(),
     postId: integer("post_id")
       .notNull()
       .references(() => Post.id),
-    body: varchar("body", {
+    body: text("body", {
       length: MAX_COMMENT_LENGTH,
     }).notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: text("created_at")
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
-    status: submissionStatus("status").default("live"),
+    status: text("status", {
+      enum: ["live", "deleted", "moderator_hidden"],
+    }).default("live"),
     parentCommentId: integer("parent_comment_id"),
   },
   (t) => ({
@@ -99,14 +99,16 @@ export const Comment = pgTable(
   }),
 );
 
-export const CommentVote = pgTable(
+export const CommentVote = sqliteTable(
   "comment_votes",
   {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey(),
     commentId: integer("comment_id")
       .notNull()
       .references(() => Comment.id),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: text("created_at")
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
     authorDid: did("author_did").notNull(),
     cid: text("cid").notNull().unique(),
     rkey: text("rkey").notNull(),
@@ -118,14 +120,14 @@ export const CommentVote = pgTable(
   }),
 );
 
-export const BetaUser = pgTable("beta_users", {
-  id: serial("id").primaryKey(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const BetaUser = sqliteTable("beta_users", {
+  id: integer("id").primaryKey(),
+  createdAt: text("created_at")
+    .default(sql`(CURRENT_TIMESTAMP)`)
+    .notNull(),
   did: did("did").notNull().unique(),
 });
 
-export const ConsumedOffset = pgTable("consumed_offsets", {
-  offset: bigint("offset", {
-    mode: "bigint",
-  }).primaryKey(),
+export const ConsumedOffset = sqliteTable("consumed_offsets", {
+  offset: integer("offset").primaryKey(),
 });

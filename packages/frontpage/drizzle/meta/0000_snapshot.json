@@ -1,52 +1,134 @@
 {
-  "id": "5e8e33d8-dde1-44fa-8f06-5d03c394551e",
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "39edfe3f-1625-4b39-8bad-3b3ef38b111e",
   "prevId": "00000000-0000-0000-0000-000000000000",
-  "version": "7",
-  "dialect": "postgresql",
   "tables": {
-    "public.comments": {
-      "name": "comments",
-      "schema": "",
+    "beta_users": {
+      "name": "beta_users",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        },
+        "did": {
+          "name": "did",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "beta_users_did_unique": {
+          "name": "beta_users_did_unique",
+          "columns": [
+            "did"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "comments": {
+      "name": "comments",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rkey": {
+          "name": "rkey",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
         "cid": {
           "name": "cid",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
         },
         "post_id": {
           "name": "post_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
         },
         "body": {
           "name": "body",
-          "type": "text",
+          "type": "text(10000)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "now()"
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
         },
         "author_did": {
           "name": "author_did",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'live'"
+        },
+        "parent_comment_id": {
+          "name": "parent_comment_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "comments_cid_unique": {
+          "name": "comments_cid_unique",
+          "columns": [
+            "cid"
+          ],
+          "isUnique": true
+        },
+        "comments_author_did_rkey_unique": {
+          "name": "comments_author_did_rkey_unique",
+          "columns": [
+            "author_did",
+            "rkey"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "comments_post_id_posts_id_fk": {
           "name": "comments_post_id_posts_id_fk",
@@ -60,42 +142,96 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "parent_comment_id_fkey": {
+          "name": "parent_comment_id_fkey",
+          "tableFrom": "comments",
+          "tableTo": "comments",
+          "columnsFrom": [
+            "parent_comment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.comment_votes": {
+    "comment_votes": {
       "name": "comment_votes",
-      "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "integer",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
         },
         "comment_id": {
           "name": "comment_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "now()"
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
         },
         "author_did": {
           "name": "author_did",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cid": {
+          "name": "cid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rkey": {
+          "name": "rkey",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "comment_votes_cid_unique": {
+          "name": "comment_votes_cid_unique",
+          "columns": [
+            "cid"
+          ],
+          "isUnique": true
+        },
+        "comment_votes_author_did_rkey_unique": {
+          "name": "comment_votes_author_did_rkey_unique",
+          "columns": [
+            "author_did",
+            "rkey"
+          ],
+          "isUnique": true
+        },
+        "comment_votes_author_did_comment_id_unique": {
+          "name": "comment_votes_author_did_comment_id_unique",
+          "columns": [
+            "author_did",
+            "comment_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "comment_votes_comment_id_comments_id_fk": {
           "name": "comment_votes_comment_id_comments_id_fk",
@@ -114,46 +250,15 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.posts": {
-      "name": "posts",
-      "schema": "",
+    "consumed_offsets": {
+      "name": "consumed_offsets",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
+        "offset": {
+          "name": "offset",
+          "type": "integer",
           "primaryKey": true,
-          "notNull": true
-        },
-        "cid": {
-          "name": "cid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "url": {
-          "name": "url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
           "notNull": true,
-          "default": "now()"
-        },
-        "author_did": {
-          "name": "author_did",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
+          "autoincrement": false
         }
       },
       "indexes": {},
@@ -161,37 +266,161 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.post_votes": {
-      "name": "post_votes",
-      "schema": "",
+    "posts": {
+      "name": "posts",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "post_id": {
-          "name": "post_id",
           "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rkey": {
+          "name": "rkey",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cid": {
+          "name": "cid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text(300)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "now()"
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
         },
         "author_did": {
           "name": "author_did",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'live'"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "posts_cid_unique": {
+          "name": "posts_cid_unique",
+          "columns": [
+            "cid"
+          ],
+          "isUnique": true
+        },
+        "posts_author_did_rkey_unique": {
+          "name": "posts_author_did_rkey_unique",
+          "columns": [
+            "author_did",
+            "rkey"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "post_votes": {
+      "name": "post_votes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "post_id": {
+          "name": "post_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        },
+        "author_did": {
+          "name": "author_did",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cid": {
+          "name": "cid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rkey": {
+          "name": "rkey",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "post_votes_cid_unique": {
+          "name": "post_votes_cid_unique",
+          "columns": [
+            "cid"
+          ],
+          "isUnique": true
+        },
+        "post_votes_author_did_rkey_unique": {
+          "name": "post_votes_author_did_rkey_unique",
+          "columns": [
+            "author_did",
+            "rkey"
+          ],
+          "isUnique": true
+        },
+        "post_votes_author_did_post_id_unique": {
+          "name": "post_votes_author_did_post_id_unique",
+          "columns": [
+            "author_did",
+            "post_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "post_votes_post_id_posts_id_fk": {
           "name": "post_votes_post_id_posts_id_fk",
@@ -212,10 +441,12 @@
     }
   },
   "enums": {},
-  "schemas": {},
   "_meta": {
-    "columns": {},
     "schemas": {},
-    "tables": {}
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
   }
 }
