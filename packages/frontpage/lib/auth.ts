@@ -44,6 +44,7 @@ export const getPublicJwk = cache(async () => {
   return jwk;
 });
 
+// TODO: Cache this?
 export const getClientMetadata = cache(() => {
   const host =
     process.env.NODE_ENV === "development"
@@ -522,6 +523,7 @@ export async function fetchAuthenticatedAtproto(
     publicJwk: session.user.dpopPublicJwk,
   });
 
+  // TODO: Handle dpop retry (or is this done for us already?)
   const response = await protectedResourceRequest(
     session.user.accessToken,
     request.method,
