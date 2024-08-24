@@ -20,6 +20,9 @@ const did = customType<{ data: DID }>({
   },
 });
 
+const createStatusColumn = (col: string) =>
+  text(col, { enum: ["live", "deleted", "moderator_hidden"] }).default("live");
+
 export const Post = sqliteTable(
   "posts",
   {
@@ -37,9 +40,7 @@ export const Post = sqliteTable(
       .notNull(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
-    status: text("status", {
-      enum: ["live", "deleted", "moderator_hidden"],
-    }).default("live"),
+    status: createStatusColumn("status"),
   },
   (t) => ({
     unique_author_rkey: unique().on(t.authorDid, t.rkey),
@@ -84,9 +85,7 @@ export const Comment = sqliteTable(
       .notNull(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
-    status: text("status", {
-      enum: ["live", "deleted", "moderator_hidden"],
-    }).default("live"),
+    status: createStatusColumn("status"),
     parentCommentId: integer("parent_comment_id"),
   },
   (t) => ({

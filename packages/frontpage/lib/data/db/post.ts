@@ -200,15 +200,6 @@ export async function unauthed_createPost({
       createdAt: new Date(post.createdAt).toISOString(),
     });
 
-    await tx.insert(schema.Post).values({
-      rkey,
-      cid,
-      authorDid,
-      title: post.title,
-      url: post.url,
-      createdAt: new Date(post.createdAt).toISOString(),
-    });
-
     await tx.insert(schema.ConsumedOffset).values({ offset });
   });
 
