@@ -1,7 +1,8 @@
-import { config } from "dotenv";
+import { loadEnvConfig } from "@next/env";
 import { defineConfig } from "drizzle-kit";
 
-config({ path: ".env.local" });
+// Load environment variables
+loadEnvConfig(process.cwd());
 
 const URL = process.env.TURSO_CONNECTION_URL!;
 const AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN!;
