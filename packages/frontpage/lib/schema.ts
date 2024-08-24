@@ -36,7 +36,7 @@ export const Post = sqliteTable(
       length: MAX_POST_URL_LENGTH,
     }).notNull(),
     createdAt: text("created_at")
-      .default(sql`(CURRENT_TIMESTAMP)`)
+      .default(sql`(CURRENT_DATE)`)
       .notNull(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
@@ -55,7 +55,7 @@ export const PostVote = sqliteTable(
       .notNull()
       .references(() => Post.id),
     createdAt: text("created_at")
-      .default(sql`(CURRENT_TIMESTAMP)`)
+      .default(sql`(CURRENT_DATE)`)
       .notNull(),
     authorDid: did("author_did").notNull(),
     cid: text("cid").notNull().unique(),
@@ -81,7 +81,7 @@ export const Comment = sqliteTable(
       length: MAX_COMMENT_LENGTH,
     }).notNull(),
     createdAt: text("created_at")
-      .default(sql`(CURRENT_TIMESTAMP)`)
+      .default(sql`(CURRENT_DATE)`)
       .notNull(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
@@ -106,7 +106,7 @@ export const CommentVote = sqliteTable(
       .notNull()
       .references(() => Comment.id),
     createdAt: text("created_at")
-      .default(sql`(CURRENT_TIMESTAMP)`)
+      .default(sql`(CURRENT_DATE)`)
       .notNull(),
     authorDid: did("author_did").notNull(),
     cid: text("cid").notNull().unique(),
@@ -122,7 +122,7 @@ export const CommentVote = sqliteTable(
 export const BetaUser = sqliteTable("beta_users", {
   id: integer("id").primaryKey(),
   createdAt: text("created_at")
-    .default(sql`(CURRENT_TIMESTAMP)`)
+    .default(sql`(CURRENT_DATE)`)
     .notNull(),
   did: did("did").notNull().unique(),
 });
