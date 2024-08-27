@@ -41,6 +41,9 @@ importers:
       react-error-boundary:
         specifier: ^4.0.13
         version: 4.0.13(react@19.0.0-rc-f994737d14-20240522)
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
       swr:
         specifier: 2.2.6-beta.4
         version: 2.2.6-beta.4(react@19.0.0-rc-f994737d14-20240522)

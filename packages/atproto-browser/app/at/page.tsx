@@ -1,13 +1,7 @@
-import {
-  DidResolver,
-  getHandle,
-  getKey,
-  getPds,
-  HandleResolver,
-} from "@atproto/identity";
-import { AtUri, isValidHandle } from "@atproto/syntax";
+import { getHandle, getKey, getPds } from "@atproto/identity";
+import { AtUri } from "@atproto/syntax";
 import { isDid } from "@atproto/did";
-import { cache, Fragment, Suspense } from "react";
+import { Fragment, Suspense } from "react";
 import Link from "next/link";
 import { AtBlob } from "./_lib/at-blob";
 import { CollectionItems } from "./_lib/collection";
@@ -16,45 +10,8 @@ import { listRecords } from "@/lib/atproto";
 import { verifyRecords } from "@atproto/repo";
 import { ErrorBoundary } from "react-error-boundary";
 import { z } from "zod";
-import { unstable_cache as nextCache } from "next/cache";
+import { resolveIdentity } from "@/lib/atproto-server";
 
-function timeoutWith<T>(
-  timeout: number,
-  promise: Promise<T>,
-  errorMessage: string,
-): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_res, reject) =>
-      setTimeout(() => reject(new Error(errorMessage)), timeout),
-    ),
-  ]);
-}
-
-const didResolver = new DidResolver({});
-const resolveDid = cache(
-  nextCache(
-    cache((did: string) =>
-      timeoutWith(1000, didResolver.resolve(did), "DID timeout"),
-    ),
-    ["did-doc"],
-    {
-      revalidate: 10,
-    },
-  ),
-);
-const handleResolver = new HandleResolver({});
-const resolveHandle = cache(
-  nextCache(
-    cache((handle: string) =>
-      timeoutWith(3000, handleResolver.resolve(handle), "Handle timeout"),
-    ),
-    ["handle-from-did"],
-    {
-      revalidate: 10,
-    },
-  ),
-);
 export default async function AtPage({
   searchParams,
 }: {
@@ -62,42 +19,12 @@ export default async function AtPage({
 }) {
   const uri = new AtUri(searchParams.u!);
 
-  let didStr;
-  if (isValidHandle(uri.hostname)) {
-    didStr = await resolveHandle(uri.hostname).catch(() => undefined);
-    if (!didStr) {
-      return <div>Could not resolve did from handle: {uri.hostname}</div>;
-    }
-  } else {
-    if (!isDid(uri.hostname)) {
-      return <div>Invalid DID: {uri.hostname}</div>;
-    }
-    didStr = uri.hostname;
+  const identityResult = await resolveIdentity(uri.hostname);
+  if (!identityResult.success) {
+    return <div>{identityResult.error}</div>;
   }
 
-  const didDocument = await resolveDid(didStr);
-  if (!didDocument) {
-    return <div>Could not resolve DID: {didStr}</div>;
-  }
-
-  if (
-    isValidHandle(uri.hostname) &&
-    !didDocument.alsoKnownAs?.includes(`at://${uri.hostname}`)
-  ) {
-    return (
-      <div>
-        Handle not found in alsoKnownAs:{" "}
-        <Link href={`/at?u=at://${uri.hostname}`}>{uri.hostname}</Link> not in [
-        {didDocument.alsoKnownAs?.flatMap((aka) => [
-          <Link key={aka} href={`/at?u=${aka}`}>
-            {aka}
-          </Link>,
-          ", ",
-        ])}
-        ]
-      </div>
-    );
-  }
+  const didDocument = identityResult.identity;
 
   const pds = getPds(didDocument);
   if (!pds) {
@@ -112,12 +39,12 @@ export default async function AtPage({
         <h1>
           {handle} ({didDocument.id})
         </h1>
-        <DidSummary did={didStr} />
+        <DidSummary did={didDocument.id} />
 
         <Suspense fallback={<p>Loading history...</p>}>
           <ErrorBoundary fallback={<p>Failed to fetch history.</p>}>
             <h2>History</h2>
-            <DidHistory did={didStr} />
+            <DidHistory did={didDocument.id} />
           </ErrorBoundary>
         </Suspense>
       </>
@@ -179,10 +106,11 @@ export default async function AtPage({
     <div>
       <details>
         <summary>
-          Author: {handle} (<Link href={`/at?u=at://${didStr}`}>{didStr}</Link>)
+          Author: {handle} (
+          <Link href={`/at?u=at://${didDocument.id}`}>{didDocument.id}</Link>)
         </summary>
         <Suspense>
-          <DidSummary did={didStr} />
+          <DidSummary did={didDocument.id} />
         </Suspense>
       </details>
       <h2>
@@ -195,7 +123,7 @@ export default async function AtPage({
           }
         >
           <RecordVerificationBadge
-            did={didStr}
+            did={didDocument.id}
             collection={uri.collection}
             rkey={uri.rkey}
           />
@@ -215,7 +143,11 @@ async function RecordVerificationBadge({
   collection: string;
   rkey: string;
 }) {
-  const didDoc = (await resolveDid(did))!;
+  const identityResult = await resolveIdentity(did);
+  if (!identityResult.success) {
+    throw new Error(identityResult.error);
+  }
+  const didDoc = identityResult.identity;
   const pds = getPds(didDoc);
   if (!pds) {
     return <span title="Invalid record (no pds)">❌</span>;
@@ -273,15 +205,16 @@ async function DidSummary({ did }: { did: string }) {
 }
 
 async function DidDoc({ did }: { did: string }) {
-  const didDocument = await resolveDid(did);
-  return <JSONValue data={didDocument as JSONType} repo={did} />;
+  const identityResult = await resolveIdentity(did);
+  return <JSONValue data={identityResult as JSONType} repo={did} />;
 }
 
 async function DidCollections({ did }: { did: string }) {
-  const didDocument = await resolveDid(did);
-  if (!didDocument) {
+  const identityResult = await resolveIdentity(did);
+  if (!identityResult.success) {
     throw new Error(`Could not resolve DID: ${did}`);
   }
+  const didDocument = identityResult.identity;
   const pds = getPds(didDocument);
   if (!pds) {
     throw new Error(`No PDS found for DID: ${didDocument.id}`);
