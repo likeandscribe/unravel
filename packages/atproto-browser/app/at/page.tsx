@@ -57,7 +57,10 @@ export default async function AtPage({
     return (
       <div>
         <h1>
-          {handle}&apos;s {uri.collection} records
+          {handle}&apos;s {uri.collection} records{" "}
+          <Link href={`/collection-rss?u=${uri.toString()}`} title="RSS feed">
+            🛜
+          </Link>
         </h1>
         <ul>
           <SWRConfig
