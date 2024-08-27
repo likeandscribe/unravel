@@ -47,7 +47,7 @@ export async function GET(request: Request) {
               month: "2-digit",
               day: "2-digit",
             }).format(new Date())}</pubDate>
-            <link>${ORIGIN}/collection-rss?u=${uri.toString()}</link>
+            <link>${ORIGIN}/at?u=${uri.toString()}</link>
             <guid isPermalink="false">${record.cid}</guid>
           </item>
         `.trim(),
