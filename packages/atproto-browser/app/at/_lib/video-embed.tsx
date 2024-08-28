@@ -17,7 +17,7 @@ export async function VideoEmbed({ cid, did }: VideoEmbedProps) {
 }
 
 async function VideoEmbedInner({ cid, did }: VideoEmbedProps) {
-  const rootUrl = `https://lumi.jazco.dev/watch/${did}/${cid}`;
+  const rootUrl = `https://video.bsky.app/watch/${did}/${cid}`;
   const source = `${rootUrl}/playlist.m3u8`;
   const manifestText = await fetch(source, {
     next: {
