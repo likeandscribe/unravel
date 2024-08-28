@@ -34,6 +34,7 @@ async function VideoEmbedInner({ cid, did }: VideoEmbedProps) {
     // This is quite naive, but it's good enough for now
     const sourceUrl = new URL(source);
     sourceUrl.searchParams.set("session_id", sessionId);
+    // TODO: Find a way to just pass these manifest/playlist promises to the client instead of preloading them
     preload(sourceUrl.toString(), {
       as: "fetch",
       crossOrigin: "anonymous",
