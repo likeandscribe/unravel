@@ -1,6 +1,6 @@
 "use client";
 import Hls from "hls.js";
-import { useEffect, useRef } from "react";
+import { ReactNode, RefObject, useEffect, useRef } from "react";
 
 export function VideoEmbedClient({
   source,
@@ -9,7 +9,6 @@ export function VideoEmbedClient({
   source: string;
   sessionId?: string;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLVideoElement>(null);
 
   const hlsRef = useRef<Hls | undefined>(undefined);
@@ -47,19 +46,25 @@ export function VideoEmbedClient({
     };
   }, [source, sessionId]);
 
+  return <VideoEmbedWrapper videoRef={ref} />;
+}
+
+export function VideoEmbedWrapper({
+  videoRef,
+}: {
+  videoRef?: RefObject<HTMLVideoElement>;
+}) {
   return (
     <div
       style={{
         aspectRatio: "16 / 9",
+        width: 500,
       }}
     >
-      <div
-        ref={containerRef}
-        style={{ width: "100%", height: "100%", display: "flex" }}
-      >
+      <div style={{ width: "100%", height: "100%", display: "flex" }}>
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
-          ref={ref}
+          ref={videoRef}
           style={{ width: "100%", height: "100%", objectFit: "contain" }}
           preload="none"
           controls

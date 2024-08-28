@@ -1,5 +1,5 @@
 import HLS from "parse-hls";
-import { VideoEmbedClient } from "./video-embed-client";
+import { VideoEmbedClient, VideoEmbedWrapper } from "./video-embed-client";
 import { preload } from "react-dom";
 import { Suspense } from "react";
 
@@ -10,7 +10,7 @@ type VideoEmbedProps = {
 
 export async function VideoEmbed({ cid, did }: VideoEmbedProps) {
   return (
-    <Suspense>
+    <Suspense fallback={<VideoEmbedWrapper />}>
       <VideoEmbedInner cid={cid} did={did} />
     </Suspense>
   );
