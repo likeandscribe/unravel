@@ -44,7 +44,7 @@ async function VideoEmbedInner({ cid, did }: VideoEmbedProps) {
       crossOrigin: "anonymous",
     });
 
-    // TODO: Preload first segment
+    // TODO: Preload first segment. Altho maybe doesn't help because we dont know the best resolution for the client to fetch
   }
 
   return <VideoEmbedClient source={source} sessionId={sessionId} />;
