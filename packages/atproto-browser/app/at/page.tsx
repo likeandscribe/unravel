@@ -11,6 +11,7 @@ import { verifyRecords } from "@atproto/repo";
 import { ErrorBoundary } from "react-error-boundary";
 import { z } from "zod";
 import { resolveIdentity } from "@/lib/atproto-server";
+import { VideoEmbed } from "./_lib/video-embed";
 
 export default async function AtPage({
   searchParams,
@@ -659,6 +660,21 @@ function JSONObject({
           alt=""
           width={200}
         />
+        <details>
+          <summary>View blob content</summary>
+          {rawObj}
+        </details>
+      </>
+    );
+  }
+
+  if (
+    parseBlobResult.success &&
+    parseBlobResult.data.mimeType === "video/mp4"
+  ) {
+    return (
+      <>
+        <VideoEmbed cid={parseBlobResult.data.ref.$link} did={repo} />
         <details>
           <summary>View blob content</summary>
           {rawObj}

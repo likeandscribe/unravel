@@ -13,6 +13,7 @@
     "@atproto/identity": "^0.4.0",
     "@atproto/repo": "^0.4.1",
     "@atproto/syntax": "^0.3.0",
+    "hls.js": "^1.5.15",
     "next": "15.0.0-rc.0",
     "react": "19.0.0-rc-f994737d14-20240522",
     "react-dom": "19.0.0-rc-f994737d14-20240522",
