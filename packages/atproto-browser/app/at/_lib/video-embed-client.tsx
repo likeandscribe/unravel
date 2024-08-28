@@ -1,6 +1,6 @@
 "use client";
 import Hls from "hls.js";
-import { ReactNode, RefObject, useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef } from "react";
 
 export function VideoEmbedClient({
   source,
