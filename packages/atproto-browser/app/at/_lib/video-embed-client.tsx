@@ -2,7 +2,13 @@
 import Hls from "hls.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function VideoEmbedClient({ source }: { source: string }) {
+export function VideoEmbedClient({
+  source,
+  sessionId,
+}: {
+  source: string;
+  sessionId?: string;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLVideoElement>(null);
   const { play, pause } = useVideoUtils(ref);
@@ -13,7 +19,20 @@ export function VideoEmbedClient({ source }: { source: string }) {
     if (!ref.current) return;
     if (!Hls.isSupported()) throw new HLSUnsupportedError();
 
-    const hls = new Hls({ capLevelToPlayerSize: true });
+    const hls = new Hls({
+      capLevelToPlayerSize: true,
+      // progressive: true enables fetch, we can then customize the request in fetchSetup
+      // Can't use the default xhr loader because there appears to be no way to customise the URL there
+      progressive: true,
+      fetchSetup(context, initParams) {
+        const url = new URL(context.url);
+        if (sessionId) {
+          url.searchParams.set("session_id", sessionId);
+        }
+
+        return new Request(url, initParams);
+      },
+    });
     hlsRef.current = hls;
 
     hls.attachMedia(ref.current);
@@ -27,7 +46,7 @@ export function VideoEmbedClient({ source }: { source: string }) {
       hls.detachMedia();
       hls.destroy();
     };
-  }, [source]);
+  }, [source, sessionId]);
 
   return (
     <div

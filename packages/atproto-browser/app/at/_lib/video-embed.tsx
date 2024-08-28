@@ -1,4 +1,4 @@
-// import HLS from "parse-hls";
+import HLS from "parse-hls";
 import { VideoEmbedClient } from "./video-embed-client";
 import { preload } from "react-dom";
 import { Suspense } from "react";
@@ -19,25 +19,28 @@ export async function VideoEmbed({ cid, did }: VideoEmbedProps) {
 async function VideoEmbedInner({ cid, did }: VideoEmbedProps) {
   const rootUrl = `https://lumi.jazco.dev/watch/${did}/${cid}`;
   const source = `${rootUrl}/playlist.m3u8`;
-  preload(source, {
-    as: "fetch",
-    crossOrigin: "anonymous",
-  });
-  // TODO: This doesn't work currently because the session id is different on the client, so preload doesn't match the resources requested by the client
-  // const manifest = HLS.parse(
-  //   await fetch(source, {
-  //     next: {
-  //       revalidate: 600,
-  //     },
-  //   }).then((res) => res.text()),
-  // );
-  // for (const line of manifest.lines) {
-  //   if (line.type !== "URI") continue;
-  //   preload(`${rootUrl}/${line.content}`, {
-  //     as: "fetch",
-  //     crossOrigin: "anonymous",
-  //   });
-  // }
 
-  return <VideoEmbedClient source={source} />;
+  const manifest = HLS.parse(
+    await fetch(source, {
+      next: {
+        revalidate: 600,
+      },
+    }).then((res) => res.text()),
+  );
+
+  // This is quite naive, but it's good enough for now
+  const sessionId = manifest.streamRenditions[0]?.uri.split("session_id=")[1];
+
+  if (sessionId) {
+    const sourceUrl = new URL(source);
+    sourceUrl.searchParams.set("session_id", sessionId);
+    preload(sourceUrl.toString(), {
+      as: "fetch",
+      crossOrigin: "anonymous",
+    });
+
+    // TODO: Preload first segment
+  }
+
+  return <VideoEmbedClient source={source} sessionId={sessionId} />;
 }
