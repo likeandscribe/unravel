@@ -9,9 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@atproto/did": "^0.1.0",
-    "@atproto/identity": "^0.4.0",
-    "@atproto/repo": "^0.4.1",
+    "@atproto/did": "^0.1.1",
+    "@atproto/identity": "^0.4.1",
+    "@atproto/repo": "^0.4.3",
     "@atproto/syntax": "^0.3.0",
     "next": "15.0.0-rc.0",
     "react": "19.0.0-rc-f994737d14-20240522",
