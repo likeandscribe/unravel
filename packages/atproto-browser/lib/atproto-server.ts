@@ -48,20 +48,21 @@ export async function resolveIdentity(
 ): Promise<
   { success: true; identity: DidDocument } | { success: false; error: string }
 > {
+  const decoded = decodeURIComponent(didOrHandle);
   let didStr;
-  if (isValidHandle(didOrHandle)) {
-    didStr = await resolveHandle(didOrHandle).catch(() => undefined);
+  if (isValidHandle(decoded)) {
+    didStr = await resolveHandle(decoded).catch(() => undefined);
     if (!didStr) {
       return {
         success: false,
-        error: `Could not resolve did from handle: ${didOrHandle}`,
+        error: `Could not resolve did from handle: ${decoded}`,
       };
     }
   } else {
-    if (!isDid(didOrHandle)) {
-      return { success: false, error: `Invalid DID: ${didOrHandle}` };
+    if (!isDid(decoded)) {
+      return { success: false, error: `Invalid DID: ${decoded}` };
     }
-    didStr = didOrHandle;
+    didStr = decoded;
   }
 
   const didDocument = await resolveDid(didStr);

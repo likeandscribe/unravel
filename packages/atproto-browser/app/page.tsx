@@ -7,8 +7,7 @@ export const metadata: Metadata = {
   description: "Browse the atmosphere.",
 };
 
-const EXAMPLE_URI =
-  "at://did:plc:2xau7wbgdq4phuou2ypwuen7/app.bsky.feed.like/3kyutnrmg3s2r";
+const EXAMPLE_PATH = "tom-sherman.com/app.bsky.feed.like/3kyutnrmg3s2r";
 
 export default function Home() {
   return (
@@ -18,7 +17,7 @@ export default function Home() {
         <AtUriForm />
       </div>
       <p>
-        eg. <Link href={`/at?u=${EXAMPLE_URI}`}>{EXAMPLE_URI}</Link>
+        eg. <Link href={`/at/${EXAMPLE_PATH}`}>at://{EXAMPLE_PATH}</Link>
       </p>
     </main>
   );

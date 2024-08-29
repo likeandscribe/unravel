@@ -1,5 +1,6 @@
 import { listRecords } from "@/lib/atproto";
 import { resolveIdentity } from "@/lib/atproto-server";
+import { getAtUriPath } from "@/lib/util";
 import { getHandle, getPds } from "@atproto/identity";
 import { AtUri } from "@atproto/syntax";
 
@@ -47,7 +48,7 @@ export async function GET(request: Request) {
               month: "2-digit",
               day: "2-digit",
             }).format(new Date())}</pubDate>
-            <link>${ORIGIN}/at?u=${uri.toString()}</link>
+            <link>${ORIGIN}${getAtUriPath(uri)}</link>
             <guid isPermalink="false">${record.cid}</guid>
           </item>
         `.trim(),
