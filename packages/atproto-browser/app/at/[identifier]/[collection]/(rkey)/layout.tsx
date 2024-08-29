@@ -1,5 +1,4 @@
 import { resolveIdentity } from "@/lib/atproto-server";
-import type { Params } from "./[rkey]/page";
 import { getHandle, getPds } from "@atproto/identity";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -10,7 +9,7 @@ export default async function Layout({
   params,
 }: {
   children: React.ReactNode;
-  params: Params;
+  params: { identifier: string };
 }) {
   const identityResult = await resolveIdentity(params.identifier);
   if (!identityResult.success) {

@@ -4,13 +4,15 @@ import { getHandle, getKey, getPds } from "@atproto/identity";
 import { verifyRecords } from "@atproto/repo";
 import { Suspense } from "react";
 
-export type Params = {
-  identifier: string;
-  collection: string;
-  rkey: string;
-};
-
-export default async function RkeyPage({ params }: { params: Params }) {
+export default async function RkeyPage({
+  params,
+}: {
+  params: {
+    identifier: string;
+    collection: string;
+    rkey: string;
+  };
+}) {
   const identityResult = await resolveIdentity(params.identifier);
   if (!identityResult.success) {
     return <div>{identityResult.error}</div>;
