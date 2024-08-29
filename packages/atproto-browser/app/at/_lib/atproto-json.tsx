@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AtBlob } from "../../../lib/at-blob";
 import { getAtUriPath } from "@/lib/util";
 import { AtUri } from "@atproto/syntax";
+import { VideoEmbed } from "./video-embed";
 
 function naiveAtUriCheck(atUri: string) {
   if (!atUri.startsWith("at://")) {
@@ -116,6 +117,21 @@ function JSONObject({
           alt=""
           width={200}
         />
+        <details>
+          <summary>View blob content</summary>
+          {rawObj}
+        </details>
+      </>
+    );
+  }
+
+  if (
+    parseBlobResult.success &&
+    parseBlobResult.data.mimeType === "video/mp4"
+  ) {
+    return (
+      <>
+        <VideoEmbed cid={parseBlobResult.data.ref.$link} did={repo} />
         <details>
           <summary>View blob content</summary>
           {rawObj}
