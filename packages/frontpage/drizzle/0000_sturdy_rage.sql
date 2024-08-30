@@ -1,6 +1,6 @@
 CREATE TABLE `beta_users` (
 	`id` integer PRIMARY KEY NOT NULL,
-	`created_at` text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
+	`created_at` text DEFAULT (CURRENT_DATE) NOT NULL,
 	`did` text NOT NULL
 );
 --> statement-breakpoint
@@ -10,7 +10,7 @@ CREATE TABLE `comments` (
 	`cid` text NOT NULL,
 	`post_id` integer NOT NULL,
 	`body` text(10000) NOT NULL,
-	`created_at` text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
+	`created_at` text DEFAULT (CURRENT_DATE) NOT NULL,
 	`author_did` text NOT NULL,
 	`status` text DEFAULT 'live',
 	`parent_comment_id` integer,
@@ -21,7 +21,7 @@ CREATE TABLE `comments` (
 CREATE TABLE `comment_votes` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`comment_id` integer NOT NULL,
-	`created_at` text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
+	`created_at` text DEFAULT (CURRENT_DATE) NOT NULL,
 	`author_did` text NOT NULL,
 	`cid` text NOT NULL,
 	`rkey` text NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE `posts` (
 	`cid` text NOT NULL,
 	`title` text(300) NOT NULL,
 	`url` text(255) NOT NULL,
-	`created_at` text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
+	`created_at` text DEFAULT (CURRENT_DATE) NOT NULL,
 	`author_did` text NOT NULL,
 	`status` text DEFAULT 'live'
 );
@@ -46,7 +46,7 @@ CREATE TABLE `posts` (
 CREATE TABLE `post_votes` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`post_id` integer NOT NULL,
-	`created_at` text DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
+	`created_at` text DEFAULT (CURRENT_DATE) NOT NULL,
 	`author_did` text NOT NULL,
 	`cid` text NOT NULL,
 	`rkey` text NOT NULL,

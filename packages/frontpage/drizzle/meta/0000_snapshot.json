@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "39edfe3f-1625-4b39-8bad-3b3ef38b111e",
+  "id": "b13e6740-b488-43a0-a373-49d5657df2bc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "beta_users": {
@@ -20,7 +20,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(CURRENT_DATE)"
         },
         "did": {
           "name": "did",
@@ -87,7 +87,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(CURRENT_DATE)"
         },
         "author_did": {
           "name": "author_did",
@@ -183,7 +183,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(CURRENT_DATE)"
         },
         "author_did": {
           "name": "author_did",
@@ -310,7 +310,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(CURRENT_DATE)"
         },
         "author_did": {
           "name": "author_did",
@@ -372,7 +372,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(CURRENT_DATE)"
         },
         "author_did": {
           "name": "author_did",

@@ -65,12 +65,11 @@ export const getCommentsForPost = cache(async (postId: number) => {
 
   const commentRank = sql`
     CAST(COALESCE(${votes.voteCount}, 1) AS REAL) / (
-      (
-        (JULIANDAY('now') - JULIANDAY(${schema.Comment.createdAt})) * 24 + 2
-      ) * (
-        (JULIANDAY('now') - JULIANDAY(${schema.Comment.createdAt})) * 24 + 2
-      ) * SQRT((JULIANDAY('now') - JULIANDAY(${schema.Comment.createdAt})) * 24 + 2)
+    pow(
+      (JULIANDAY('now') - JULIANDAY(${schema.Comment.createdAt})) * 24 + 2,
+      1.8
     )
+  )
   `
     .mapWith(Number)
     .as("rank");

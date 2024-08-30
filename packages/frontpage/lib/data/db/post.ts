@@ -42,15 +42,14 @@ const commentCountSubQuery = db
 export const getFrontpagePosts = cache(async () => {
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
   // We should closely monitor this and consider alternatives if it gets slow over time
-  const rank = sql`
-    CAST(COALESCE(${votesSubQuery.voteCount}, 1) AS REAL) / (
-      (
-        (JULIANDAY('now') - JULIANDAY(${schema.Post.createdAt})) * 24 + 2
-      ) * (
-        (JULIANDAY('now') - JULIANDAY(${schema.Post.createdAt})) * 24 + 2
-      ) * SQRT((JULIANDAY('now') - JULIANDAY(${schema.Post.createdAt})) * 24 + 2)
+  const rank = sql<number>`
+  CAST(COALESCE(${votesSubQuery.voteCount}, 1) AS REAL) / (
+    pow(
+      (JULIANDAY('now') - JULIANDAY(${schema.Post.createdAt})) * 24 + 2,
+      1.8
     )
-  `.as("rank");
+  )
+`.as("rank");
 
   const userHasVoted = await buildUserHasVotedQuery();
 
