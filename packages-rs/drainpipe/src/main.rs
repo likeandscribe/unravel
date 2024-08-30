@@ -209,7 +209,9 @@ async fn main() {
                         match metrics_monitor.instrument(process(message, &mut ctx)).await {
                             Ok(seq) => {
                                 update_seq(&mut ctx.db_connection, seq)
-                                    .map_err(|_| eprintln!("Failed to update sequence"))
+                                    .map_err(|e| {
+                                        eprint!("Failed to update sequence: {e:?}");
+                                    })
                                     .ok();
                             }
                             Err(error) => {
