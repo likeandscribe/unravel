@@ -179,9 +179,8 @@ async fn main() {
         });
     }
 
-    let cursor = db::get_seq(&mut ctx.db_connection).expect("Failed to get sequence");
-
     loop {
+        let cursor = db::get_seq(&mut ctx.db_connection).expect("Failed to get sequence");
         let connect_result = {
             let mut ws_request = format!(
                 "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
