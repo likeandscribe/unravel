@@ -197,7 +197,7 @@ export async function unauthed_createPost({
       authorDid,
       title: post.title,
       url: post.url,
-      createdAt: new Date(post.createdAt).toISOString(),
+      createdAt: new Date(post.createdAt),
     });
 
     await tx.insert(schema.ConsumedOffset).values({ offset });

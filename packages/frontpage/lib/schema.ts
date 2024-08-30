@@ -20,6 +20,14 @@ const did = customType<{ data: DID }>({
   },
 });
 
+const dateIsoText = customType<{ data: Date; driverData: string }>({
+  dataType() {
+    return "text";
+  },
+  toDriver: (value) => value.toISOString(),
+  fromDriver: (value) => new Date(value),
+});
+
 const createStatusColumn = (col: string) =>
   text(col, { enum: ["live", "deleted", "moderator_hidden"] }).default("live");
 
@@ -35,7 +43,7 @@ export const Post = sqliteTable(
     url: text("url", {
       length: MAX_POST_URL_LENGTH,
     }).notNull(),
-    createdAt: text("created_at")
+    createdAt: dateIsoText("created_at")
       .default(sql`(CURRENT_DATE)`)
       .notNull(),
     authorDid: did("author_did").notNull(),
@@ -54,7 +62,7 @@ export const PostVote = sqliteTable(
     postId: integer("post_id")
       .notNull()
       .references(() => Post.id),
-    createdAt: text("created_at")
+    createdAt: dateIsoText("created_at")
       .default(sql`(CURRENT_DATE)`)
       .notNull(),
     authorDid: did("author_did").notNull(),
@@ -80,7 +88,7 @@ export const Comment = sqliteTable(
     body: text("body", {
       length: MAX_COMMENT_LENGTH,
     }).notNull(),
-    createdAt: text("created_at")
+    createdAt: dateIsoText("created_at")
       .default(sql`(CURRENT_DATE)`)
       .notNull(),
     authorDid: did("author_did").notNull(),
@@ -105,7 +113,7 @@ export const CommentVote = sqliteTable(
     commentId: integer("comment_id")
       .notNull()
       .references(() => Comment.id),
-    createdAt: text("created_at")
+    createdAt: dateIsoText("created_at")
       .default(sql`(CURRENT_DATE)`)
       .notNull(),
     authorDid: did("author_did").notNull(),
@@ -121,7 +129,7 @@ export const CommentVote = sqliteTable(
 
 export const BetaUser = sqliteTable("beta_users", {
   id: integer("id").primaryKey(),
-  createdAt: text("created_at")
+  createdAt: dateIsoText("created_at")
     .default(sql`(CURRENT_DATE)`)
     .notNull(),
   did: did("did").notNull().unique(),

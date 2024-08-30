@@ -25,7 +25,7 @@ export async function generateMetadata({
       title: post.title,
       description: "Discuss this post on Frontpage.",
       type: "article",
-      publishedTime: post.createdAt,
+      publishedTime: post.createdAt.toISOString(),
       authors: [`@${handle}`],
       url: `https://frontpage.fyi${path}`,
       images: [
