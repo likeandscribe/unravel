@@ -1,6 +1,6 @@
 # Drainpipe
 
-Drainpipe is a atproto [firehose](https://docs.bsky.app/docs/advanced-guides/firehose) consumer written in rust. It knows how to reliably* take messages from the firehose, filter them, and forward them over HTTPs to a webhook receiver some place else on the internet.
+Drainpipe is a atproto [firehose](https://docs.bsky.app/docs/advanced-guides/firehose) consumer written in rust. It knows how to reliably<sup>*</sup> take messages from the firehose, filter them, and forward them over HTTPs to a webhook receiver some place else on the internet.
 
 <sup>*totally subjective opinion.</sup>
 
