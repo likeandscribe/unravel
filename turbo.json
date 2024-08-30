@@ -6,7 +6,9 @@
       "env": [
         "DRAINPIPE_CONSUMER_SECRET",
         "POSTGRES_URL",
-        "DISCORD_WEBHOOK_URL"
+        "DISCORD_WEBHOOK_URL",
+        "TURSO_CONNECTION_URL",
+        "TURSO_AUTH_TOKEN"
       ]
     },
     "type-check": {},

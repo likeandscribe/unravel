@@ -1,21 +1,24 @@
-import { defineConfig } from "drizzle-kit";
 import { loadEnvConfig } from "@next/env";
+import { defineConfig } from "drizzle-kit";
 
-const projectDir = process.cwd();
-loadEnvConfig(projectDir);
+// Load environment variables
+loadEnvConfig(process.cwd());
 
-const POSTGRES_URL = process.env.POSTGRES_URL;
-if (!POSTGRES_URL) {
-  throw new Error("POSTGRES_URL is not set");
+const URL = process.env.TURSO_CONNECTION_URL!;
+const AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN!;
+
+if (!URL || !AUTH_TOKEN) {
+  throw new Error("TURSO_CONNECTION_URL and TURSO_AUTH_TOKEN must be set");
 }
 
 export default defineConfig({
-  dialect: "postgresql",
   schema: "./lib/schema.ts",
   out: "./drizzle",
+  dialect: "sqlite",
+  driver: "turso",
   strict: true,
-  verbose: true,
   dbCredentials: {
-    url: POSTGRES_URL,
+    url: URL,
+    authToken: AUTH_TOKEN,
   },
 });

@@ -57,7 +57,12 @@ export const Commit = z.object({
   repo: z.string().refine(isDid),
   seq: z.string().transform((x, ctx) => {
     try {
-      return BigInt(x);
+      const n = parseInt(x);
+      if (isNaN(n)) {
+        throw new Error("Invalid BigInt");
+      }
+
+      return parseInt(x);
     } catch (_e) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

@@ -1,6 +1,6 @@
 import "server-only";
-import { cache } from "react";
 
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { eq, sql, count, desc, and } from "drizzle-orm";
 import * as schema from "@/lib/schema";
@@ -42,18 +42,14 @@ const commentCountSubQuery = db
 export const getFrontpagePosts = cache(async () => {
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
   // We should closely monitor this and consider alternatives if it gets slow over time
-  const rank = sql`
-    coalesce(${votesSubQuery.voteCount}, 1) / (
-    -- Age
-      (
-        EXTRACT(
-          EPOCH
-          FROM
-            (CURRENT_TIMESTAMP - ${schema.Post.createdAt})
-        ) / 3600
-      ) + 2
-    ) ^ 1.8
-  `.as("rank");
+  const rank = sql<number>`
+  CAST(COALESCE(${votesSubQuery.voteCount}, 1) AS REAL) / (
+    pow(
+      (JULIANDAY('now') - JULIANDAY(${schema.Post.createdAt})) * 24 + 2,
+      1.8
+    )
+  )
+`.as("rank");
 
   const userHasVoted = await buildUserHasVotedQuery();
 
@@ -183,7 +179,7 @@ type CreatePostInput = {
   authorDid: DID;
   rkey: string;
   cid: string;
-  offset: bigint;
+  offset: number;
 };
 
 export async function unauthed_createPost({
@@ -248,7 +244,7 @@ export async function unauthed_createPost({
 
 type DeletePostInput = {
   rkey: string;
-  offset: bigint;
+  offset: number;
 };
 
 export async function unauthed_deletePost({ rkey, offset }: DeletePostInput) {
