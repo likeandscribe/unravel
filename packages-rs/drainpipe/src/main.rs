@@ -11,7 +11,7 @@ use diesel::{
 use futures::{StreamExt as _, TryFutureExt};
 use serde::Serialize;
 use std::{path::PathBuf, thread, time::Duration};
-use tokio_tungstenite::tungstenite::protocol::Message;
+use tokio_tungstenite::tungstenite::{client::IntoClientRequest, protocol::Message};
 
 mod db;
 mod firehose;
@@ -182,11 +182,26 @@ async fn main() {
     let cursor = db::get_seq(&mut ctx.db_connection).expect("Failed to get sequence");
 
     loop {
-        let connect_result = tokio_tungstenite::connect_async(format!(
-            "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
-            cursor
-        ))
-        .await;
+        let connect_result = {
+            let mut ws_request = format!(
+                "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
+                cursor
+            )
+            .into_client_request()
+            .unwrap();
+            ws_request.headers_mut().insert(
+                "User-Agent",
+                reqwest::header::HeaderValue::from_static(
+                    "drainpipe/@frontpage.fyi (@tom-sherman.com)",
+                ),
+            );
+
+            tokio_tungstenite::connect_async(format!(
+                "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
+                cursor
+            ))
+            .await
+        };
         match connect_result {
             Ok((mut socket, _response)) => loop {
                 match socket.next().await {
