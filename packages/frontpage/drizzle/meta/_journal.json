@@ -1,96 +1,12 @@
 {
   "version": "7",
-  "dialect": "postgresql",
+  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1718288572804,
-      "tag": "0000_numerous_imperial_guard",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1718312518825,
-      "tag": "0001_nice_magma",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1718316283733,
-      "tag": "0002_dizzy_juggernaut",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1718358344831,
-      "tag": "0003_nervous_violations",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1718358380881,
-      "tag": "0004_demonic_the_spike",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1718645631396,
-      "tag": "0005_colorful_turbo",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1718656372587,
-      "tag": "0006_short_adam_destine",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1718662931500,
-      "tag": "0007_smiling_betty_ross",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1718922181653,
-      "tag": "0008_oval_master_mold",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1719050407535,
-      "tag": "0009_lying_zeigeist",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1719351325903,
-      "tag": "0010_regular_roxanne_simpson",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1719617343757,
-      "tag": "0011_wooden_mattie_franklin",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "7",
-      "when": 1719674721438,
-      "tag": "0012_nebulous_vin_gonzales",
+      "version": "6",
+      "when": 1725040407942,
+      "tag": "0000_sturdy_rage",
       "breakpoints": true
     }
   ]
