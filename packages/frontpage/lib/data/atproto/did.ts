@@ -27,9 +27,34 @@ const getAtprotoDidFromDns = unstable_cache(
     });
     // records is [ [ "did=xxx" ] ]
     // We're assuming that you only have one txt record or that the first one is the one we want
-    return (records[0]?.join().split("did=")[1] ?? null) as DID | null;
+    const val = records[0]?.join().split("did=")[1];
+    return val ? parseDid(val) : null;
   },
-  ["dns", "resolveTxt"],
+  ["did", "dns"],
+  {
+    revalidate: 60 * 60 * 24, // 24 hours
+  },
+);
+
+const getAtprotoFromHttps = unstable_cache(
+  async (handle: string) => {
+    let res;
+    const timeoutSignal = AbortSignal.timeout(1500);
+    try {
+      res = await fetch(`https://${handle}/.well-known/atproto-did`, {
+        signal: timeoutSignal,
+      });
+    } catch (_e) {
+      // We're caching failures here, we should at some point invalidate the cache by listening to handle changes on the network
+      return null;
+    }
+
+    if (!res.ok) {
+      return null;
+    }
+    return parseDid(await res.text());
+  },
+  ["did", "https"],
   {
     revalidate: 60 * 60 * 24, // 24 hours
   },
@@ -40,25 +65,16 @@ export const getVerifiedDid = cache(async (handle: string) => {
     getAtprotoDidFromDns(handle).catch((_) => {
       return null;
     }),
-    fetch(`https://${handle}/.well-known/atproto-did`, {
-      next: {
-        revalidate: 60 * 60 * 24, // 24 hours
-      },
-    })
-      .then((res) => {
-        if (!res.ok) {
-          return null;
-        }
-        return res.text();
-      })
-      .catch((_) => {
-        return null;
-      }),
+    getAtprotoFromHttps(handle).catch((_) => {
+      return null;
+    }),
   ]);
 
   if (dnsDid && httpDid && dnsDid !== httpDid) {
     return null;
   }
+
+  // TODO: Check did doc includes the handle
 
   return dnsDid ?? (httpDid ? parseDid(httpDid) : null);
 });
