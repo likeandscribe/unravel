@@ -31,6 +31,8 @@ import { db } from "./db";
 import * as schema from "./schema";
 import { eq } from "drizzle-orm";
 
+const USER_AGENT = "appview/@frontpage.fyi (@tom-sherman.com)";
+
 export const getPrivateJwk = cache(() =>
   importJWK<KeyObject>(JSON.parse(process.env.PRIVATE_JWK!)),
 );
@@ -105,7 +107,7 @@ export async function signIn(handle: string) {
     };
   }
 
-  const meta = await getOauthResourceMetadata(did);
+  const meta = await oauthProtectedMetadataRequest(did);
   if ("error" in meta) {
     return meta;
   }
@@ -119,7 +121,9 @@ export async function signIn(handle: string) {
 
   const authServer = await processDiscoveryResponse(
     new URL(authServerUrl),
-    await discoveryRequest(new URL(authServerUrl)),
+    await discoveryRequest(new URL(authServerUrl), {
+      algorithm: "oauth2",
+    }),
   );
 
   // Check this early, we'll need it later
@@ -228,7 +232,17 @@ export async function signIn(handle: string) {
   redirect(redirectUrl.toString());
 }
 
-async function getOauthResourceMetadata(did: DID) {
+function oauthDiscoveryRequest(url: URL) {
+  return discoveryRequest(url, {
+    algorithm: "oauth2",
+    headers: {
+      "User-Agent": USER_AGENT,
+    },
+  });
+}
+
+// TODO: Split this out to match the oauth4webapi pattern of processProtectedMetadataResponse(oauthProtectedMetadataRequest())
+async function oauthProtectedMetadataRequest(did: DID) {
   const pds = await getPdsUrl(did);
   if (!pds) {
     return {
@@ -236,7 +250,11 @@ async function getOauthResourceMetadata(did: DID) {
     };
   }
 
-  const response = await fetch(`${pds}/.well-known/oauth-protected-resource`);
+  const response = await fetch(`${pds}/.well-known/oauth-protected-resource`, {
+    headers: {
+      "User-Agent": USER_AGENT,
+    },
+  });
   if (response.status !== 200) {
     return {
       error: "FAILED_TO_FETCH_METADATA" as const,
@@ -308,7 +326,7 @@ export const handlers = {
 
       const authServer = await processDiscoveryResponse(
         new URL(iss),
-        await discoveryRequest(new URL(iss)),
+        await oauthDiscoveryRequest(new URL(iss)),
       );
 
       const client = getClientMetadata();
@@ -422,7 +440,7 @@ export async function signOut() {
   cookies().delete(AUTH_COOKIE_NAME);
   const authServer = await processDiscoveryResponse(
     new URL(session.user.iss),
-    await discoveryRequest(new URL(session.user.iss)),
+    await oauthDiscoveryRequest(new URL(session.user.iss)),
   );
 
   await revocationRequest(
