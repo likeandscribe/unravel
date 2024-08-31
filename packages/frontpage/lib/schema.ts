@@ -139,7 +139,7 @@ export const ConsumedOffset = sqliteTable("consumed_offsets", {
   offset: integer("offset").primaryKey(),
 });
 
-export const OauthAuthRequest = pgTable("oauth_auth_requests", {
+export const OauthAuthRequest = sqliteTable("oauth_auth_requests", {
   state: text("state").notNull().unique(),
   iss: text("iss").notNull(),
   did: did("did").notNull(),
@@ -148,10 +148,12 @@ export const OauthAuthRequest = pgTable("oauth_auth_requests", {
   pkceVerifier: text("pkce_verifier").notNull(),
   dpopPrivateJwk: text("dpop_private_jwk").notNull(),
   dpopPublicJwk: text("dpop_public_jwk").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(CURRENT_DATE)`),
 });
 
-export const OauthSession = pgTable("oauth_sessions", {
+export const OauthSession = sqliteTable("oauth_sessions", {
   did: did("did").notNull().primaryKey(),
   username: text("username").notNull(),
   iss: text("iss").notNull(),
