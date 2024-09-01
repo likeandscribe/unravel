@@ -1,0 +1,21 @@
+{
+  "name": "@repo/atproto-identity-next",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@atproto/did": "catalog:",
+    "@atproto/identity": "catalog:",
+    "@atproto/syntax": "catalog:",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "^18.3.5",
+    "next": "15.0.0-rc.0",
+    "react": "19.0.0-rc-e56f4ae3-20240830"
+  },
+  "peerDependencies": {
+    "next": "^15.0.0"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "extends": "@repo/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "types": ["@types/react/canary"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}

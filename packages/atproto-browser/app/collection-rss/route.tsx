@@ -1,5 +1,5 @@
 import { listRecords } from "@/lib/atproto";
-import { resolveIdentity } from "@/lib/atproto-server";
+import { resolveIdentity } from "@repo/atproto-identity-next";
 import { getAtUriPath } from "@/lib/util";
 import { getHandle, getPds } from "@atproto/identity";
 import { AtUri } from "@atproto/syntax";

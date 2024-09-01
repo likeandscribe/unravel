@@ -1,2 +1,7 @@
 packages:
   - "packages/*"
+
+catalog:
+  "@atproto/did": ^0.1.1
+  "@atproto/identity": ^0.4.1
+  "@atproto/syntax": ^0.3.0

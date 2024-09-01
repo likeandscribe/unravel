@@ -1,4 +1,4 @@
-import { resolveIdentity } from "@/lib/atproto-server";
+import { resolveIdentity } from "@repo/atproto-identity-next";
 import { getHandle, getPds } from "@atproto/identity";
 import Link from "next/link";
 import { Suspense } from "react";

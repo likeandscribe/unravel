@@ -4,7 +4,7 @@ import { Fragment, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { z } from "zod";
 import { DidSummary } from "../_lib/did-components";
-import { resolveIdentity } from "@/lib/atproto-server";
+import { resolveIdentity } from "@repo/atproto-identity-next";
 import { getHandle } from "@atproto/identity";
 import { AtUri } from "@atproto/syntax";
 

@@ -1,5 +1,5 @@
 import { JSONType, JSONValue } from "@/app/at/_lib/atproto-json";
-import { resolveIdentity } from "@/lib/atproto-server";
+import { resolveIdentity } from "@repo/atproto-identity-next";
 import { getHandle, getKey, getPds } from "@atproto/identity";
 import { verifyRecords } from "@atproto/repo";
 import { Suspense } from "react";

@@ -1,6 +1,6 @@
 import { ErrorBoundary } from "react-error-boundary";
 import { JSONType, JSONValue } from "./atproto-json";
-import { resolveIdentity } from "@/lib/atproto-server";
+import { resolveIdentity } from "@repo/atproto-identity-next";
 import { DidCollections } from "./collection-server";
 
 export async function DidSummary({ did }: { did: string }) {
