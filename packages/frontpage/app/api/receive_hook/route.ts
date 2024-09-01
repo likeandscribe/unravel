@@ -2,12 +2,12 @@ import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { atprotoGetRecord } from "@/lib/data/atproto/record";
-import { getPdsUrl } from "@/lib/data/user";
 import { Commit } from "@/lib/data/atproto/event";
 import * as atprotoPost from "@/lib/data/atproto/post";
 import * as dbPost from "@/lib/data/db/post";
 import { CommentCollection, getComment } from "@/lib/data/atproto/comment";
 import { VoteRecord } from "@/lib/data/atproto/vote";
+import { getPdsUrl } from "@/lib/data/atproto/did";
 
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
