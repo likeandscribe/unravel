@@ -17,7 +17,7 @@ export default async function RkeyPage({
   if (!identityResult.success) {
     return <div>{identityResult.error}</div>;
   }
-  const didDocument = identityResult.identity;
+  const didDocument = identityResult.didDocument;
   const handle = getHandle(didDocument);
   if (!handle) {
     return <div>No handle found for DID: {didDocument.id}</div>;
@@ -86,7 +86,7 @@ async function RecordVerificationBadge({
   if (!identityResult.success) {
     throw new Error(identityResult.error);
   }
-  const didDoc = identityResult.identity;
+  const didDoc = identityResult.didDocument;
   const pds = getPds(didDoc);
   if (!pds) {
     return <span title="Invalid record (no pds)">❌</span>;

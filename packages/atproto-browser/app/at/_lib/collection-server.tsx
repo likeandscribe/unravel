@@ -2,12 +2,12 @@ import { resolveIdentity } from "@/lib/atproto-server";
 import { getPds } from "@atproto/identity";
 import Link from "next/link";
 
-export async function DidCollections({ did }: { did: string }) {
-  const identityResult = await resolveIdentity(did);
+export async function DidCollections({ identifier }: { identifier: string }) {
+  const identityResult = await resolveIdentity(identifier);
   if (!identityResult.success) {
-    throw new Error(`Could not resolve DID: ${did}`);
+    throw new Error(`Could not resolve identity: ${identifier}`);
   }
-  const didDocument = identityResult.identity;
+  const didDocument = identityResult.didDocument;
   const pds = getPds(didDocument);
   if (!pds) {
     throw new Error(`No PDS found for DID: ${didDocument.id}`);
@@ -40,7 +40,7 @@ export async function DidCollections({ did }: { did: string }) {
         collections.map((nsid) => {
           return (
             <li key={nsid}>
-              <Link href={`/at/${did}/${nsid}`}>{nsid}</Link>
+              <Link href={`/at/${identifier}/${nsid}`}>{nsid}</Link>
             </li>
           );
         })
