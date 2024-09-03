@@ -9,11 +9,6 @@ const [privateJwk, publicJwk] = await Promise.all([
   exportJWK(keyPair.publicKey),
 ]);
 
-const kid = `frontpage-${new Date().toISOString()}`;
-
-privateJwk.kid = kid;
-publicJwk.kid = kid;
-
 console.log(
   `PRIVATE_JWK='${JSON.stringify(privateJwk)}'\nPUBLIC_JWK='${JSON.stringify(publicJwk)}'`,
 );

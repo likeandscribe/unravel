@@ -1,5 +1,11 @@
 import "server-only";
-import { exportJWK, importJWK, SignJWT, jwtVerify } from "jose";
+import {
+  exportJWK,
+  importJWK,
+  SignJWT,
+  jwtVerify,
+  calculateJwkThumbprint,
+} from "jose";
 import { cache } from "react";
 import { DID, getDidFromHandleOrDid, parseDid } from "./data/atproto/did";
 import { getPdsUrl } from "./data/user";
@@ -10,7 +16,6 @@ import {
   generateRandomState,
   calculatePKCECodeChallenge,
   generateRandomCodeVerifier,
-  generateRandomNonce,
   generateKeyPair,
   authorizationCodeGrantRequest,
   validateAuthResponse,
@@ -66,7 +71,8 @@ export const getClientMetadata = cache(() => {
     subject_type: "public",
     grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code"], // TODO: "code id_token"?
-    scope: "openid profile offline_access",
+    // TODO: Tweak these?
+    scope: "atproto transition:generic",
     client_name: "Frontpage",
     token_endpoint_auth_method: "none",
     redirect_uris: [`${appUrl}/oauth/callback`] as const,
@@ -82,15 +88,11 @@ export const getOauthClientOptions = () =>
   }) satisfies OauthClient;
 
 async function getClientPrivateKey() {
-  const jwk = await getPublicJwk().then(exportJWK);
-  const kid = jwk.kid;
-  if (!kid) {
-    // TODO: Fix this somehow? Maybe use webcrypto everywhere?
-    console.warn("Missing kid, fix this!");
-  }
+  const jwk = await exportJWK(await getPrivateJwk());
+  const kid = await calculateJwkThumbprint(jwk);
   const key = await crypto.subtle.importKey(
     "jwk",
-    await exportJWK(await getPrivateJwk()),
+    jwk,
     { name: "ECDSA", namedCurve: "P-256" },
     true,
     ["sign"],
@@ -136,7 +138,6 @@ export async function signIn(handle: string) {
 
   const client = getClientMetadata();
 
-  const nonce = generateRandomNonce();
   const state = generateRandomState();
   const pkceVerifier = generateRandomCodeVerifier();
 
@@ -155,10 +156,8 @@ export async function signIn(handle: string) {
         // TODO: Do we need this? It's included in the oauth client options
         client_id: client.client_id,
         state,
-        nonce,
         redirect_uri: client.redirect_uris[0],
-        // TODO: Tweak these?
-        scope: "openid profile offline_access",
+        scope: client.scope,
         login_hint: handle,
       },
       {
@@ -285,9 +284,16 @@ export const handlers = {
       return Response.json(getClientMetadata());
     }
 
+    const key = await exportJWK(await getPublicJwk());
+
     if (url.pathname.endsWith("/jwks.json")) {
       return Response.json({
-        keys: [await exportJWK(await getPublicJwk())],
+        keys: [
+          {
+            ...key,
+            kid: await calculateJwkThumbprint(key),
+          },
+        ],
       });
     }
 
