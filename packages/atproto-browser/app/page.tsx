@@ -23,7 +23,7 @@ export default function Home() {
       <footer>
         <p>
           Developed by{" "}
-          <Link href="/at/tom-sherman.com//app.bsky.actor.profile/self">
+          <Link href="/at/tom-sherman.com/app.bsky.actor.profile/self">
             @tom-sherman.com
           </Link>
           .{" "}
