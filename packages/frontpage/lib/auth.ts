@@ -171,33 +171,45 @@ export async function signIn(handle: string) {
     );
   };
 
-  // Make the PAR request without dpop nonce
-  const parDpopNonceDiscoveryResponse = await makeParRequest();
-  // We expect a 400 response here because we didn't include a DPoP nonce
-  if (parDpopNonceDiscoveryResponse.status !== 400) {
-    // TODO: This sometimes actually returns a 201, it shouldn't. I've reached out to the bsky team about this
-    console.error(
-      `PAR error:  received ${parDpopNonceDiscoveryResponse.status} status`,
-      await parDpopNonceDiscoveryResponse.text(),
-    );
-    return {
-      error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
-    };
-  }
+  // Try PAR request without DPoP nonce first
+  // oauth4webapi has an in-memory cache that may be used here
+  let parResponse = await makeParRequest();
 
-  const dpopNonce = parDpopNonceDiscoveryResponse.headers.get("DPoP-Nonce");
-  if (!dpopNonce) {
-    return {
-      error: "MISSING_PAR_DPOP_NONCE",
-    };
-  }
+  if (!parResponse.ok) {
+    // TODO: Check for this error when the header is deployed by bsky team
+    // if (
+    //   // Expect a use_dpop_nonce error
+    //   !parseWwwAuthenticateChallenges(parResponse)?.some(
+    //     (challenge) => challenge.parameters.error === "use_dpop_nonce",
+    //   )
+    // ) {
+    //   return {
+    //     error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
+    //   };
+    // }
 
-  const parResponse = await makeParRequest(dpopNonce);
+    const dpopNonce = parResponse.headers.get("DPoP-Nonce");
+    if (!dpopNonce) {
+      return {
+        error: "MISSING_PAR_DPOP_NONCE",
+      };
+    }
+    // Try again with new nonce
+    parResponse = await makeParRequest(dpopNonce);
+  }
 
   if (!parResponse.ok) {
     console.error("PAR error: ", await parResponse.text());
     return {
       error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
+    };
+  }
+
+  const dpopNonce = parResponse.headers.get("DPoP-Nonce");
+
+  if (!dpopNonce) {
+    return {
+      error: "MISSING_PAR_DPOP_NONCE",
     };
   }
 
