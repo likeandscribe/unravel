@@ -231,6 +231,8 @@ export async function signIn(handle: string) {
     dpopPrivateJwk: JSON.stringify(
       await crypto.subtle.exportKey("jwk", dpopKeyPair.privateKey),
     ),
+    expiresAt: new Date(Date.now() + 1000 * 60),
+    createdAt: new Date(),
     dpopPublicJwk: JSON.stringify(
       await crypto.subtle.exportKey("jwk", dpopKeyPair.publicKey),
     ),
@@ -402,6 +404,10 @@ export const handlers = {
         throw new Error("Missing refresh");
       }
 
+      if (!tokensResult.data.expires_in) {
+        throw new Error("Missing expires");
+      }
+
       await db
         .insert(schema.OauthSession)
         .values({
@@ -410,6 +416,8 @@ export const handlers = {
           iss: row.iss,
           accessToken: tokensResult.data.access_token,
           refreshToken: tokensResult.data.refresh_token,
+          expiresAt: new Date(Date.now() + tokensResult.data.expires_in * 1000),
+          createdAt: new Date(),
           dpopNonce,
           dpopPrivateJwk: row.dpopPrivateJwk,
           dpopPublicJwk: row.dpopPublicJwk,

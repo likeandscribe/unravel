@@ -138,9 +138,8 @@ export const OauthAuthRequest = sqliteTable("oauth_auth_requests", {
   pkceVerifier: text("pkce_verifier").notNull(),
   dpopPrivateJwk: text("dpop_private_jwk").notNull(),
   dpopPublicJwk: text("dpop_public_jwk").notNull(),
-  createdAt: dateIsoText("created_at")
-    .notNull()
-    .default(sql`(CURRENT_DATE)`),
+  expiresAt: dateIsoText("expires_at").notNull(),
+  createdAt: dateIsoText("created_at").notNull(),
 });
 
 export const OauthSession = sqliteTable("oauth_sessions", {
@@ -152,4 +151,6 @@ export const OauthSession = sqliteTable("oauth_sessions", {
   dpopNonce: text("dpop_nonce").notNull(),
   dpopPrivateJwk: text("dpop_private_jwk").notNull(),
   dpopPublicJwk: text("dpop_public_jwk").notNull(),
+  expiresAt: dateIsoText("expires_at").notNull(),
+  createdAt: dateIsoText("created_at").notNull(),
 });
