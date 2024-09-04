@@ -542,7 +542,6 @@ export async function fetchAuthenticatedAtproto(
   input: RequestInfo,
   init?: RequestInit,
 ) {
-  const request = new Request(input, init);
   const session = await getSession();
 
   if (!session) {
@@ -554,8 +553,10 @@ export async function fetchAuthenticatedAtproto(
     publicJwk: session.user.dpopPublicJwk,
   });
 
-  const makeRequest = (dpopNonce: string) =>
-    protectedResourceRequest(
+  const makeRequest = (dpopNonce: string) => {
+    // It's important to reconstruct the request because we can't send the same body readable stream twice
+    const request = new Request(input, init);
+    return protectedResourceRequest(
       session.user.accessToken,
       request.method,
       new URL(request.url),
@@ -569,6 +570,7 @@ export async function fetchAuthenticatedAtproto(
         },
       },
     );
+  };
 
   let response = await makeRequest(session.user.dpopNonce);
 
