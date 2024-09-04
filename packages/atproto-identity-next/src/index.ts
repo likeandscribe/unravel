@@ -18,24 +18,39 @@ function timeoutWith<T>(
 }
 
 const didResolver = new DidResolver({});
-const resolveDid = nextCache(
-  // TODO: Cache the timeout instead of throwing
-  (did: string) => timeoutWith(1000, didResolver.resolve(did), "DID timeout"),
-  ["atproto-identity-next", "resolveDid"],
-  {
-    revalidate: 10,
-  },
-);
+const makeResolveDidTag = (did: string) => [
+  "atproto-identity-next",
+  "resolveDid",
+  did,
+];
+function resolveDid(did: string) {
+  return nextCache(
+    // TODO: Cache the timeout instead of throwing
+    () => timeoutWith(1000, didResolver.resolve(did), "DID timeout"),
+    makeResolveDidTag(did),
+    {
+      revalidate: 10,
+      tags: makeResolveDidTag(did),
+    },
+  )();
+}
 
 const handleResolver = new HandleResolver({});
-const resolveHandle = nextCache(
-  (handle: string) =>
-    timeoutWith(3000, handleResolver.resolve(handle), "Handle timeout"),
-  ["atproto-identity-next", "resolveHandle"],
-  {
-    revalidate: 10,
-  },
-);
+const makeResolveHandleTag = (handle: string) => [
+  "atproto-identity-next",
+  "resolveHandle",
+  handle,
+];
+function resolveHandle(handle: string) {
+  return nextCache(
+    () => timeoutWith(3000, handleResolver.resolve(handle), "Handle timeout"),
+    makeResolveHandleTag(handle),
+    {
+      revalidate: 10,
+      tags: makeResolveHandleTag(handle),
+    },
+  )();
+}
 
 export const resolveIdentity = cache(
   async (
