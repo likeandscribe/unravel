@@ -91,7 +91,7 @@ export async function atprotoCreateRecord({
   });
 
   if (!response.ok) {
-    throw new DataLayerError("Failed to create post", { cause: response });
+    throw new DataLayerError("Failed to create record", { cause: response });
   }
 
   return CreateRecordResponse.parse(await response.json());
@@ -123,7 +123,7 @@ export async function atprotoDeleteRecord({
   });
 
   if (!response.ok) {
-    throw new DataLayerError("Failed to create post", { cause: response });
+    throw new DataLayerError("Failed to delete record", { cause: response });
   }
 }
 

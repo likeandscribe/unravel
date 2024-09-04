@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "4585c3cd-d882-4e73-b74b-f82262356bc4",
+  "id": "dcb0c712-e046-420d-9fc3-bdcc9f58fa45",
   "prevId": "b13e6740-b488-43a0-a373-49d5657df2bc",
   "tables": {
     "beta_users": {
@@ -322,13 +322,19 @@
           "notNull": true,
           "autoincrement": false
         },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(CURRENT_DATE)"
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -347,10 +353,17 @@
     "oauth_sessions": {
       "name": "oauth_sessions",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
         "did": {
           "name": "did",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -398,6 +411,20 @@
         },
         "dpop_public_jwk": {
           "name": "dpop_public_jwk",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,

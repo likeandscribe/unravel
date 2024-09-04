@@ -21,6 +21,7 @@ import {
   validateAuthResponse,
   protectedResourceRequest,
   revocationRequest,
+  parseWwwAuthenticateChallenges,
   Client as OauthClient,
 } from "oauth4webapi";
 import { cookies, headers } from "next/headers";
@@ -408,30 +409,18 @@ export const handlers = {
         throw new Error("Missing expires");
       }
 
-      await db
-        .insert(schema.OauthSession)
-        .values({
-          did: row.did,
-          username: row.username,
-          iss: row.iss,
-          accessToken: tokensResult.data.access_token,
-          refreshToken: tokensResult.data.refresh_token,
-          expiresAt: new Date(Date.now() + tokensResult.data.expires_in * 1000),
-          createdAt: new Date(),
-          dpopNonce,
-          dpopPrivateJwk: row.dpopPrivateJwk,
-          dpopPublicJwk: row.dpopPublicJwk,
-        })
-        .onConflictDoUpdate({
-          target: schema.OauthSession.did,
-          set: {
-            accessToken: tokensResult.data.access_token,
-            refreshToken: tokensResult.data.refresh_token,
-            dpopNonce,
-            dpopPrivateJwk: row.dpopPrivateJwk,
-            dpopPublicJwk: row.dpopPublicJwk,
-          },
-        });
+      await db.insert(schema.OauthSession).values({
+        did: row.did,
+        username: row.username,
+        iss: row.iss,
+        accessToken: tokensResult.data.access_token,
+        refreshToken: tokensResult.data.refresh_token,
+        expiresAt: new Date(Date.now() + tokensResult.data.expires_in * 1000),
+        createdAt: new Date(),
+        dpopNonce,
+        dpopPrivateJwk: row.dpopPrivateJwk,
+        dpopPublicJwk: row.dpopPublicJwk,
+      });
 
       const userToken = await new SignJWT()
         .setSubject(row.did)
@@ -565,26 +554,54 @@ export async function fetchAuthenticatedAtproto(
     publicJwk: session.user.dpopPublicJwk,
   });
 
-  // TODO: Handle dpop retry (or is this done for us already?)
-  const response = await protectedResourceRequest(
-    session.user.accessToken,
-    request.method,
-    new URL(request.url),
-    request.headers,
-    request.body,
-    {
-      DPoP: {
-        privateKey: privateDpopKey,
-        publicKey: publicDpopKey,
-        nonce: session.user.dpopNonce,
+  const makeRequest = (dpopNonce: string) =>
+    protectedResourceRequest(
+      session.user.accessToken,
+      request.method,
+      new URL(request.url),
+      request.headers,
+      request.body,
+      {
+        DPoP: {
+          privateKey: privateDpopKey,
+          publicKey: publicDpopKey,
+          nonce: dpopNonce,
+        },
       },
-    },
-  );
+    );
 
-  console.log(
-    "Protected resource headers",
-    Object.fromEntries(response.headers),
-  );
+  let response = await makeRequest(session.user.dpopNonce);
+
+  if (response.status === 401) {
+    if (
+      // Expect a use_dpop_nonce error
+      !parseWwwAuthenticateChallenges(response)?.some(
+        (challenge) => challenge.parameters.error === "use_dpop_nonce",
+      )
+    ) {
+      throw new Error("Not expecting error: " + (await response.text()));
+    }
+
+    const dpopNonce2 = response.headers.get("DPoP-Nonce");
+    if (!dpopNonce2) {
+      throw new Error("Missing DPoP nonce");
+    }
+    console.log("new nonce", dpopNonce2);
+
+    response = await makeRequest(dpopNonce2);
+  }
+
+  const dpopNonce = response.headers.get("DPoP-Nonce");
+  if (!dpopNonce) {
+    throw new Error("Missing DPoP nonce");
+  }
+
+  await db
+    .update(schema.OauthSession)
+    .set({
+      dpopNonce,
+    })
+    .where(eq(schema.OauthSession.sessionId, session.user.sessionId));
 
   return response;
 }

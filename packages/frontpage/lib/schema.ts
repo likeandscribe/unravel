@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import {
   sqliteTable,
   text,
@@ -143,7 +142,8 @@ export const OauthAuthRequest = sqliteTable("oauth_auth_requests", {
 });
 
 export const OauthSession = sqliteTable("oauth_sessions", {
-  did: did("did").notNull().primaryKey(),
+  sessionId: integer("id").primaryKey(),
+  did: did("did").notNull(),
   username: text("username").notNull(),
   iss: text("iss").notNull(),
   accessToken: text("access_token").notNull(),

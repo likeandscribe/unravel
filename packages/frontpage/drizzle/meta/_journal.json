@@ -12,15 +12,8 @@
     {
       "idx": 1,
       "version": "6",
-      "when": 1725380219560,
-      "tag": "0001_lumpy_talkback",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1725474369385,
-      "tag": "0002_colorful_lionheart",
+      "when": 1725476942887,
+      "tag": "0001_confused_norrin_radd",
       "breakpoints": true
     }
   ]

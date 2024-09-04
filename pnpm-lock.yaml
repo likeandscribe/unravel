@@ -169,8 +169,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
       drizzle-orm:
-        specifier: ^0.31.2
-        version: 0.31.2(@libsql/client@0.9.0(bufferutil@4.0.8)(utf-8-validate@6.0.3))(@neondatabase/serverless@0.7.2)(@types/better-sqlite3@7.6.10)(@types/pg@8.6.6)(@types/react@18.3.3)(@vercel/postgres@0.8.0)(better-sqlite3@11.0.0)(kysely@0.22.0)(react@19.0.0-rc-f994737d14-20240522)
+        specifier: ^0.33.0
+        version: 0.33.0(@libsql/client@0.9.0(bufferutil@4.0.8)(utf-8-validate@6.0.3))(@neondatabase/serverless@0.7.2)(@types/better-sqlite3@7.6.10)(@types/pg@8.6.6)(@types/react@18.3.3)(@vercel/postgres@0.8.0)(better-sqlite3@11.0.0)(kysely@0.22.0)(react@19.0.0-rc-f994737d14-20240522)
       jose:
         specifier: ^5.4.0
         version: 5.4.0
@@ -230,8 +230,8 @@ importers:
         specifier: 0.0.0-experimental-334f00b-20240725
         version: 0.0.0-experimental-334f00b-20240725
       drizzle-kit:
-        specifier: ^0.22.7
-        version: 0.22.7
+        specifier: ^0.24.2
+        version: 0.24.2
       eslint:
         specifier: ^8
         version: 8.57.0
@@ -773,6 +773,9 @@ packages:
 
   '@did-plc/lib@0.0.4':
     resolution: {integrity: sha512-Omeawq3b8G/c/5CtkTtzovSOnWuvIuCI4GTJNrt1AmCskwEQV7zbX5d6km1mjJNbE0gHuQPTVqZxLVqetNbfwA==}
+
+  '@drizzle-team/brocli@0.10.1':
+    resolution: {integrity: sha512-AHy0vjc+n/4w/8Mif+w86qpppHuF3AyXbcWW+R/W7GNA3F5/p2nuhlkCJaTXSLZheB4l1rtHzOfr9A7NwoR/Zg==}
 
   '@emnapi/runtime@1.2.0':
     resolution: {integrity: sha512-bV21/9LQmcQeCPEg3BDFtvwL6cwiTMksYNWQQ4KOxCZikEGalWtenoZ0wCiukJINlGCIi2KXx01g4FoH/LxpzQ==}
@@ -3208,12 +3211,12 @@ packages:
     resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
     engines: {node: '>=12'}
 
-  drizzle-kit@0.22.7:
-    resolution: {integrity: sha512-9THPCb2l1GPt7wxhws9LvTR0YG565ZlVgTuqGMwjs590Kch1pXu4GyjEArVijSF5m0OBj3qgdeKmuJXhKXgWFw==}
+  drizzle-kit@0.24.2:
+    resolution: {integrity: sha512-nXOaTSFiuIaTMhS8WJC2d4EBeIcN9OSt2A2cyFbQYBAZbi7lRsVGJNqDpEwPqYfJz38yxbY/UtbvBBahBfnExQ==}
     hasBin: true
 
-  drizzle-orm@0.31.2:
-    resolution: {integrity: sha512-QnenevbnnAzmbNzQwbhklvIYrDE8YER8K7kSrAWQSV1YvFCdSQPzj+jzqRdTSsV2cDqSpQ0NXGyL1G9I43LDLg==}
+  drizzle-orm@0.33.0:
+    resolution: {integrity: sha512-SHy72R2Rdkz0LEq0PSG/IdvnT3nGiWuRk+2tXZQ90GVq/XQhpCzu/EFT3V2rox+w8MlkBQxifF8pCStNYnERfA==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=3'
@@ -3223,6 +3226,7 @@ packages:
       '@op-engineering/op-sqlite': '>=2'
       '@opentelemetry/api': ^1.4.1
       '@planetscale/database': '>=1'
+      '@prisma/client': '*'
       '@tidbcloud/serverless': '*'
       '@types/better-sqlite3': '*'
       '@types/pg': '*'
@@ -3238,6 +3242,7 @@ packages:
       mysql2: '>=2'
       pg: '>=8'
       postgres: '>=3'
+      prisma: '*'
       react: '>=18'
       sql.js: '>=1'
       sqlite3: '>=5'
@@ -3257,6 +3262,8 @@ packages:
       '@opentelemetry/api':
         optional: true
       '@planetscale/database':
+        optional: true
+      '@prisma/client':
         optional: true
       '@tidbcloud/serverless':
         optional: true
@@ -3287,6 +3294,8 @@ packages:
       pg:
         optional: true
       postgres:
+        optional: true
+      prisma:
         optional: true
       react:
         optional: true
@@ -6950,6 +6959,8 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  '@drizzle-team/brocli@0.10.1': {}
+
   '@emnapi/runtime@1.2.0':
     dependencies:
       tslib: 2.6.2
@@ -9342,15 +9353,16 @@ snapshots:
 
   dotenv@16.0.3: {}
 
-  drizzle-kit@0.22.7:
+  drizzle-kit@0.24.2:
     dependencies:
+      '@drizzle-team/brocli': 0.10.1
       '@esbuild-kit/esm-loader': 2.6.5
       esbuild: 0.19.12
       esbuild-register: 3.5.0(esbuild@0.19.12)
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.31.2(@libsql/client@0.9.0(bufferutil@4.0.8)(utf-8-validate@6.0.3))(@neondatabase/serverless@0.7.2)(@types/better-sqlite3@7.6.10)(@types/pg@8.6.6)(@types/react@18.3.3)(@vercel/postgres@0.8.0)(better-sqlite3@11.0.0)(kysely@0.22.0)(react@19.0.0-rc-f994737d14-20240522):
+  drizzle-orm@0.33.0(@libsql/client@0.9.0(bufferutil@4.0.8)(utf-8-validate@6.0.3))(@neondatabase/serverless@0.7.2)(@types/better-sqlite3@7.6.10)(@types/pg@8.6.6)(@types/react@18.3.3)(@vercel/postgres@0.8.0)(better-sqlite3@11.0.0)(kysely@0.22.0)(react@19.0.0-rc-f994737d14-20240522):
     optionalDependencies:
       '@libsql/client': 0.9.0(bufferutil@4.0.8)(utf-8-validate@6.0.3)
       '@neondatabase/serverless': 0.7.2
@@ -9787,7 +9799,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.14.1(eslint@8.57.0)(typescript@5.5.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.14.1(eslint@8.57.0)(typescript@5.5.2))(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
       hasown: 2.0.2
       is-core-module: 2.13.1
       is-glob: 4.0.3
