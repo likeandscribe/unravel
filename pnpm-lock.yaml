@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  oauth4webapi@2.11.1:
-    hash: sicslpggdkfamwoxumma4rikmi
-    path: patches/oauth4webapi@2.11.1.patch
-
 importers:
 
   .:
@@ -186,8 +181,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522))(react@19.0.0-rc-f994737d14-20240522)
       oauth4webapi:
-        specifier: ^2.11.1
-        version: 2.11.1(patch_hash=sicslpggdkfamwoxumma4rikmi)
+        specifier: ^2.12.1
+        version: 2.12.1
       react:
         specifier: 19.0.0-rc-f994737d14-20240522
         version: 19.0.0-rc-f994737d14-20240522
@@ -4531,8 +4526,8 @@ packages:
   nwsapi@2.2.12:
     resolution: {integrity: sha512-qXDmcVlZV4XRtKFzddidpfVP4oMSGhga+xdMc25mv8kaLUHtgzCDhUxkrN8exkGdTlLNaXj7CV3GtON7zuGZ+w==}
 
-  oauth4webapi@2.11.1:
-    resolution: {integrity: sha512-aNzOnL98bL6izG97zgnZs1PFEyO4WDVRhz2Pd066NPak44w5ESLRCYmJIyey8avSBPOMtBjhF3ZDDm7bIb7UOg==}
+  oauth4webapi@2.12.1:
+    resolution: {integrity: sha512-7lgyz74z5NJ1dRbZSnL/YCJt7UMhNOqQ8I6Jokh/Et66GVK6KfFikzU98i5PTbgbrsSmxzsQprJdI3Z+5Uwj2Q==}
 
   object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
@@ -10999,7 +10994,7 @@ snapshots:
 
   nwsapi@2.2.12: {}
 
-  oauth4webapi@2.11.1(patch_hash=sicslpggdkfamwoxumma4rikmi): {}
+  oauth4webapi@2.12.1: {}
 
   object-assign@4.1.1: {}
 

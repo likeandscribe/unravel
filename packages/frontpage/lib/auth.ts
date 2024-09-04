@@ -164,7 +164,6 @@ export async function signIn(handle: string) {
         DPoP: {
           privateKey: dpopKeyPair.privateKey,
           publicKey: dpopKeyPair.publicKey,
-          expiresIn: 30,
           nonce: dpopNonce,
         },
         clientPrivateKey: await getClientPrivateKey(),
@@ -364,7 +363,6 @@ export const handlers = {
           DPoP: {
             privateKey: privateDpopKey,
             publicKey: publicDpopKey,
-            expiresIn: 30,
             nonce: row.nonce,
           },
         },
@@ -558,7 +556,6 @@ export async function fetchAuthenticatedAtproto(
       DPoP: {
         privateKey: privateDpopKey,
         publicKey: publicDpopKey,
-        expiresIn: 30,
         nonce: session.user.dpopNonce,
       },
     },
