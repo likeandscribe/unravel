@@ -12,12 +12,15 @@ const EXAMPLE_PATH = "tom-sherman.com/app.bsky.feed.like/3kyutnrmg3s2r";
 export default function Home() {
   return (
     <main>
-      <h1>Enter an AT uri:</h1>
+      <h1>Enter an AT uri or BlueSky post uri:</h1>
       <div style={{ maxWidth: "450px" }}>
         <AtUriForm />
       </div>
       <p>
-        eg. <Link href={`/at/${EXAMPLE_PATH}`}>at://{EXAMPLE_PATH}</Link>
+        eg. <Link href={`/at/${EXAMPLE_PATH}`}>at://{EXAMPLE_PATH}</Link> or{" "}
+        <Link href={`/at/danabra.mov/app.bsky.feed.post/3kyt2aywc2k2d`}>
+          https://bsky.app/profile/danabra.mov/post/3kyt2aywc2k2d
+        </Link>
       </p>
 
       <footer>
