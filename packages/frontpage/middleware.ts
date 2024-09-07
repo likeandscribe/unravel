@@ -76,9 +76,18 @@ export async function middleware(_request: NextRequest) {
       result = await processRefreshTokenResponse(authServer, client, response);
     }
 
+    if (
+      "error" in result &&
+      result.error === "invalid_grant" &&
+      result.error_description === "refresh token replayed"
+    ) {
+      // Concurrent refresh token replayed, just ignore for now
+      console.warn("Concurrent refresh token replayed");
+      return NextResponse.next();
+    }
+
     if ("error" in result) {
       // Logout and show error
-      // TODO: Sometimes this error is refresh token replayed probably because middleware is concurrent. Fix this.
       console.error(result);
       throw new Error("not implemented");
     }
