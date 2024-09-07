@@ -1,5 +1,10 @@
 import "server-only";
-import { DidDocument, DidResolver, HandleResolver } from "@atproto/identity";
+import {
+  DidDocument,
+  DidResolver,
+  getHandle,
+  HandleResolver,
+} from "@atproto/identity";
 import { cache } from "react";
 import { unstable_cache as nextCache } from "next/cache";
 import { isValidHandle } from "@atproto/syntax";
@@ -46,12 +51,15 @@ const resolveHandle = cache(
 export async function resolveIdentity(
   didOrHandle: string,
 ): Promise<
-  { success: true; identity: DidDocument } | { success: false; error: string }
+  | { success: true; didDocument: DidDocument; handle: string | null }
+  | { success: false; error: string }
 > {
   const decoded = decodeURIComponent(didOrHandle);
   let didStr;
+  let didFromHandle = null;
   if (isValidHandle(decoded)) {
-    didStr = await resolveHandle(decoded).catch(() => undefined);
+    didFromHandle = await resolveHandle(decoded).catch(() => undefined);
+    didStr = didFromHandle;
     if (!didStr) {
       return {
         success: false,
@@ -70,5 +78,21 @@ export async function resolveIdentity(
     return { success: false, error: `Could not resolve DID: ${didStr}` };
   }
 
-  return { success: true, identity: didDocument };
+  const handle = getHandle(didDocument);
+  if (!handle) {
+    return {
+      success: false,
+      error: `Could not find handle in DID document: ${didStr}`,
+    };
+  }
+
+  if (didFromHandle === null) {
+    didFromHandle = await resolveHandle(handle).catch(() => undefined);
+  }
+
+  return {
+    success: true,
+    didDocument: didDocument,
+    handle: didFromHandle === didDocument.id ? handle : null,
+  };
 }

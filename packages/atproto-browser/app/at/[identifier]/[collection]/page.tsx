@@ -1,6 +1,6 @@
 import { listRecords } from "@/lib/atproto";
 import { resolveIdentity } from "@/lib/atproto-server";
-import { getHandle, getPds } from "@atproto/identity";
+import { getPds } from "@atproto/identity";
 import Link from "next/link";
 import { SWRConfig } from "swr";
 import { CollectionItems } from "../../_lib/collection";
@@ -14,11 +14,7 @@ export default async function CollectionPage({
   if (!identityResult.success) {
     return <div>{identityResult.error}</div>;
   }
-  const didDocument = identityResult.identity;
-  const handle = getHandle(didDocument);
-  if (!handle) {
-    return <div>No handle found for DID: {didDocument.id}</div>;
-  }
+  const { didDocument } = identityResult;
   const pds = getPds(didDocument);
   if (!pds) {
     return <div>No PDS found for DID: {didDocument.id}</div>;
@@ -30,7 +26,7 @@ export default async function CollectionPage({
   return (
     <div>
       <h1>
-        {handle}&apos;s {params.collection} records{" "}
+        {params.collection} records{" "}
         <Link
           href={`/collection-rss?u=at://${params.identifier}/${params.collection}</h1>}`}
           title="RSS feed"

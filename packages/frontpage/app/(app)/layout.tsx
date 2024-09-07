@@ -54,9 +54,8 @@ export default async function Layout({
                   href={`https://bsky.app/profile/${FRONTPAGE_ATPROTO_HANDLE}`}
                   className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                 >
-                  @unravel.fyi <OpenInNewWindowIcon className="inline" />
+                  @frontpage.fyi <OpenInNewWindowIcon className="inline" />
                 </a>
-                !
               </>
             ) : (
               <>You&apos;re not currently part of the beta</>

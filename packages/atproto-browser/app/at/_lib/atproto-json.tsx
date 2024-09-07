@@ -4,6 +4,8 @@ import { AtBlob } from "../../../lib/at-blob";
 import { getAtUriPath } from "@/lib/util";
 import { AtUri } from "@atproto/syntax";
 import { VideoEmbed } from "./video-embed";
+import { ErrorBoundary } from "react-error-boundary";
+import { VideoEmbedWrapper } from "./video-embed-client";
 
 function naiveAtUriCheck(atUri: string) {
   if (!atUri.startsWith("at://")) {
@@ -131,7 +133,9 @@ function JSONObject({
   ) {
     return (
       <>
-        <VideoEmbed cid={parseBlobResult.data.ref.$link} did={repo} />
+        <ErrorBoundary fallback={<VideoEmbedWrapper />}>
+          <VideoEmbed cid={parseBlobResult.data.ref.$link} did={repo} />
+        </ErrorBoundary>
         <details>
           <summary>View blob content</summary>
           {rawObj}

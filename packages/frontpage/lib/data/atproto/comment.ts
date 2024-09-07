@@ -1,5 +1,5 @@
 import "server-only";
-import { ensureIsInBeta, getPdsUrl } from "../user";
+import { ensureIsInBeta } from "../user";
 import {
   atprotoCreateRecord,
   createAtUriParser,
@@ -9,7 +9,7 @@ import {
 import { DataLayerError } from "../error";
 import { z } from "zod";
 import { PostCollection } from "./post";
-import { DID } from "./did";
+import { DID, getPdsUrl } from "./did";
 
 export const CommentCollection = "fyi.unravel.frontpage.comment";
 

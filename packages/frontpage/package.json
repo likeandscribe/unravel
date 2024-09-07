@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
+    "dev-1pw": "op run --env-file=\"./.env.1pw\" -- next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

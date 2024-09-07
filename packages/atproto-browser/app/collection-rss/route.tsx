@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     return new Response(identityResult.error, { status: 400 });
   }
 
-  const didDoc = identityResult.identity;
+  const didDoc = identityResult.didDocument;
   const pds = getPds(didDoc);
   if (!pds) {
     return new Response(`No PDS found for ${didDoc.id}`, { status: 400 });

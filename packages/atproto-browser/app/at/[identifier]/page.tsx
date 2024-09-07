@@ -3,10 +3,10 @@ import Link from "next/link";
 import { Fragment, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { z } from "zod";
-import { DidSummary } from "../_lib/did-components";
+import { DidDoc, DidHandle } from "../_lib/did-components";
 import { resolveIdentity } from "@/lib/atproto-server";
-import { getHandle } from "@atproto/identity";
 import { AtUri } from "@atproto/syntax";
+import { DidCollections } from "../_lib/collection-server";
 
 export default async function IdentifierPage({
   params,
@@ -17,30 +17,36 @@ export default async function IdentifierPage({
   if (!identityResult.success) {
     return <div>{identityResult.error}</div>;
   }
-  const didDocument = identityResult.identity;
-  const handle = getHandle(didDocument);
-  if (!handle) {
-    return <div>No handle found for DID: {didDocument.id}</div>;
-  }
 
   return (
     <>
       <h1>
-        {handle} ({didDocument.id})
+        <DidHandle did={identityResult.didDocument.id} />
       </h1>
-      <DidSummary did={didDocument.id} />
+
+      <h2>Collections</h2>
+      <DidCollections identifier={identityResult.didDocument.id} />
+
+      <h2>DID Doc</h2>
+      <DidDoc did={identityResult.didDocument.id} />
 
       <Suspense fallback={<p>Loading history...</p>}>
         <ErrorBoundary fallback={<p>Failed to fetch history.</p>}>
           <h2>History</h2>
-          <DidHistory did={didDocument.id} />
+          <DidHistory identifier={params.identifier} />
         </ErrorBoundary>
       </Suspense>
     </>
   );
 }
 
-async function DidHistory({ did }: { did: string }) {
+async function DidHistory({ identifier }: { identifier: string }) {
+  const identity = await resolveIdentity(identifier);
+  if (!identity.success) {
+    throw new Error(identity.error);
+  }
+  const did = identity.didDocument.id;
+
   const response = await fetch(`https://plc.directory/${did}/log/audit`);
   if (!response.ok) {
     throw new Error(`Failed to fetch history: ${response.statusText}`);
