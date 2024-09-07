@@ -7,8 +7,12 @@ import {
   calculateJwkThumbprint,
 } from "jose";
 import { cache } from "react";
-import { DID, getDidFromHandleOrDid, parseDid } from "./data/atproto/did";
-import { getPdsUrl } from "./data/user";
+import {
+  DID,
+  getDidFromHandleOrDid,
+  getPdsUrl,
+  parseDid,
+} from "./data/atproto/did";
 import {
   discoveryRequest,
   processDiscoveryResponse,
