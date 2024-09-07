@@ -7,20 +7,10 @@ import {
   calculateJwkThumbprint,
 } from "jose";
 import { cache } from "react";
-import {
-  DID,
-  getDidFromHandleOrDid,
-  getPdsUrl,
-  parseDid,
-} from "./data/atproto/did";
+import { DID, parseDid, getPdsUrl } from "./data/atproto/did";
 import {
   discoveryRequest,
   processDiscoveryResponse,
-  pushedAuthorizationRequest,
-  generateRandomState,
-  calculatePKCECodeChallenge,
-  generateRandomCodeVerifier,
-  generateKeyPair,
   authorizationCodeGrantRequest,
   validateAuthResponse,
   protectedResourceRequest,
@@ -29,10 +19,8 @@ import {
   Client as OauthClient,
 } from "oauth4webapi";
 import { cookies, headers } from "next/headers";
-import type { KeyObject } from "node:crypto";
 import {
   OAuthClientMetadata,
-  oauthParResponseSchema,
   oauthProtectedResourceMetadataSchema,
   oauthTokenResponseSchema,
 } from "@atproto/oauth-types";
@@ -44,11 +32,14 @@ import { eq } from "drizzle-orm";
 const USER_AGENT = "appview/@frontpage.fyi (@tom-sherman.com)";
 
 export const getPrivateJwk = cache(() =>
-  importJWK<KeyObject>(JSON.parse(process.env.PRIVATE_JWK!)),
+  importJWK(JSON.parse(process.env.PRIVATE_JWK!), USER_SESSION_JWT_ALG),
 );
 
 export const getPublicJwk = cache(async () => {
-  const jwk = await importJWK(JSON.parse(process.env.PUBLIC_JWK!));
+  const jwk = await importJWK(
+    JSON.parse(process.env.PUBLIC_JWK!),
+    USER_SESSION_JWT_ALG,
+  );
   if ("d" in jwk) {
     throw new Error("Expected public JWK, got private JWK");
   }
@@ -92,7 +83,7 @@ export const getOauthClientOptions = () =>
     token_endpoint_auth_method: "private_key_jwt",
   }) satisfies OauthClient;
 
-async function getClientPrivateKey() {
+export async function getClientPrivateKey() {
   const jwk = await exportJWK(await getPrivateJwk());
   const kid = await calculateJwkThumbprint(jwk);
   const key = await crypto.subtle.importKey(
@@ -106,150 +97,7 @@ async function getClientPrivateKey() {
   return { key, kid };
 }
 
-export async function signIn(handle: string) {
-  const did = await getDidFromHandleOrDid(handle);
-  if (!did) {
-    return {
-      error: "DID_NOT_FOUND",
-    };
-  }
-
-  const meta = await oauthProtectedMetadataRequest(did);
-  if ("error" in meta) {
-    return meta;
-  }
-
-  const authServerUrl = meta.data.authorization_servers?.[0];
-  if (!authServerUrl) {
-    return {
-      error: "NO_AUTH_SERVER",
-    };
-  }
-
-  const authServer = await processDiscoveryResponse(
-    new URL(authServerUrl),
-    await discoveryRequest(new URL(authServerUrl), {
-      algorithm: "oauth2",
-    }),
-  );
-
-  // Check this early, we'll need it later
-  const authorizationEndpiont = authServer.authorization_endpoint;
-  if (!authorizationEndpiont) {
-    return {
-      error: "NO_AUTHORIZATION_ENDPOINT",
-    };
-  }
-
-  const client = getClientMetadata();
-
-  const state = generateRandomState();
-  const pkceVerifier = generateRandomCodeVerifier();
-
-  const dpopKeyPair = await generateKeyPair("RS256", {
-    extractable: true,
-  });
-
-  const makeParRequest = async (dpopNonce?: string) => {
-    return pushedAuthorizationRequest(
-      authServer,
-      getOauthClientOptions(),
-      {
-        response_type: "code",
-        code_challenge: await calculatePKCECodeChallenge(pkceVerifier),
-        code_challenge_method: "S256",
-        // TODO: Do we need this? It's included in the oauth client options
-        client_id: client.client_id,
-        state,
-        redirect_uri: client.redirect_uris[0],
-        scope: client.scope,
-        login_hint: handle,
-      },
-      {
-        DPoP: {
-          privateKey: dpopKeyPair.privateKey,
-          publicKey: dpopKeyPair.publicKey,
-          nonce: dpopNonce,
-        },
-        clientPrivateKey: await getClientPrivateKey(),
-      },
-    );
-  };
-
-  // Try PAR request without DPoP nonce first
-  // oauth4webapi has an in-memory cache that may be used here
-  let parResponse = await makeParRequest();
-
-  if (!parResponse.ok) {
-    // TODO: Check for this error when the header is deployed by bsky team
-    // if (
-    //   // Expect a use_dpop_nonce error
-    //   !parseWwwAuthenticateChallenges(parResponse)?.some(
-    //     (challenge) => challenge.parameters.error === "use_dpop_nonce",
-    //   )
-    // ) {
-    //   return {
-    //     error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
-    //   };
-    // }
-
-    const dpopNonce = parResponse.headers.get("DPoP-Nonce");
-    if (!dpopNonce) {
-      return {
-        error: "MISSING_PAR_DPOP_NONCE",
-      };
-    }
-    // Try again with new nonce
-    parResponse = await makeParRequest(dpopNonce);
-  }
-
-  if (!parResponse.ok) {
-    console.error("PAR error: ", await parResponse.text());
-    return {
-      error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
-    };
-  }
-
-  const dpopNonce = parResponse.headers.get("DPoP-Nonce");
-
-  if (!dpopNonce) {
-    return {
-      error: "MISSING_PAR_DPOP_NONCE",
-    };
-  }
-
-  const parResult = oauthParResponseSchema.safeParse(await parResponse.json());
-  if (!parResult.success) {
-    return {
-      error: "INVALID_PAR_RESPONSE",
-      cause: parResult.error,
-    };
-  }
-
-  await db.insert(schema.OauthAuthRequest).values({
-    did: did,
-    iss: authServer.issuer,
-    username: handle,
-    nonce: dpopNonce,
-    state,
-    pkceVerifier,
-    dpopPrivateJwk: JSON.stringify(
-      await crypto.subtle.exportKey("jwk", dpopKeyPair.privateKey),
-    ),
-    expiresAt: new Date(Date.now() + 1000 * 60),
-    createdAt: new Date(),
-    dpopPublicJwk: JSON.stringify(
-      await crypto.subtle.exportKey("jwk", dpopKeyPair.publicKey),
-    ),
-  });
-
-  const redirectUrl = new URL(authServer.authorization_endpoint);
-  redirectUrl.searchParams.set("request_uri", parResult.data.request_uri);
-  redirectUrl.searchParams.set("client_id", client.client_id);
-  redirect(redirectUrl.toString());
-}
-
-function oauthDiscoveryRequest(url: URL) {
+export function oauthDiscoveryRequest(url: URL) {
   return discoveryRequest(url, {
     algorithm: "oauth2",
     headers: {
@@ -259,7 +107,7 @@ function oauthDiscoveryRequest(url: URL) {
 }
 
 // TODO: Split this out to match the oauth4webapi pattern of processProtectedMetadataResponse(oauthProtectedMetadataRequest())
-async function oauthProtectedMetadataRequest(did: DID) {
+export async function oauthProtectedMetadataRequest(did: DID) {
   const pds = await getPdsUrl(did);
   if (!pds) {
     return {
@@ -292,6 +140,7 @@ async function oauthProtectedMetadataRequest(did: DID) {
 }
 
 const AUTH_COOKIE_NAME = "__auth_sesion";
+const USER_SESSION_JWT_ALG = "ES256";
 
 // This is to mimic next-auth's API, hopefully we can upstream later
 export const handlers = {
@@ -348,6 +197,7 @@ export const handlers = {
         throw new Error("Invalid state");
       }
 
+      // TODO: Cache this
       const authServer = await processDiscoveryResponse(
         new URL(iss),
         await oauthDiscoveryRequest(new URL(iss)),
@@ -371,6 +221,7 @@ export const handlers = {
         publicJwk: row.dpopPublicJwk,
       });
 
+      // TODO: Use processAuthorizationCodeOAuth2Response
       const authCodeResponse = await authorizationCodeGrantRequest(
         authServer,
         getOauthClientOptions(),
@@ -400,6 +251,8 @@ export const handlers = {
         throw new Error("Invalid tokens");
       }
 
+      // TODO: Compare token sub with original did and diddoc id
+
       const dpopNonce = authCodeResponse.headers.get("DPoP-Nonce");
       if (!dpopNonce) {
         throw new Error("Missing DPoP nonce");
@@ -428,7 +281,7 @@ export const handlers = {
 
       const userToken = await new SignJWT()
         .setSubject(row.did)
-        .setProtectedHeader({ alg: "ES256" })
+        .setProtectedHeader({ alg: USER_SESSION_JWT_ALG })
         .setIssuedAt()
         .sign(
           // TODO: This probably ought to be a different key
@@ -483,7 +336,7 @@ export const getSession = cache(async () => {
 
   let token;
   try {
-    token = await jwtVerify(tokenCookie.value, await getPublicJwk(), {});
+    token = await jwtVerify(tokenCookie.value, await getPublicJwk());
   } catch (e) {
     console.error("Failed to verify token", e);
     return null;
@@ -512,7 +365,7 @@ export const getSession = cache(async () => {
   };
 });
 
-async function importDpopJwks({
+export async function importDpopJwks({
   privateJwk,
   publicJwk,
 }: {

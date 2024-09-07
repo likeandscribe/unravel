@@ -1,14 +1,18 @@
-import { generateKeyPair, exportJWK } from "jose";
+const keyPair = await crypto.subtle.generateKey(
+  {
+    name: "ECDSA",
+    namedCurve: "P-256",
+  },
+  true,
+  ["sign", "verify"],
+);
 
-const keyPair = await generateKeyPair("ES256", {
-  crv: "P-256",
-});
-
-const [privateJwk, publicJwk] = await Promise.all([
-  exportJWK(keyPair.privateKey),
-  exportJWK(keyPair.publicKey),
-]);
+const [privateKey, publicKey] = await Promise.all(
+  [keyPair.privateKey, keyPair.publicKey].map((key) =>
+    crypto.subtle.exportKey("jwk", key),
+  ),
+);
 
 console.log(
-  `PRIVATE_JWK='${JSON.stringify(privateJwk)}'\nPUBLIC_JWK='${JSON.stringify(publicJwk)}'`,
+  `PRIVATE_JWK='${JSON.stringify(privateKey)}'\nPUBLIC_JWK='${JSON.stringify(publicKey)}'`,
 );

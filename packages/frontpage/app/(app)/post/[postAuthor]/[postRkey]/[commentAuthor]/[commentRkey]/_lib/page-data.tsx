@@ -1,5 +1,5 @@
 import "server-only";
-import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/identity";
 import {
   getCommentWithChildren,
   shouldHideComment,

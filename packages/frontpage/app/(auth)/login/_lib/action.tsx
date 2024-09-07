@@ -1,5 +1,5 @@
 "use server";
-import { signIn } from "@/lib/auth";
+import { signIn } from "@/lib/auth-sign-in";
 
 export async function loginAction(_prevStart: unknown, formData: FormData) {
   const handle = formData.get("handle") as string;
