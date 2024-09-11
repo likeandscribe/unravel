@@ -17,6 +17,7 @@ import {
   revocationRequest,
   parseWwwAuthenticateChallenges,
   Client as OauthClient,
+  isOAuth2Error,
 } from "oauth4webapi";
 import { cookies, headers } from "next/headers";
 import {
@@ -164,13 +165,39 @@ export const handlers = {
     }
 
     if (url.pathname.endsWith("/callback")) {
-      // TODO: Show error UI each time we throw/return an error
-      const state = url.searchParams.get("state");
-      const code = url.searchParams.get("code");
       const iss = url.searchParams.get("iss");
-      if (!state || !code || !iss) {
-        console.error("missing params", { state, code, iss });
-        return new Response("Invalid request", { status: 400 });
+      const state = url.searchParams.get("state");
+      if (!iss || !state) {
+        throw new Error("Missing iss or state", { cause: { iss, state } });
+      }
+
+      // TODO: Cache this
+      const authServer = await processDiscoveryResponse(
+        new URL(iss),
+        await oauthDiscoveryRequest(new URL(iss)),
+      );
+
+      const callbackParams = validateAuthResponse(
+        authServer,
+        getOauthClientOptions(),
+        url.searchParams,
+        state,
+      );
+
+      if (isOAuth2Error(callbackParams)) {
+        let errorMessage;
+        if (callbackParams.error === "access_denied") {
+          errorMessage = "You have not authorized the app. Please try again.";
+        } else {
+          errorMessage = "An error occurred";
+        }
+
+        redirect(`/login?error=${errorMessage}`, RedirectType.replace);
+      }
+
+      const code = url.searchParams.get("code");
+      if (!code || !state) {
+        throw new Error("Missing code");
       }
 
       const [row] = await db
@@ -195,12 +222,6 @@ export const handlers = {
       if (row.state !== state) {
         throw new Error("Invalid state");
       }
-
-      // TODO: Cache this
-      const authServer = await processDiscoveryResponse(
-        new URL(iss),
-        await oauthDiscoveryRequest(new URL(iss)),
-      );
 
       const client = getClientMetadata();
       const params = validateAuthResponse(

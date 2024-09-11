@@ -23,7 +23,7 @@ export async function signIn(handle: string) {
   const did = await getDidFromHandleOrDid(handle);
   if (!did) {
     return {
-      error: "DID_NOT_FOUND",
+      error: "DID_NOT_FOUND" as const,
     };
   }
 
@@ -35,7 +35,7 @@ export async function signIn(handle: string) {
   const authServerUrl = meta.data.authorization_servers?.[0];
   if (!authServerUrl) {
     return {
-      error: "NO_AUTH_SERVER",
+      error: "NO_AUTH_SERVER" as const,
     };
   }
 
@@ -51,7 +51,7 @@ export async function signIn(handle: string) {
   const authorizationEndpiont = authServer.authorization_endpoint;
   if (!authorizationEndpiont) {
     return {
-      error: "NO_AUTHORIZATION_ENDPOINT",
+      error: "NO_AUTHORIZATION_ENDPOINT" as const,
     };
   }
 
@@ -110,7 +110,7 @@ export async function signIn(handle: string) {
     const dpopNonce = parResponse.headers.get("DPoP-Nonce");
     if (!dpopNonce) {
       return {
-        error: "MISSING_PAR_DPOP_NONCE",
+        error: "MISSING_PAR_DPOP_NONCE" as const,
       };
     }
     // Try again with new nonce
@@ -120,7 +120,7 @@ export async function signIn(handle: string) {
   if (!parResponse.ok) {
     console.error("PAR error: ", await parResponse.text());
     return {
-      error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST",
+      error: "FAILED_TO_PUSH_AUTHORIZATION_REQUEST" as const,
     };
   }
 
@@ -128,14 +128,14 @@ export async function signIn(handle: string) {
 
   if (!dpopNonce) {
     return {
-      error: "MISSING_PAR_DPOP_NONCE",
+      error: "MISSING_PAR_DPOP_NONCE" as const,
     };
   }
 
   const parResult = oauthParResponseSchema.safeParse(await parResponse.json());
   if (!parResult.success) {
     return {
-      error: "INVALID_PAR_RESPONSE",
+      error: "INVALID_PAR_RESPONSE" as const,
       cause: parResult.error,
     };
   }

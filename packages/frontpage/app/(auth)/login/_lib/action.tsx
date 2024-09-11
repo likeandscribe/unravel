@@ -5,7 +5,8 @@ export async function loginAction(_prevStart: unknown, formData: FormData) {
   const handle = formData.get("handle") as string;
   const result = await signIn(handle);
   if (result && "error" in result) {
-    // throw new Error(result.error);
-    console.error(result.error);
+    return {
+      error: `An error occured while signing in (${result.error})`,
+    };
   }
 }
