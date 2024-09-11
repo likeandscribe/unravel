@@ -101,8 +101,6 @@ export async function middleware(_request: NextRequest) {
       throw new Error("Missing expires_in");
     }
 
-    // TODO: Check sub against did and diddoc.id
-
     await db
       .update(schema.OauthSession)
       .set({

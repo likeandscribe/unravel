@@ -47,7 +47,6 @@ export const getPublicJwk = cache(async () => {
   return jwk;
 });
 
-// TODO: Cache this?
 export const getClientMetadata = cache(() => {
   const host =
     process.env.NODE_ENV === "development"
@@ -251,7 +250,9 @@ export const handlers = {
         throw new Error("Invalid tokens");
       }
 
-      // TODO: Compare token sub with original did and diddoc id
+      if (tokensResult.data.sub !== row.did) {
+        throw new Error("Token sub does not match did");
+      }
 
       const dpopNonce = authCodeResponse.headers.get("DPoP-Nonce");
       if (!dpopNonce) {
