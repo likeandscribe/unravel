@@ -91,6 +91,8 @@ function JSONObject({
   data: { [x: string]: JSONType };
   repo: string;
 }) {
+  const parseBlobResult = AtBlob.safeParse(data);
+
   const rawObj = (
     <dl>
       {Object.entries(data).map(([key, value]) => (
@@ -99,14 +101,21 @@ function JSONObject({
             <pre>{key}:</pre>
           </dt>
           <dd style={{ margin: 0 }}>
-            <JSONValue data={value} repo={repo} />
+            {parseBlobResult.success &&
+            key === "$link" &&
+            typeof value === "string" ? (
+              <pre>
+                <a href={`/blob/${repo}/${value}`}>{value}</a>
+              </pre>
+            ) : (
+              <JSONValue data={value} repo={repo} />
+            )}
           </dd>
         </div>
       ))}
     </dl>
   );
 
-  const parseBlobResult = AtBlob.safeParse(data);
   if (
     parseBlobResult.success &&
     parseBlobResult.data.mimeType.startsWith("image/")
