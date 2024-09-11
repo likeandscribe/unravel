@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState } from "react";
+import { startTransition, Suspense, useActionState } from "react";
 import { loginAction } from "./action";
 import { Label } from "@/lib/components/ui/label";
 import { Input } from "@/lib/components/ui/input";
@@ -11,8 +11,6 @@ import { CrossCircledIcon } from "@radix-ui/react-icons";
 
 export function LoginForm() {
   const [state, action, isPending] = useActionState(loginAction, null);
-  const searchParams = useSearchParams();
-  const error = state?.error ?? searchParams.get("error");
 
   return (
     <>
@@ -36,13 +34,22 @@ export function LoginForm() {
           </Button>
         </div>
       </form>
-      {error ? (
-        <Alert variant="destructive">
-          <CrossCircledIcon className="h-4 w-4" />
-          <AlertTitle>Login error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
+      <Suspense>
+        <LoginError errorState={state?.error} />
+      </Suspense>
     </>
+  );
+}
+
+function LoginError({ errorState }: { errorState?: string }) {
+  const searchParams = useSearchParams();
+  const error = errorState ?? searchParams.get("error");
+  if (!error) return null;
+  return (
+    <Alert variant="destructive">
+      <CrossCircledIcon className="h-4 w-4" />
+      <AlertTitle>Login error</AlertTitle>
+      <AlertDescription>{error}</AlertDescription>
+    </Alert>
   );
 }
