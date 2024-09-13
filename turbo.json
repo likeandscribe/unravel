@@ -13,7 +13,8 @@
         "PRIVATE_JWK",
         "PUBLIC_JWK",
         "VERCEL_BRANCH_URL",
-        "VERCEL_ENV"
+        "VERCEL_ENV",
+        "CRON_SECRET"
       ]
     },
     "type-check": {},
