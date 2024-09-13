@@ -127,3 +127,34 @@ export const BetaUser = sqliteTable("beta_users", {
 export const ConsumedOffset = sqliteTable("consumed_offsets", {
   offset: integer("offset").primaryKey(),
 });
+
+export const ModerationEvent = sqliteTable("moderation_events", {
+  subjectUri: text("subject_uri").notNull(),
+  subjectDid: text("subject_did").notNull(),
+  subjectCollection: text("subject_collection"),
+  subjectRkey: text("subject_rkey"),
+  subjectCid: text("subject_cid").notNull(),
+  createdBy: text("created_by").notNull(),
+  createdAt: dateIsoText("created_at").notNull(),
+  labelsAdded: text("labels_added"),
+  labelsRemoved: text("labels_removed"),
+});
+
+export const LabelledProfile = sqliteTable("labelled_profiles", {
+  did: text("did").notNull().unique(),
+  labels: text("labels"),
+});
+
+export const Report = sqliteTable("reports", {
+  actionedAt: dateIsoText("actioned_at"),
+  actionedBy: text("actioned_by"),
+  subjectUri: text("subject_uri").notNull(),
+  subjectDid: text("subject_did").notNull(),
+  subjectCollection: text("subject_collection"),
+  subjectRkey: text("subject_rkey"),
+  subjectCid: text("subject_cid").notNull(),
+  createdBy: text("created_by").notNull(),
+  createdAt: dateIsoText("created_at").notNull(),
+  creatorComment: text("creator_comment"),
+  labelsAdded: text("labels_added"),
+});
