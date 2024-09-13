@@ -19,7 +19,19 @@ export const getVerifiedDid = cache(async (handle: string) => {
 
   // TODO: Check did doc includes the handle
 
-  return dnsDid ?? (httpDid ? parseDid(httpDid) : null);
+  const did = dnsDid ?? (httpDid ? parseDid(httpDid) : null);
+  if (!did) {
+    return null;
+  }
+
+  const plcDoc = await getDidDoc(did);
+  const plcHandle = plcDoc.alsoKnownAs
+    .find((handle) => handle.startsWith("at://"))
+    ?.replace("at://", "");
+
+  if (!plcHandle) return null;
+
+  return plcHandle === handle ? did : null;
 });
 
 const getAtprotoDidFromDns = unstable_cache(
