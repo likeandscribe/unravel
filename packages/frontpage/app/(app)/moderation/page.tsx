@@ -7,13 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/lib/components/ui/card";
-import { ScrollArea } from "@/lib/components/ui/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/lib/components/ui/tooltip";
 
 type Report = {
   id: string;
@@ -28,13 +21,8 @@ type Report = {
   community: string;
 };
 
-type Community = {
-  name: string;
-  icon: string;
-};
-
 export default function Component() {
-  const reports = [
+  const reports: Report[] = [
     {
       id: "1",
       type: "post",
@@ -72,14 +60,6 @@ export default function Component() {
       community: "Science",
     },
   ];
-
-  // const handleAction = (id: string, action: "approve" | "reject") => {
-  //   setReports(
-  //     reports.map((report) =>
-  //       report.id === id ? { ...report, status: action } : report,
-  //     ),
-  //   );
-  // };
 
   const stats = {
     total: reports.length,
