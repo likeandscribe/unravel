@@ -81,6 +81,20 @@ export const isBetaUser = cache(async () => {
   );
 });
 
+export const hasRole = cache(async (role: string) => {
+  const user = await getUser();
+  if (!user) {
+    return false;
+  }
+
+  return Boolean(
+    role === "moderator",
+    // await db.query.User.findFirst({
+    // where: and(eq(schema.User.did, user.did), eq(schema.User.role, role)),
+    // }),
+  );
+});
+
 const ProfileResponse = z.object({
   avatar: z.string(),
   handle: z.string(),

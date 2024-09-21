@@ -128,16 +128,19 @@ export const ConsumedOffset = sqliteTable("consumed_offsets", {
   offset: integer("offset").primaryKey(),
 });
 
+const createColumnReportType = (col: string) =>
+  text(col, { enum: ["post", "comment", "user"] });
+
 export const ModerationEvent = sqliteTable("moderation_events", {
   subjectUri: text("subject_uri").notNull(),
   subjectDid: text("subject_did").notNull(),
   subjectCollection: text("subject_collection"),
   subjectRkey: text("subject_rkey"),
-  subjectCid: text("subject_cid").notNull(),
+  subjectCid: text("subject_cid"),
   createdBy: text("created_by").notNull(),
   createdAt: dateIsoText("created_at").notNull(),
   labelsAdded: text("labels_added"),
-  labelsRemoved: text("labels_removed"),
+  reportType: createColumnReportType("report_type"),
 });
 
 export const LabelledProfile = sqliteTable("labelled_profiles", {
@@ -152,7 +155,7 @@ export const Report = sqliteTable("reports", {
   subjectDid: text("subject_did").notNull(),
   subjectCollection: text("subject_collection"),
   subjectRkey: text("subject_rkey"),
-  subjectCid: text("subject_cid").notNull(),
+  subjectCid: text("subject_cid"),
   createdBy: text("created_by").notNull(),
   createdAt: dateIsoText("created_at").notNull(),
   creatorComment: text("creator_comment"),
