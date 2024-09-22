@@ -22,6 +22,7 @@ import { UserAvatar } from "@/lib/components/user-avatar";
 import { FRONTPAGE_ATPROTO_HANDLE } from "@/lib/constants";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 
 export default async function Layout({
   children,
@@ -129,6 +130,7 @@ async function LoginOrLogout() {
               "use server";
               await signOut();
               deleteAuthCookie(cookies());
+              revalidatePath("/", "layout");
               redirect("/");
             }}
           >
