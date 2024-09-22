@@ -17,8 +17,6 @@ export const getVerifiedDid = cache(async (handle: string) => {
     return null;
   }
 
-  // TODO: Check did doc includes the handle
-
   const did = dnsDid ?? (httpDid ? parseDid(httpDid) : null);
   if (!did) {
     return null;
