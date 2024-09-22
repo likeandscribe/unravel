@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/lib/link";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { AtUriForm } from "../../aturi-form";
 

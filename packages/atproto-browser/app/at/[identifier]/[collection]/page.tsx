@@ -1,7 +1,7 @@
 import { listRecords } from "@/lib/atproto";
 import { resolveIdentity } from "@/lib/atproto-server";
 import { getPds } from "@atproto/identity";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { SWRConfig } from "swr";
 import { CollectionItems } from "../../_lib/collection";
 

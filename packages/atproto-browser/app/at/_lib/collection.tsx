@@ -3,7 +3,7 @@
 import { listRecords } from "@/lib/atproto";
 import { getAtUriPath } from "@/lib/util";
 import { AtUri } from "@atproto/syntax";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { Suspense, useState } from "react";
 import useSWR from "swr";
 

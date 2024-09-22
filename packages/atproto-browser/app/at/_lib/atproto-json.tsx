@@ -1,5 +1,5 @@
 import { isDid } from "@atproto/did";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { AtBlob } from "../../../lib/at-blob";
 import { getAtUriPath } from "@/lib/util";
 import { AtUri } from "@atproto/syntax";
