@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { DID, getDidDoc, isDid, parseDid } from "./did";
 import { unstable_cache } from "next/cache";
-import dns from "node:dns/promises";
+import { z } from "zod";
 
 export const getVerifiedDid = cache(async (handle: string) => {
   const [dnsDid, httpDid] = await Promise.all([
@@ -32,25 +32,40 @@ export const getVerifiedDid = cache(async (handle: string) => {
   return plcHandle === handle ? did : null;
 });
 
-const getAtprotoDidFromDns = unstable_cache(
-  async (handle: string) => {
-    const records = await dns.resolveTxt(`_atproto.${handle}`).catch((e) => {
-      if ("code" in e && e.code === "ENODATA") {
-        return [];
-      }
+const DnsQueryResponse = z.object({
+  Answer: z.array(
+    z.object({
+      name: z.string(),
+      type: z.number(),
+      TTL: z.number(),
+      data: z.string(),
+    }),
+  ),
+});
 
-      throw e;
-    });
-    // records is [ [ "did=xxx" ] ]
-    // We're assuming that you only have one txt record or that the first one is the one we want
-    const val = records[0]?.join().split("did=")[1];
-    return val ? parseDid(val) : null;
-  },
-  ["did", "dns"],
-  {
-    revalidate: 60 * 60 * 24, // 24 hours
-  },
-);
+// See https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/dns-json/
+async function getAtprotoDidFromDns(handle: string) {
+  const url = new URL("https://cloudflare-dns.com/dns-query");
+  url.searchParams.set("type", "TXT");
+  url.searchParams.set("name", `_atproto.${handle}`);
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/dns-json",
+    },
+    next: {
+      revalidate: 60 * 60 * 24, // 24 hours
+    },
+  });
+
+  const { Answer } = DnsQueryResponse.parse(await response.json());
+  // Answer[0].data is "\"did=...\"" (with quotes)
+  const val = Answer[0]?.data
+    ? JSON.parse(Answer[0]?.data).split("did=")[1]
+    : null;
+
+  return val ? parseDid(val) : null;
+}
 
 const getAtprotoFromHttps = unstable_cache(
   async (handle: string) => {
