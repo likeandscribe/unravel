@@ -1,12 +1,13 @@
 import "server-only";
-import { cache } from "react";
 
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { eq, sql, count, desc, and } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getBlueskyProfile, getUser } from "../user";
 import * as atprotoPost from "../atproto/post";
 import { DID } from "../atproto/did";
+import { sendDiscordMessage } from "@/lib/discord";
 
 const votesSubQuery = db
   .select({
@@ -42,18 +43,14 @@ const commentCountSubQuery = db
 export const getFrontpagePosts = cache(async () => {
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
   // We should closely monitor this and consider alternatives if it gets slow over time
-  const rank = sql`
-    coalesce(${votesSubQuery.voteCount}, 1) / (
-    -- Age
-      (
-        EXTRACT(
-          EPOCH
-          FROM
-            (CURRENT_TIMESTAMP - ${schema.Post.createdAt})
-        ) / 3600
-      ) + 2
-    ) ^ 1.8
-  `.as("rank");
+  const rank = sql<number>`
+  CAST(COALESCE(${votesSubQuery.voteCount}, 1) AS REAL) / (
+    pow(
+      (JULIANDAY('now') - JULIANDAY(${schema.Post.createdAt})) * 24 + 2,
+      1.8
+    )
+  )
+`.as("rank");
 
   const userHasVoted = await buildUserHasVotedQuery();
 
@@ -183,7 +180,7 @@ type CreatePostInput = {
   authorDid: DID;
   rkey: string;
   cid: string;
-  offset: bigint;
+  offset: number;
 };
 
 export async function unauthed_createPost({
@@ -206,49 +203,35 @@ export async function unauthed_createPost({
     await tx.insert(schema.ConsumedOffset).values({ offset });
   });
 
-  if (process.env.DISCORD_WEBHOOK_URL) {
-    const bskyProfile = await getBlueskyProfile(authorDid);
-    const webhookResponse = await fetch(process.env.DISCORD_WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        embeds: [
+  const bskyProfile = await getBlueskyProfile(authorDid);
+  sendDiscordMessage({
+    embeds: [
+      {
+        title: "New post on Frontpage",
+        description: post.title,
+        url: `https://frontpage.fyi/post/${authorDid}/${rkey}`,
+        color: 10181046,
+        author: bskyProfile
+          ? {
+              name: `@${bskyProfile.handle}`,
+              icon_url: bskyProfile.avatar,
+              url: `https://frontpage.fyi/profile/${bskyProfile.handle}`,
+            }
+          : undefined,
+        fields: [
           {
-            title: "New post on Frontpage",
-            description: post.title,
-            url: `https://frontpage.fyi/post/${authorDid}/${rkey}`,
-            color: 10181046,
-            author: bskyProfile
-              ? {
-                  name: `@${bskyProfile.handle}`,
-                  icon_url: bskyProfile.avatar,
-                  url: `https://frontpage.fyi/profile/${bskyProfile.handle}`,
-                }
-              : undefined,
-            fields: [
-              {
-                name: "Link",
-                value: post.url,
-              },
-            ],
+            name: "Link",
+            value: post.url,
           },
         ],
-      }),
-    });
-
-    if (!webhookResponse.ok) {
-      console.error("Failed to alert of new post", webhookResponse.statusText);
-    }
-  } else {
-    console.error("Can't alert of new post: No DISCORD_WEBHOOK_URL set");
-  }
+      },
+    ],
+  });
 }
 
 type DeletePostInput = {
   rkey: string;
-  offset: bigint;
+  offset: number;
 };
 
 export async function unauthed_deletePost({ rkey, offset }: DeletePostInput) {

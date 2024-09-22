@@ -1,4 +1,4 @@
-import { DID, getDidFromHandleOrDid } from "@/lib/data/atproto/did";
+import type { DID } from "@/lib/data/atproto/did";
 import { getUserPosts } from "@/lib/data/db/post";
 import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
@@ -14,6 +14,7 @@ import { getBlueskyProfile } from "@/lib/data/user";
 import { getUserComments } from "@/lib/data/db/comment";
 import { Comment } from "../../post/[postAuthor]/[postRkey]/_lib/comment";
 import { Suspense } from "react";
+import { getDidFromHandleOrDid } from "@/lib/data/atproto/identity";
 
 type Params = {
   user: string;

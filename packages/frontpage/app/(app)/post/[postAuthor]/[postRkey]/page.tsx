@@ -3,7 +3,7 @@ import { NewComment } from "./_lib/comment-client";
 import { Comment } from "./_lib/comment";
 import { getCommentsForPost } from "@/lib/data/db/comment";
 import { Metadata } from "next";
-import { getVerifiedHandle } from "@/lib/data/user";
+import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { PostPageParams, getPostPageData } from "./_lib/page-data";
 
 export async function generateMetadata({

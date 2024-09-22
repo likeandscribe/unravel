@@ -1,8 +1,9 @@
 "use client";
 
 import { listRecords } from "@/lib/atproto";
+import { getAtUriPath } from "@/lib/util";
 import { AtUri } from "@atproto/syntax";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { Suspense, useState } from "react";
 import useSWR from "swr";
 
@@ -34,7 +35,7 @@ export function CollectionItems({
         const uri = new AtUri(record.uri);
         return (
           <li key={record.uri}>
-            <Link href={`/at?u=${record.uri}`}>{uri.rkey}</Link>
+            <Link href={getAtUriPath(new AtUri(record.uri))}>{uri.rkey}</Link>
           </li>
         );
       })}

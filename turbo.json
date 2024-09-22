@@ -5,8 +5,16 @@
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DRAINPIPE_CONSUMER_SECRET",
-        "POSTGRES_URL",
-        "DISCORD_WEBHOOK_URL"
+        "DISCORD_WEBHOOK_URL",
+        "TURSO_CONNECTION_URL",
+        "TURSO_AUTH_TOKEN",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+        "NODE_ENV",
+        "PRIVATE_JWK",
+        "PUBLIC_JWK",
+        "VERCEL_BRANCH_URL",
+        "VERCEL_ENV",
+        "CRON_SECRET"
       ]
     },
     "type-check": {},

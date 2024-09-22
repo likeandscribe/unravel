@@ -1,16 +1,11 @@
 import {
+  sqliteTable,
   text,
-  pgTable,
-  serial,
   integer,
-  timestamp,
-  bigint,
-  unique,
-  pgEnum,
-  foreignKey,
   customType,
-  varchar,
-} from "drizzle-orm/pg-core";
+  unique,
+  foreignKey,
+} from "drizzle-orm/sqlite-core";
 import type { DID } from "./data/atproto/did";
 import {
   MAX_COMMENT_LENGTH,
@@ -24,42 +19,47 @@ const did = customType<{ data: DID }>({
   },
 });
 
-export const submissionStatus = pgEnum("submission_status", [
-  "live",
-  "deleted",
-  "moderator_hidden",
-]);
+const dateIsoText = customType<{ data: Date; driverData: string }>({
+  dataType() {
+    return "text";
+  },
+  toDriver: (value) => value.toISOString(),
+  fromDriver: (value) => new Date(value),
+});
 
-export const Post = pgTable(
+const createStatusColumn = (col: string) =>
+  text(col, { enum: ["live", "deleted", "moderator_hidden"] }).default("live");
+
+export const Post = sqliteTable(
   "posts",
   {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey(),
     rkey: text("rkey").notNull(),
     cid: text("cid").notNull().unique(),
-    title: varchar("title", {
+    title: text("title", {
       length: MAX_POST_TITLE_LENGTH,
     }).notNull(),
-    url: varchar("url", {
+    url: text("url", {
       length: MAX_POST_URL_LENGTH,
     }).notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: dateIsoText("created_at").notNull(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
-    status: submissionStatus("status").default("live"),
+    status: createStatusColumn("status"),
   },
   (t) => ({
     unique_author_rkey: unique().on(t.authorDid, t.rkey),
   }),
 );
 
-export const PostVote = pgTable(
+export const PostVote = sqliteTable(
   "post_votes",
   {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey(),
     postId: integer("post_id")
       .notNull()
       .references(() => Post.id),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: dateIsoText("created_at").notNull(),
     authorDid: did("author_did").notNull(),
     cid: text("cid").notNull().unique(),
     rkey: text("rkey").notNull(),
@@ -71,22 +71,22 @@ export const PostVote = pgTable(
   }),
 );
 
-export const Comment = pgTable(
+export const Comment = sqliteTable(
   "comments",
   {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey(),
     rkey: text("rkey").notNull(),
     cid: text("cid").notNull().unique(),
     postId: integer("post_id")
       .notNull()
       .references(() => Post.id),
-    body: varchar("body", {
+    body: text("body", {
       length: MAX_COMMENT_LENGTH,
     }).notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: dateIsoText("created_at").notNull(),
     authorDid: did("author_did").notNull(),
     // TODO: add notNull once this is rolled out
-    status: submissionStatus("status").default("live"),
+    status: createStatusColumn("status"),
     parentCommentId: integer("parent_comment_id"),
   },
   (t) => ({
@@ -99,14 +99,14 @@ export const Comment = pgTable(
   }),
 );
 
-export const CommentVote = pgTable(
+export const CommentVote = sqliteTable(
   "comment_votes",
   {
-    id: serial("id").primaryKey(),
+    id: integer("id").primaryKey(),
     commentId: integer("comment_id")
       .notNull()
       .references(() => Comment.id),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: dateIsoText("created_at").notNull(),
     authorDid: did("author_did").notNull(),
     cid: text("cid").notNull().unique(),
     rkey: text("rkey").notNull(),
@@ -118,14 +118,39 @@ export const CommentVote = pgTable(
   }),
 );
 
-export const BetaUser = pgTable("beta_users", {
-  id: serial("id").primaryKey(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const BetaUser = sqliteTable("beta_users", {
+  id: integer("id").primaryKey(),
+  createdAt: dateIsoText("created_at").notNull(),
   did: did("did").notNull().unique(),
 });
 
-export const ConsumedOffset = pgTable("consumed_offsets", {
-  offset: bigint("offset", {
-    mode: "bigint",
-  }).primaryKey(),
+export const ConsumedOffset = sqliteTable("consumed_offsets", {
+  offset: integer("offset").primaryKey(),
+});
+
+export const OauthAuthRequest = sqliteTable("oauth_auth_requests", {
+  state: text("state").notNull().unique(),
+  iss: text("iss").notNull(),
+  did: did("did").notNull(),
+  username: text("username").notNull(),
+  nonce: text("nonce").notNull(),
+  pkceVerifier: text("pkce_verifier").notNull(),
+  dpopPrivateJwk: text("dpop_private_jwk").notNull(),
+  dpopPublicJwk: text("dpop_public_jwk").notNull(),
+  expiresAt: dateIsoText("expires_at").notNull(),
+  createdAt: dateIsoText("created_at").notNull(),
+});
+
+export const OauthSession = sqliteTable("oauth_sessions", {
+  sessionId: integer("id").primaryKey(),
+  did: did("did").notNull(),
+  username: text("username").notNull(),
+  iss: text("iss").notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  dpopNonce: text("dpop_nonce").notNull(),
+  dpopPrivateJwk: text("dpop_private_jwk").notNull(),
+  dpopPublicJwk: text("dpop_public_jwk").notNull(),
+  expiresAt: dateIsoText("expires_at").notNull(),
+  createdAt: dateIsoText("created_at").notNull(),
 });

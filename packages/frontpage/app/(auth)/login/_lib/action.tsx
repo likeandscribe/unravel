@@ -1,15 +1,12 @@
 "use server";
-import { signIn } from "@/lib/auth";
-import { AuthError } from "next-auth";
+import { signIn } from "@/lib/auth-sign-in";
 
 export async function loginAction(_prevStart: unknown, formData: FormData) {
-  try {
-    formData.set("redirectTo", "/");
-    await signIn(formData);
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Failed to sign in." };
-    }
-    throw error;
+  const identifier = formData.get("identifier") as string;
+  const result = await signIn(identifier.replace(/^@/, ""));
+  if (result && "error" in result) {
+    return {
+      error: `An error occured while signing in (${result.error})`,
+    };
   }
 }

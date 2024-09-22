@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use cid::Cid;
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
@@ -7,8 +6,6 @@ use std::io::Cursor;
 pub struct Header {
     #[serde(rename(deserialize = "t"))]
     pub type_: String,
-    #[serde(rename(deserialize = "op"))]
-    pub operation: u8,
 }
 
 use std::fmt;
@@ -72,34 +69,23 @@ pub struct SubscribeReposCommitOperation {
 
 #[derive(Debug, Deserialize)]
 pub struct SubscribeReposCommit {
-    pub commit: Cid,
     #[serde(rename(deserialize = "ops"))]
     pub operations: Vec<SubscribeReposCommitOperation>,
-    pub prev: Option<Cid>,
-    pub rebase: bool,
     pub repo: String,
     #[serde(rename(deserialize = "seq"))]
     pub sequence: i64,
-    pub time: DateTime<Utc>,
-    #[serde(rename(deserialize = "tooBig"))]
-    pub too_big: bool,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SubscribeReposHandle {
-    pub did: String,
-    pub handle: String,
     #[serde(rename(deserialize = "seq"))]
     pub sequence: i64,
-    pub time: DateTime<Utc>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SubscribeReposTombstone {
-    pub did: String,
     #[serde(rename(deserialize = "seq"))]
     pub sequence: i64,
-    pub time: DateTime<Utc>,
 }
 
 #[derive(Debug, Deserialize)]

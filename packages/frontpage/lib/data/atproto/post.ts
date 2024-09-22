@@ -1,5 +1,5 @@
 import "server-only";
-import { ensureIsInBeta, getPdsUrl } from "../user";
+import { ensureIsInBeta } from "../user";
 import {
   atprotoCreateRecord,
   atprotoDeleteRecord,
@@ -7,7 +7,7 @@ import {
 } from "./record";
 import { z } from "zod";
 import { DataLayerError } from "../error";
-import { DID } from "./did";
+import { DID, getPdsUrl } from "./did";
 
 export const PostCollection = "fyi.unravel.frontpage.post";
 

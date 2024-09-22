@@ -1,10 +1,11 @@
 "use server";
 
 import { DID } from "@/lib/data/atproto/did";
+import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { createPost } from "@/lib/data/atproto/post";
 import { uncached_doesPostExist } from "@/lib/data/db/post";
 import { DataLayerError } from "@/lib/data/error";
-import { ensureUser, getVerifiedHandle } from "@/lib/data/user";
+import { ensureUser } from "@/lib/data/user";
 import { redirect } from "next/navigation";
 
 export async function newPostAction(_prevState: unknown, formData: FormData) {

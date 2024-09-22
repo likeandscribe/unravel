@@ -1,12 +1,18 @@
-use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
+use diesel::{connection::SimpleConnection, prelude::*};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use std::ops::Deref;
 
 use crate::{ProcessError, ProcessErrorKind};
 
 pub fn db_connect(database_url: &String) -> anyhow::Result<SqliteConnection> {
-    SqliteConnection::establish(&database_url).map_err(Into::into)
+    let mut conn =
+        SqliteConnection::establish(&database_url).map_err(Into::<anyhow::Error>::into)?;
+
+    conn.batch_execute("PRAGMA journal_mode=WAL;")?;
+    conn.batch_execute("PRAGMA synchronous=NORMAL;")?;
+
+    Ok(conn)
 }
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
