@@ -23,7 +23,7 @@ export async function middleware(_request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (session.user.expiresAt.getTime() > new Date().getTime() - 500) {
+  if (session.user.expiresAt.getTime() < new Date().getTime() - 500) {
     const authServer = await processDiscoveryResponse(
       new URL(session.user.iss),
       await oauthDiscoveryRequest(new URL(session.user.iss)),
