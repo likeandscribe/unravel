@@ -8,11 +8,13 @@ import {
 import { db } from "./lib/db";
 import * as schema from "./lib/schema";
 import {
+  deleteAuthCookie,
   getClientPrivateKey,
   getOauthClientOptions,
   getSession,
   importDpopJwks,
   oauthDiscoveryRequest,
+  signOut,
 } from "./lib/auth";
 
 export async function middleware(_request: NextRequest) {
@@ -88,8 +90,11 @@ export async function middleware(_request: NextRequest) {
 
     if ("error" in result) {
       // Logout and show error
-      console.error(result);
-      throw new Error("not implemented");
+      console.log("session corrupt, logging out", result);
+      await signOut();
+      const response = NextResponse.redirect("/login");
+      deleteAuthCookie(response.cookies);
+      return response;
     }
 
     const dpopNonce = response.headers.get("DPoP-Nonce");

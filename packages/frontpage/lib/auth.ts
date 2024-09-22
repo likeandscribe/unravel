@@ -324,12 +324,21 @@ export const handlers = {
   },
 };
 
+export async function deleteAuthCookie(cookieStub: {
+  delete: (name: string) => void;
+}) {
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Not authenticated");
+  }
+  cookieStub.delete(AUTH_COOKIE_NAME);
+}
+
 export async function signOut() {
   const session = await getSession();
   if (!session) {
     throw new Error("Not authenticated");
   }
-  cookies().delete(AUTH_COOKIE_NAME);
   const authServer = await processDiscoveryResponse(
     new URL(session.user.iss),
     await oauthDiscoveryRequest(new URL(session.user.iss)),
@@ -347,7 +356,6 @@ export async function signOut() {
   await db
     .delete(schema.OauthSession)
     .where(eq(schema.OauthSession.did, session.user.did));
-  redirect("/");
 }
 
 export const getSession = cache(async () => {
