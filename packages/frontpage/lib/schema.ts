@@ -127,3 +127,30 @@ export const BetaUser = sqliteTable("beta_users", {
 export const ConsumedOffset = sqliteTable("consumed_offsets", {
   offset: integer("offset").primaryKey(),
 });
+
+export const OauthAuthRequest = sqliteTable("oauth_auth_requests", {
+  state: text("state").notNull().unique(),
+  iss: text("iss").notNull(),
+  did: did("did").notNull(),
+  username: text("username").notNull(),
+  nonce: text("nonce").notNull(),
+  pkceVerifier: text("pkce_verifier").notNull(),
+  dpopPrivateJwk: text("dpop_private_jwk").notNull(),
+  dpopPublicJwk: text("dpop_public_jwk").notNull(),
+  expiresAt: dateIsoText("expires_at").notNull(),
+  createdAt: dateIsoText("created_at").notNull(),
+});
+
+export const OauthSession = sqliteTable("oauth_sessions", {
+  sessionId: integer("id").primaryKey(),
+  did: did("did").notNull(),
+  username: text("username").notNull(),
+  iss: text("iss").notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  dpopNonce: text("dpop_nonce").notNull(),
+  dpopPrivateJwk: text("dpop_private_jwk").notNull(),
+  dpopPublicJwk: text("dpop_public_jwk").notNull(),
+  expiresAt: dateIsoText("expires_at").notNull(),
+  createdAt: dateIsoText("created_at").notNull(),
+});

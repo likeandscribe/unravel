@@ -1,6 +1,7 @@
 "use server";
 
-import { DID, getVerifiedHandle } from "@/lib/data/atproto/did";
+import { DID } from "@/lib/data/atproto/did";
+import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { createPost } from "@/lib/data/atproto/post";
 import { uncached_doesPostExist } from "@/lib/data/db/post";
 import { DataLayerError } from "@/lib/data/error";
