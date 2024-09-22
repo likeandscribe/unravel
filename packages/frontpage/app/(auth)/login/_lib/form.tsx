@@ -26,7 +26,12 @@ export function LoginForm() {
       >
         <div>
           <Label htmlFor="handle">Handle</Label>
-          <Input id="handle" name="handle" required placeholder="example.com" />
+          <Input
+            id="identifier"
+            name="handle"
+            required
+            placeholder="example.com"
+          />
         </div>
         <div>
           <Button type="submit" className="w-full" disabled={isPending}>

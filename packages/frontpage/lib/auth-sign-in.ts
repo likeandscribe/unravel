@@ -19,8 +19,8 @@ import { db } from "./db";
 import * as schema from "./schema";
 import { redirect } from "next/navigation";
 
-export async function signIn(handle: string) {
-  const did = await getDidFromHandleOrDid(handle);
+export async function signIn(identifier: string) {
+  const did = await getDidFromHandleOrDid(identifier);
   if (!did) {
     return {
       error: "DID_NOT_FOUND" as const,
@@ -77,7 +77,7 @@ export async function signIn(handle: string) {
         state,
         redirect_uri: client.redirect_uris[0],
         scope: client.scope,
-        login_hint: handle,
+        login_hint: identifier,
       },
       {
         DPoP: {
@@ -143,7 +143,7 @@ export async function signIn(handle: string) {
   await db.insert(schema.OauthAuthRequest).values({
     did: did,
     iss: authServer.issuer,
-    username: handle,
+    username: identifier,
     nonce: dpopNonce,
     state,
     pkceVerifier,
