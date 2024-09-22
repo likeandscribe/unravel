@@ -100,9 +100,9 @@ export async function getClientPrivateKey() {
 export function oauthDiscoveryRequest(url: URL) {
   return discoveryRequest(url, {
     algorithm: "oauth2",
-    headers: {
+    headers: new Headers({
       "User-Agent": USER_AGENT,
-    },
+    }),
   });
 }
 
