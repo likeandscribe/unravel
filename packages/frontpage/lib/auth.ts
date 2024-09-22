@@ -288,7 +288,7 @@ export const handlers = {
         throw new Error("Missing expires");
       }
 
-      await db.insert(schema.OauthSession).values({
+      const { lastInsertRowid } = await db.insert(schema.OauthSession).values({
         did: row.did,
         username: row.username,
         iss: row.iss,
@@ -301,10 +301,15 @@ export const handlers = {
         dpopPublicJwk: row.dpopPublicJwk,
       });
 
+      if (!lastInsertRowid) {
+        throw new Error("Failed to insert session");
+      }
+
       const userToken = await new SignJWT()
         .setSubject(row.did)
         .setProtectedHeader({ alg: USER_SESSION_JWT_ALG })
         .setIssuedAt()
+        .setJti(lastInsertRowid.toString())
         .sign(
           // TODO: This probably ought to be a different key
           await getPrivateJwk(),
@@ -355,7 +360,7 @@ export async function signOut() {
 
   await db
     .delete(schema.OauthSession)
-    .where(eq(schema.OauthSession.did, session.user.did));
+    .where(eq(schema.OauthSession.sessionId, session.user.sessionId));
 }
 
 export const getSession = cache(async () => {
@@ -372,19 +377,14 @@ export const getSession = cache(async () => {
     return null;
   }
 
-  if (!token.payload.sub) {
-    return null;
-  }
-
-  const did = parseDid(token.payload.sub);
-  if (!did) {
+  if (!token.payload.jti) {
     return null;
   }
 
   const [session] = await db
     .select()
     .from(schema.OauthSession)
-    .where(eq(schema.OauthSession.did, did));
+    .where(eq(schema.OauthSession.sessionId, Number(token.payload.jti)));
 
   if (!session) {
     return null;
