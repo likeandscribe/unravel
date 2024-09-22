@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "./_lib/form";
 import { getUser } from "@/lib/data/user";
 
-export default function LoginPage() {
-  const user = getUser();
+export default async function LoginPage() {
+  const user = await getUser();
 
   if (user !== null) {
     redirect("/");
