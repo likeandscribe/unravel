@@ -5,7 +5,10 @@ import { Button } from "@/lib/components/ui/button";
 import { isBetaUser } from "@/lib/data/user";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "./_components/theme-toggle";
-import { getDidFromHandleOrDid } from "@/lib/data/atproto/identity";
+import {
+  getDidFromHandleOrDid,
+  getVerifiedHandle,
+} from "@/lib/data/atproto/identity";
 
 import {
   DropdownMenu,
@@ -99,26 +102,24 @@ export default async function Layout({
 async function LoginOrLogout() {
   const session = await getSession();
   if (session) {
-    const did = await getDidFromHandleOrDid(session.user.username);
+    const [did, handle] = await Promise.all([
+      getDidFromHandleOrDid(session.user.username),
+      getVerifiedHandle(session.user.did),
+    ]);
     return (
       <DropdownMenu>
         <DropdownMenuTrigger>
           {did ? (
             <UserAvatar did={did} size="smedium" />
           ) : (
-            <span>{session.user.username}</span>
+            <span>{handle}</span>
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" side="bottom" align="end">
-          <DropdownMenuLabel className="truncate">
-            {session.user.username}
-          </DropdownMenuLabel>
+          <DropdownMenuLabel className="truncate">{handle}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link
-              href={`/profile/${session.user.username}`}
-              className="cursor-pointer"
-            >
+            <Link href={`/profile/${handle}`} className="cursor-pointer">
               Profile
             </Link>
           </DropdownMenuItem>
