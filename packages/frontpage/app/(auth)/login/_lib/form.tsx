@@ -28,7 +28,7 @@ export function LoginForm() {
           <Label htmlFor="handle">Handle</Label>
           <Input
             id="identifier"
-            name="handle"
+            name="identifier"
             required
             placeholder="example.com"
           />
