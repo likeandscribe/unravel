@@ -30,6 +30,7 @@ import { redirect, RedirectType } from "next/navigation";
 import { db } from "./db";
 import * as schema from "./schema";
 import { eq } from "drizzle-orm";
+import { getDidFromHandleOrDid } from "./data/atproto/identity";
 
 const USER_AGENT = "appview/@frontpage.fyi (@tom-sherman.com)";
 
@@ -140,6 +141,12 @@ export async function oauthProtectedMetadataRequest(did: DID) {
   return { data: result.data };
 }
 
+async function deleteOauthRequest(state: string) {
+  await db
+    .delete(schema.OauthAuthRequest)
+    .where(eq(schema.OauthAuthRequest.state, state));
+}
+
 const AUTH_COOKIE_NAME = "__auth_sesion";
 const USER_SESSION_JWT_ALG = "ES256";
 
@@ -193,6 +200,9 @@ export const handlers = {
           errorMessage = "An error occurred";
         }
 
+        // Delete row to prevent replay attacks
+        await deleteOauthRequest(state);
+
         redirect(`/login?error=${errorMessage}`, RedirectType.replace);
       }
 
@@ -211,9 +221,7 @@ export const handlers = {
       }
 
       // Delete row to prevent replay attacks
-      await db
-        .delete(schema.OauthAuthRequest)
-        .where(eq(schema.OauthAuthRequest.state, state));
+      await deleteOauthRequest(state);
 
       if (row.iss !== iss) {
         throw new Error("Invalid issuer");
@@ -272,8 +280,17 @@ export const handlers = {
         throw new Error("Invalid tokens");
       }
 
-      if (tokensResult.data.sub !== row.did) {
-        throw new Error("Token sub does not match did");
+      if (
+        tokensResult.data.sub !== row.did ||
+        tokensResult.data.sub !== (await getDidFromHandleOrDid(row.username)) ||
+        row.did !== (await getDidFromHandleOrDid(row.username))
+      ) {
+        // Delete row to prevent replay attacks
+        await deleteOauthRequest(state);
+        redirect(
+          `/login?error=Naughty naughty, your ID doesn't match what we were expecting!`,
+          RedirectType.replace,
+        );
       }
 
       const dpopNonce = authCodeResponse.headers.get("DPoP-Nonce");
@@ -488,7 +505,6 @@ export async function fetchAuthenticatedAtproto(
     if (!dpopNonce2) {
       throw new Error("Missing DPoP nonce");
     }
-    console.log("new nonce", dpopNonce2);
 
     response = await makeRequest(dpopNonce2);
   }
