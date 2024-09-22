@@ -83,7 +83,7 @@ const getAtprotoFromHttps = unstable_cache(
     if (!res.ok) {
       return null;
     }
-    return parseDid(await res.text());
+    return parseDid((await res.text()).trim());
   },
   ["did", "https"],
   {
