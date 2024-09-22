@@ -350,10 +350,6 @@ export const handlers = {
 export async function deleteAuthCookie(cookieStub: {
   delete: (name: string) => void;
 }) {
-  const session = await getSession();
-  if (!session) {
-    throw new Error("Not authenticated");
-  }
   cookieStub.delete(AUTH_COOKIE_NAME);
 }
 
