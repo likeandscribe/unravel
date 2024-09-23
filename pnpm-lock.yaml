@@ -114,6 +114,9 @@ importers:
       '@atproto/oauth-types':
         specifier: ^0.1.2
         version: 0.1.2
+      '@atproto/syntax':
+        specifier: ^0.3.0
+        version: 0.3.0
       '@libsql/client':
         specifier: ^0.9.0
         version: 0.9.0(bufferutil@4.0.8)(utf-8-validate@6.0.3)
