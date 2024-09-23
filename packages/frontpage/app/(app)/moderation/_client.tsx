@@ -1,6 +1,5 @@
 "use client";
-import { CheckCircle, ExternalLink, Flag, Shield, XCircle } from "lucide-react";
-import { Button } from "@/lib/components/ui/button";
+import { ExternalLink, Flag, Shield } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,12 +8,6 @@ import {
   CardTitle,
 } from "@/lib/components/ui/card";
 import { Report } from "./page";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/lib/components/ui/tabs";
 import { useState } from "react";
 
 export default function ModerationPage({
