@@ -347,7 +347,7 @@ export const handlers = {
   },
 };
 
-export async function deleteAuthCookie(cookieStub: {
+export function deleteAuthCookie(cookieStub: {
   delete: (name: string) => void;
 }) {
   cookieStub.delete(AUTH_COOKIE_NAME);

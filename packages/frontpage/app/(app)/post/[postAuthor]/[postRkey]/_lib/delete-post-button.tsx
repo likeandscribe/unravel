@@ -45,7 +45,7 @@ export function DeletePostButton({ rkey }: { rkey: string }) {
               <Button
                 variant="destructive"
                 onClick={() => {
-                  deletePostAction(rkey);
+                  void deletePostAction(rkey);
                   toast({
                     title: "Your post will be deleted shortly.",
                     description: "This usually takes a few seconds",

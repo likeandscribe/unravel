@@ -171,7 +171,7 @@ function DeleteCommentButton({ rkey }: { rkey: string }) {
   return (
     <form
       action={deleteAction}
-      onSubmit={async (e) => {
+      onSubmit={(e) => {
         // Prevent default form submission
         // Action is dispatched on dialog action
         e.preventDefault();
@@ -246,7 +246,7 @@ export function NewComment({
   return (
     <form
       action={action}
-      onSubmit={async (event) => {
+      onSubmit={(event) => {
         event.preventDefault();
         action(new FormData(event.currentTarget));
         onActionDone?.();
