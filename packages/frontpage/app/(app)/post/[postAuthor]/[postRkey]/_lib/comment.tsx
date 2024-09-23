@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   getDidFromHandleOrDid,
   getVerifiedHandle,
-} from "@/lib/data/atproto/did";
+} from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";

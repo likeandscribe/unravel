@@ -1,7 +1,7 @@
 import { UserAvatar } from "./user-avatar";
 import { HoverCard } from "@/lib/components/ui/hover-card";
 import { DID } from "../data/atproto/did";
-import { getVerifiedHandle } from "../data/atproto/did";
+import { getVerifiedHandle } from "../data/atproto/identity";
 import { UserHoverCardClient } from "./user-hover-card-client";
 
 type Props = {

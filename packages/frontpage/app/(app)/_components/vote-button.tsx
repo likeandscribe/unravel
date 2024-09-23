@@ -20,6 +20,7 @@ export function VoteButton({
   initialState,
   votes,
 }: VoteButtonProps) {
+  // TODO: useOptimistic here to fix cached vote count bug
   const [hasVoted, setHasVoted] = useState(
     initialState === "voted" || initialState === "authored",
   );

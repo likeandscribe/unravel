@@ -1,5 +1,6 @@
 import { badRequest, createApiRoute } from "@/lib/api-route";
-import { getVerifiedHandle, parseDid } from "@/lib/data/atproto/did";
+import { parseDid } from "@/lib/data/atproto/did";
+import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { getTotalSubmissions } from "@/lib/data/user";
 
 export const GET = createApiRoute(async (request) => {

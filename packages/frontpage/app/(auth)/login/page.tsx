@@ -1,6 +1,14 @@
+import { redirect } from "next/navigation";
 import { LoginForm } from "./_lib/form";
+import { getUser } from "@/lib/data/user";
 
-export default function Component() {
+export default async function LoginPage() {
+  const user = await getUser();
+
+  if (user !== null) {
+    redirect("/");
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-6">
@@ -16,7 +24,7 @@ export default function Component() {
             >
               Sign up on Bluesky
             </a>
-            , create an application password, then return here to login.
+            , then return here to login.
           </p>
         </div>
         <LoginForm />

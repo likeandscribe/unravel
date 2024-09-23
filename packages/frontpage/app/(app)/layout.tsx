@@ -1,11 +1,14 @@
-import { getSession, signOut } from "@/lib/auth";
+import { deleteAuthCookie, getSession, signOut } from "@/lib/auth";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/lib/components/ui/button";
 import { isBetaUser } from "@/lib/data/user";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "./_components/theme-toggle";
-import { getDidFromHandleOrDid } from "@/lib/data/atproto/did";
+import {
+  getDidFromHandleOrDid,
+  getVerifiedHandle,
+} from "@/lib/data/atproto/identity";
 
 import {
   DropdownMenu,
@@ -17,6 +20,9 @@ import {
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { FRONTPAGE_ATPROTO_HANDLE } from "@/lib/constants";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 
 export default async function Layout({
   children,
@@ -97,26 +103,24 @@ export default async function Layout({
 async function LoginOrLogout() {
   const session = await getSession();
   if (session) {
-    const did = await getDidFromHandleOrDid(session.user.name as string);
+    const [did, handle] = await Promise.all([
+      getDidFromHandleOrDid(session.user.username),
+      getVerifiedHandle(session.user.did),
+    ]);
     return (
       <DropdownMenu>
         <DropdownMenuTrigger>
           {did ? (
             <UserAvatar did={did} size="smedium" />
           ) : (
-            <span>{session.user.name}</span>
+            <span>{handle}</span>
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" side="bottom" align="end">
-          <DropdownMenuLabel className="truncate">
-            {session.user.name}
-          </DropdownMenuLabel>
+          <DropdownMenuLabel className="truncate">{handle}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link
-              href={`/profile/${session.user.name}`}
-              className="cursor-pointer"
-            >
+            <Link href={`/profile/${handle}`} className="cursor-pointer">
               Profile
             </Link>
           </DropdownMenuItem>
@@ -125,6 +129,9 @@ async function LoginOrLogout() {
             action={async () => {
               "use server";
               await signOut();
+              deleteAuthCookie(cookies());
+              revalidatePath("/", "layout");
+              redirect("/");
             }}
           >
             <DropdownMenuItem asChild>

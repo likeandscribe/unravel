@@ -1,6 +1,6 @@
 import { resolveIdentity } from "@/lib/atproto-server";
 import { getPds } from "@atproto/identity";
-import Link from "next/link";
+import Link from "@/lib/link";
 
 export async function DidCollections({ identifier }: { identifier: string }) {
   const identityResult = await resolveIdentity(identifier);
@@ -40,7 +40,9 @@ export async function DidCollections({ identifier }: { identifier: string }) {
         collections.map((nsid) => {
           return (
             <li key={nsid}>
-              <Link href={`/at/${identifier}/${nsid}`}>{nsid}</Link>
+              <Link href={`/at/${identifier}/${nsid}`} prefetch={false}>
+                {nsid}
+              </Link>
             </li>
           );
         })

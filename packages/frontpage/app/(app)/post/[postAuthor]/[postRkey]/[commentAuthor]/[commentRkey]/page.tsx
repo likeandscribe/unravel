@@ -1,7 +1,7 @@
 import { Comment } from "../../_lib/comment";
 import Link from "next/link";
 import { Metadata } from "next";
-import { getVerifiedHandle } from "@/lib/data/atproto/did";
+import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { CommentPageParams, getCommentPageData } from "./_lib/page-data";
 
 function truncateText(text: string, maxLength: number) {

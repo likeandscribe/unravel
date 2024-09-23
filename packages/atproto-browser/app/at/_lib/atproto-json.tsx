@@ -1,5 +1,5 @@
 import { isDid } from "@atproto/did";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { AtBlob } from "../../../lib/at-blob";
 import { getAtUriPath } from "@/lib/util";
 import { AtUri } from "@atproto/syntax";
@@ -101,9 +101,7 @@ function JSONObject({
             <pre>{key}:</pre>
           </dt>
           <dd style={{ margin: 0 }}>
-            {parseBlobResult.success &&
-            key === "$link" &&
-            typeof value === "string" ? (
+            {key === "$link" && typeof value === "string" ? (
               <pre>
                 <a href={`/blob/${repo}/${value}`}>{value}</a>
               </pre>

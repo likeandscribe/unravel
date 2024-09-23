@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/lib/link";
 import { AtUriForm } from "./aturi-form";
 import type { Metadata } from "next";
 

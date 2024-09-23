@@ -1,5 +1,5 @@
 import { getAtUriPath, isNotNull, utcDateFormatter } from "@/lib/util";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { Fragment, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { z } from "zod";

@@ -3,7 +3,7 @@ import { JSONType, JSONValue } from "./atproto-json";
 import { resolveIdentity } from "@/lib/atproto-server";
 import { DidCollections } from "./collection-server";
 import { Suspense } from "react";
-import Link from "next/link";
+import Link from "@/lib/link";
 
 export function CollapsedDidSummary({ did }: { did: string }) {
   return (
