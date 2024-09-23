@@ -27,14 +27,16 @@ export function VoteButton({
   return (
     <form
       // Action or unSubmit won't be triggered if you're an author because the button is disabled in that case
+      // Disabling the lint rule as this appears to be an issue in the react types where form actions don't accept an async fn.
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       action={hasVoted ? unvoteAction : voteAction}
       onSubmit={(e) => {
         e.preventDefault();
         if (hasVoted) {
-          unvoteAction();
+          void unvoteAction();
           setHasVoted(false);
         } else {
-          voteAction();
+          void voteAction();
           setHasVoted(true);
         }
       }}

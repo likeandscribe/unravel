@@ -126,6 +126,8 @@ async function LoginOrLogout() {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <form
+            // Disabling the lint rule as this appears to be an issue in the react types where form actions don't accept an async fn.
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             action={async () => {
               "use server";
               await signOut();

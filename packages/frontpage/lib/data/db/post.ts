@@ -204,7 +204,7 @@ export async function unauthed_createPost({
   });
 
   const bskyProfile = await getBlueskyProfile(authorDid);
-  sendDiscordMessage({
+  await sendDiscordMessage({
     embeds: [
       {
         title: "New post on Frontpage",

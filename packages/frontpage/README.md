@@ -13,7 +13,7 @@ pnpm run dev
 If you need to login, you need to setup some additional env vars and serve your dev server over the public internet. You can do this with `cloudflared` altho other options are available eg. `ngrok` or `tailscale`:
 
 ```bash
-pnpm exec tsx ./scripts/generate-jwks.mts # Copy this output into .env.local
+pnpm exec tsx ./scripts/generate-jwk.mts # Copy this output into .env.local
 
 # In one terminal, start the dev server
 pnpm run dev

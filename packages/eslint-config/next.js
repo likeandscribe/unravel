@@ -13,6 +13,9 @@ const project = resolve(process.cwd(), "tsconfig.json");
 
 module.exports = {
   parser: "@typescript-eslint/parser",
+  parserOptions: {
+    project,
+  },
   plugins: ["@typescript-eslint", "eslint-plugin-react-compiler"],
   extends: ["plugin:@typescript-eslint/recommended"].concat(
     [
@@ -51,5 +54,7 @@ module.exports = {
       },
     ],
     "react-compiler/react-compiler": "error",
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-misused-promises": "error",
   },
 };
