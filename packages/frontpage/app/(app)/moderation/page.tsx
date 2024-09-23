@@ -5,54 +5,81 @@ import { redirect } from "next/navigation";
 import ModerationPage from "./_client";
 
 export type Report = {
-  id: string;
-  type: "post" | "comment";
-  content: string;
-  reason: string;
-  status: "pending" | "approved" | "rejected";
-  did: string;
-  cid: string;
-  rkey: string;
-  uri: string;
-  community: string;
+  actionedAt?: string; // Optional field
+  actionedBy?: string; // Optional field
+  subjectUri: string;
+  subjectDid: string;
+  subjectCollection?: string; // Optional field
+  subjectRkey?: string; // Optional field
+  subjectCid?: string; // Optional field
+  createdBy: string;
+  createdAt: string;
+  creatorComment?: string; // Optional field
+  labelsAdded?: string; // Optional field
+  //TODO: add a type field to the report schema so you know if it's a post, comment or user report
+  //TODO: add a status field to the report schema so you know if it's pending, approved or rejected
+  type: "post" | "comment" | "user"; // New field to indicate the type of report
+  status: "pending" | "approved" | "rejected"; // New field to indicate the status of the report
 };
 
 const reports: Report[] = [
   {
-    id: "1",
+    actionedAt: "2023-10-01T12:00:00Z",
+    actionedBy: "moderator1",
+    subjectUri: "uri1",
+    subjectDid: "did1",
+    subjectCollection: "collection1",
+    subjectRkey: "rkey1",
+    subjectCid: "cid1",
+    createdBy: "user1",
+    createdAt: "2023-09-30T12:00:00Z",
+    creatorComment: "This is a comment by the creator.",
+    labelsAdded: "label1,label2",
     type: "post",
-    content: "This is a reported post",
-    reason: "Inappropriate content",
-    status: "pending",
-    did: "did:plc:abcdefghijklmnop",
-    cid: "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
-    rkey: "abcdef123456",
-    uri: "at://did:plc:abcdefghijklmnop/app.bsky.feed.post/abcdef123456",
-    community: "General",
+    status: "approved",
   },
   {
-    id: "2",
+    actionedAt: "2023-10-02T12:00:00Z",
+    actionedBy: "moderator2",
+    subjectUri: "uri2",
+    subjectDid: "did2",
+    subjectCollection: "collection2",
+    subjectRkey: "rkey2",
+    subjectCid: "cid2",
+    createdBy: "user2",
+    createdAt: "2023-09-29T12:00:00Z",
+    creatorComment: "This is another comment by the creator.",
+    labelsAdded: "label3,label4",
     type: "comment",
-    content: "This is a reported comment",
-    reason: "Spam",
-    status: "pending",
-    did: "did:plc:qrstuvwxyz123456",
-    cid: "bafybeihbgxvydgnxlfapxnzb7zyqbbs6tkvhflemvwogzb5zzp7ufuz7ky",
-    rkey: "ghijkl789012",
-    uri: "at://did:plc:qrstuvwxyz123456/app.bsky.feed.post/ghijkl789012",
-    community: "Tech",
+    status: "rejected",
   },
   {
-    id: "3",
-    type: "post",
-    content: "Another reported post",
-    reason: "Misinformation",
+    subjectUri: "uri3",
+    subjectDid: "did3",
+    createdBy: "user3",
+    createdAt: "2023-09-28T12:00:00Z",
+    type: "user",
     status: "pending",
-    did: "did:plc:123456abcdefghij",
-    cid: "bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xccnlnmzhe5h6y7afcvqpqom",
-    rkey: "mnopqr456789",
-    uri: "at://did:plc:123456abcdefghij/app.bsky.feed.post/mnopqr456789",
-    community: "Science",
+  },
+  {
+    subjectUri: "uri4",
+    subjectDid: "did4",
+    subjectCollection: "collection4",
+    createdBy: "user4",
+    createdAt: "2023-09-27T12:00:00Z",
+    creatorComment: "Yet another comment by the creator.",
+    type: "post",
+    status: "pending",
+  },
+  {
+    subjectUri: "uri5",
+    subjectDid: "did5",
+    subjectRkey: "rkey5",
+    createdBy: "user5",
+    createdAt: "2023-09-26T12:00:00Z",
+    labelsAdded: "label5,label6",
+    type: "comment",
+    status: "approved",
   },
 ];
 
