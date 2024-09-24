@@ -4,7 +4,7 @@ import { isValidHandle } from "@atproto/syntax";
 
 export async function loginAction(_prevStart: unknown, formData: FormData) {
   const identifier = formData.get("identifier") as string;
-  let handleOrDid = identifier;
+  let handleOrDid = identifier.trim();
   // Sanitize only handles
   if (
     isValidHandle(identifier) ||
