@@ -251,6 +251,7 @@ export function NewComment({
         startTransition(() => {
           action(new FormData(event.currentTarget));
           onActionDone?.();
+          setInput("");
         });
       }}
       aria-busy={isPending}
