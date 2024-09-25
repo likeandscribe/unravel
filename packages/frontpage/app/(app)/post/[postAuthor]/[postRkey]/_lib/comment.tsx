@@ -120,14 +120,7 @@ async function LiveComment({
             <TimeAgo createdAt={comment.createdAt} side="bottom" />
           </Link>
         </div>
-        {comment.body?.split("\n").map((line, index) => (
-          <p
-            // eslint-disable-next-line react/no-array-index-key
-            key={index}
-          >
-            {line}
-          </p>
-        ))}
+        <p className="whitespace-pre-wrap">{comment.body}</p>
       </CommentClientWrapperWithToolbar>
 
       {comment.children?.map((comment) => (
