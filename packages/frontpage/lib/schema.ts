@@ -155,10 +155,8 @@ export const OauthSession = sqliteTable("oauth_sessions", {
   createdAt: dateIsoText("created_at").notNull(),
 });
 
-const createColumnReportType = (col: string) =>
-  text(col, { enum: ["post", "comment", "user"] });
-
 export const ModerationEvent = sqliteTable("moderation_events", {
+  id: integer("id").primaryKey(),
   subjectUri: text("subject_uri").notNull(),
   subjectDid: text("subject_did").notNull(),
   subjectCollection: text("subject_collection"),
@@ -167,15 +165,19 @@ export const ModerationEvent = sqliteTable("moderation_events", {
   createdBy: text("created_by").notNull(),
   createdAt: dateIsoText("created_at").notNull(),
   labelsAdded: text("labels_added"),
-  reportType: createColumnReportType("report_type"),
+  labelsRemoved: text("labels_removed"),
+  creatorReportReason: text("report_type"),
 });
 
 export const LabelledProfile = sqliteTable("labelled_profiles", {
+  id: integer("id").primaryKey(),
   did: text("did").notNull().unique(),
+  isHidden: integer("is_hidden", { mode: "boolean" }).notNull().default(false),
   labels: text("labels"),
 });
 
 export const Report = sqliteTable("reports", {
+  id: integer("id").primaryKey(),
   actionedAt: dateIsoText("actioned_at"),
   actionedBy: text("actioned_by"),
   subjectUri: text("subject_uri").notNull(),
@@ -186,5 +188,5 @@ export const Report = sqliteTable("reports", {
   createdBy: text("created_by").notNull(),
   createdAt: dateIsoText("created_at").notNull(),
   creatorComment: text("creator_comment"),
-  labelsAdded: text("labels_added"),
+  reportReason: text("report_reason"),
 });

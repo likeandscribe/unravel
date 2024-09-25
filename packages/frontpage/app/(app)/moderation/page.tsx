@@ -2,9 +2,10 @@
 
 import { hasRole } from "@/lib/data/user";
 import { redirect } from "next/navigation";
-import ModerationPage from "./_client";
+import ModerationPage from "./client";
 
 export type Report = {
+  id: number;
   actionedAt?: string; // Optional field
   actionedBy?: string; // Optional field
   subjectUri: string;
@@ -24,6 +25,7 @@ export type Report = {
 
 const reports: Report[] = [
   {
+    id: 1,
     actionedAt: "2023-10-01T12:00:00Z",
     actionedBy: "moderator1",
     subjectUri: "uri1",
@@ -39,6 +41,7 @@ const reports: Report[] = [
     status: "approved",
   },
   {
+    id: 2,
     actionedAt: "2023-10-02T12:00:00Z",
     actionedBy: "moderator2",
     subjectUri: "uri2",
@@ -54,6 +57,7 @@ const reports: Report[] = [
     status: "rejected",
   },
   {
+    id: 3,
     subjectUri: "uri3",
     subjectDid: "did3",
     createdBy: "user3",
@@ -62,6 +66,7 @@ const reports: Report[] = [
     status: "pending",
   },
   {
+    id: 4,
     subjectUri: "uri4",
     subjectDid: "did4",
     subjectCollection: "collection4",
@@ -72,6 +77,7 @@ const reports: Report[] = [
     status: "pending",
   },
   {
+    id: 5,
     subjectUri: "uri5",
     subjectDid: "did5",
     subjectRkey: "rkey5",
