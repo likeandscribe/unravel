@@ -120,7 +120,9 @@ async function LiveComment({
             <TimeAgo createdAt={comment.createdAt} side="bottom" />
           </Link>
         </div>
-        <p>{comment.body}</p>
+        {comment.body
+          ?.split("\n")
+          .map((line, index) => <p key={index}>{line}</p>)}
       </CommentClientWrapperWithToolbar>
 
       {comment.children?.map((comment) => (
