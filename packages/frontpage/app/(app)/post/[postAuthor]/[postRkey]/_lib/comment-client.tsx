@@ -248,8 +248,11 @@ export function NewComment({
       action={action}
       onSubmit={(event) => {
         event.preventDefault();
-        action(new FormData(event.currentTarget));
-        onActionDone?.();
+        startTransition(() => {
+          action(new FormData(event.currentTarget));
+          onActionDone?.();
+          setInput("");
+        });
       }}
       aria-busy={isPending}
       onKeyDown={(event) => {
