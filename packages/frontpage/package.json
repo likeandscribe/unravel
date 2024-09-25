@@ -36,7 +36,7 @@
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.33.0",
     "jose": "^5.4.0",
-    "next": "15.0.0-canary.167",
+    "next": "15.0.0-canary.168",
     "next-themes": "^0.3.0",
     "oauth4webapi": "^2.12.1",
     "react": "19.0.0-rc-f994737d14-20240522",
