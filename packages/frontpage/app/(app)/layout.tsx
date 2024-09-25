@@ -133,7 +133,6 @@ async function LoginOrLogout() {
               await signOut();
               deleteAuthCookie(cookies());
               revalidatePath("/", "layout");
-              redirect("/");
             }}
           >
             <DropdownMenuItem asChild>
