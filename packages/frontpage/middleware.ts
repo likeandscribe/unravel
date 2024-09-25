@@ -17,7 +17,7 @@ import {
   signOut,
 } from "./lib/auth";
 
-export async function middleware(_request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const session = await getSession();
   if (!session) {
     return NextResponse.next();
@@ -92,7 +92,7 @@ export async function middleware(_request: NextRequest) {
       // Logout and show error
       console.log("session corrupt, logging out", result);
       await signOut();
-      const response = NextResponse.redirect("/login");
+      const response = NextResponse.redirect(new URL("/login", request.url));
       deleteAuthCookie(response.cookies);
       return response;
     }
