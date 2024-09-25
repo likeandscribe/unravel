@@ -30,7 +30,7 @@ export function UserHoverCardClient({
       <HoverCardTrigger
         asChild={asChild}
         onMouseEnter={() => {
-          preload(did, getHoverCardData);
+          void preload(did, getHoverCardData);
         }}
       >
         {children}

@@ -17,7 +17,7 @@ export default async function Post({
   children: React.ReactNode;
   params: Params;
 }) {
-  getUser(); // Prefetch user
+  void getUser(); // Prefetch user
   const didParam = await getDidFromHandleOrDid(params.postAuthor);
   if (!didParam) {
     notFound();

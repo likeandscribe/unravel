@@ -36,8 +36,10 @@ type CommentInput = {
 
 export async function createComment({ parent, post, content }: CommentInput) {
   await ensureIsInBeta();
+  // Collapse newlines into a single \n\n and trim whitespace
+  const sanitizedContent = content.replace(/\n\n+/g, "\n\n").trim();
   const record = {
-    content,
+    content: sanitizedContent,
     parent: parent
       ? {
           cid: parent.cid,

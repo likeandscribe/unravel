@@ -29,7 +29,7 @@ export const getVerifiedDid = cache(async (handle: string) => {
 
   if (!plcHandle) return null;
 
-  return plcHandle === handle ? did : null;
+  return plcHandle.toLowerCase() === handle.toLowerCase() ? did : null;
 });
 
 const DnsQueryResponse = z.object({

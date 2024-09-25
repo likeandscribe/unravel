@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useState } from "react";
+import { startTransition, useActionState, useId, useState } from "react";
 import { newPostAction } from "./_action";
 import { Label } from "@/lib/components/ui/label";
 import { Input } from "@/lib/components/ui/input";
@@ -23,7 +23,9 @@ export function NewPostForm() {
       action={action}
       onSubmit={(e) => {
         e.preventDefault();
-        action(new FormData(e.currentTarget));
+        startTransition(() => {
+          action(new FormData(e.currentTarget));
+        });
       }}
       className="flex flex-col gap-3"
     >

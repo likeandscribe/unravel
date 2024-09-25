@@ -7,7 +7,7 @@ import { lt, inArray } from "drizzle-orm";
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    sendDiscordMessage({
+    await sendDiscordMessage({
       embeds: [
         {
           title: "Unauthorized request to cron endpoint",
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       return expiredSessions.length;
     });
 
-    sendDiscordMessage({
+    await sendDiscordMessage({
       embeds: [
         {
           title: "Cleaned up OAuth tokens",
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       ],
     });
   } catch (e) {
-    sendDiscordMessage({
+    await sendDiscordMessage({
       embeds: [
         {
           title: "Error cleaning up OAuth tokens",
