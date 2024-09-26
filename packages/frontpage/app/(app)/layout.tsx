@@ -20,7 +20,6 @@ import {
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { FRONTPAGE_ATPROTO_HANDLE } from "@/lib/constants";
-import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -133,7 +132,6 @@ async function LoginOrLogout() {
               await signOut();
               deleteAuthCookie(cookies());
               revalidatePath("/", "layout");
-              redirect("/");
             }}
           >
             <DropdownMenuItem asChild>
