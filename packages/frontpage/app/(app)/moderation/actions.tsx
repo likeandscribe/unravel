@@ -6,14 +6,19 @@ export async function createModerationAction(
   _prevState: unknown,
   formData: FormData,
 ) {
+  const test = !!formData.get("test");
   //create the moderation action and update the report as actioned
-  return { error: "Not implemented" };
+  console.log("Creating moderation action", test);
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return { error: "Not implemented", test: test };
 }
 
 export async function rejectReportAction(
   _prevState: unknown,
   formData: FormData,
 ) {
+  const test = !!formData.get("test");
   //reject the report and update the report as actioned
-  return { error: "Not implemented" };
+  console.log("Rejecting report", test);
+  return { error: "Not implemented", test: test };
 }

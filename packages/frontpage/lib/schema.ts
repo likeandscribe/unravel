@@ -176,6 +176,9 @@ export const LabelledProfile = sqliteTable("labelled_profiles", {
   labels: text("labels"),
 });
 
+const createReportStatusColumn = (col: string) =>
+  text(col, { enum: ["pending", "accepted", "rejected"] }).default("pending");
+
 export const Report = sqliteTable("reports", {
   id: integer("id").primaryKey(),
   actionedAt: dateIsoText("actioned_at"),
@@ -189,4 +192,5 @@ export const Report = sqliteTable("reports", {
   createdAt: dateIsoText("created_at").notNull(),
   creatorComment: text("creator_comment"),
   reportReason: text("report_reason"),
+  status: createReportStatusColumn("status"),
 });
