@@ -32,13 +32,13 @@ export async function POST(request: Request) {
     console.log("Processing", collection, rkey, op.action);
 
     if (collection === atprotoPost.PostCollection) {
-      const record = await atprotoGetRecord({
-        serviceEndpoint: service,
-        repo,
-        collection,
-        rkey,
-      });
       if (op.action === "create") {
+        const record = await atprotoGetRecord({
+          serviceEndpoint: service,
+          repo,
+          collection,
+          rkey,
+        });
         const postRecord = atprotoPost.PostRecord.parse(record.value);
         await dbPost.unauthed_createPost({
           post: postRecord,
@@ -48,14 +48,15 @@ export async function POST(request: Request) {
           offset: seq,
         });
       } else if (op.action === "delete") {
-        await dbPost.unauthed_deletePost({ cid: record.cid, offset: seq });
+        await dbPost.unauthed_deletePost({ rkey, offset: seq });
       }
     }
     // repo is actually the did of the user
     if (collection === CommentCollection) {
       await db.transaction(async (tx) => {
-        const comment = await getComment({ rkey, repo });
         if (op.action === "create") {
+          const comment = await getComment({ rkey, repo });
+
           const parentComment =
             comment.parent != null
               ? (
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
           await tx
             .update(schema.Comment)
             .set({ status: "deleted" })
-            .where(eq(schema.Comment.cid, comment.cid));
+            .where(eq(schema.Comment.rkey, rkey));
         }
 
         await tx.insert(schema.ConsumedOffset).values({ offset: seq });
