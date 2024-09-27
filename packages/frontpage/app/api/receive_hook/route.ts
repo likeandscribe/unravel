@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { atprotoGetRecord } from "@/lib/data/atproto/record";
 import { Commit } from "@/lib/data/atproto/event";
 import * as atprotoPost from "@/lib/data/atproto/post";
@@ -48,7 +48,11 @@ export async function POST(request: Request) {
           offset: seq,
         });
       } else if (op.action === "delete") {
-        await dbPost.unauthed_deletePost({ rkey, offset: seq });
+        await dbPost.unauthed_deletePost({
+          rkey,
+          authorDid: repo,
+          offset: seq,
+        });
       }
     }
     // repo is actually the did of the user
@@ -97,7 +101,12 @@ export async function POST(request: Request) {
           await tx
             .update(schema.Comment)
             .set({ status: "deleted" })
-            .where(eq(schema.Comment.rkey, rkey));
+            .where(
+              and(
+                eq(schema.Comment.cid, rkey),
+                eq(schema.Comment.authorDid, repo),
+              ),
+            );
         }
 
         await tx.insert(schema.ConsumedOffset).values({ offset: seq });
@@ -165,13 +174,23 @@ export async function POST(request: Request) {
           }
         } else if (op.action === "delete") {
           // Try deleting from both tables. In reality only one will have a record.
-          // Relies on postgres not throwing an error if the record doesn't exist.
+          // Relies on sqlite not throwing an error if the record doesn't exist.
           await tx
             .delete(schema.CommentVote)
-            .where(eq(schema.CommentVote.rkey, rkey));
+            .where(
+              and(
+                eq(schema.CommentVote.rkey, rkey),
+                eq(schema.CommentVote.authorDid, repo),
+              ),
+            );
           await tx
             .delete(schema.PostVote)
-            .where(eq(schema.PostVote.rkey, rkey));
+            .where(
+              and(
+                eq(schema.PostVote.rkey, rkey),
+                eq(schema.PostVote.authorDid, repo),
+              ),
+            );
         }
 
         await tx.insert(schema.ConsumedOffset).values({ offset: seq });
