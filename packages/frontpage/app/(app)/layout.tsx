@@ -20,7 +20,6 @@ import {
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { FRONTPAGE_ATPROTO_HANDLE } from "@/lib/constants";
-import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -126,14 +125,11 @@ async function LoginOrLogout() {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <form
-            // Disabling the lint rule as this appears to be an issue in the react types where form actions don't accept an async fn.
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             action={async () => {
               "use server";
               await signOut();
               deleteAuthCookie(cookies());
               revalidatePath("/", "layout");
-              redirect("/");
             }}
           >
             <DropdownMenuItem asChild>

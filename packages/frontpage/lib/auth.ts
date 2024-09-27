@@ -72,7 +72,8 @@ export const getClientMetadata = cache(() => {
     // TODO: Tweak these?
     scope: "atproto transition:generic",
     client_name: "Frontpage",
-    token_endpoint_auth_method: "none",
+    token_endpoint_auth_method: "private_key_jwt",
+    token_endpoint_auth_signing_alg: "ES256",
     redirect_uris: [`${appUrl}/oauth/callback`] as const,
     client_uri: appUrl,
     jwks_uri: `${appUrl}/oauth/jwks.json`,
@@ -82,7 +83,7 @@ export const getClientMetadata = cache(() => {
 export const getOauthClientOptions = () =>
   ({
     client_id: getClientMetadata().client_id,
-    token_endpoint_auth_method: "private_key_jwt",
+    token_endpoint_auth_method: getClientMetadata().token_endpoint_auth_method,
   }) satisfies OauthClient;
 
 export async function getClientPrivateKey() {
