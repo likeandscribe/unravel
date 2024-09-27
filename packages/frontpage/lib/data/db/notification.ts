@@ -3,7 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
-import { and, eq, lt, desc, isNull } from "drizzle-orm";
+import { and, eq, lt, desc, isNull, count } from "drizzle-orm";
 import { getCommentsFromCids } from "./comment";
 import { getPostsFromCids } from "./post";
 import { invariant } from "@/lib/utils";
@@ -105,6 +105,24 @@ export const getNotifications = cache(
     };
   },
 );
+
+export const getNotificationCount = cache(async () => {
+  const user = await ensureUser();
+  const [row] = await db
+    .select({
+      count: count(),
+    })
+    .from(schema.Notification)
+    .where(
+      and(
+        eq(schema.Notification.did, user.did),
+        isNull(schema.Notification.readAt),
+      ),
+    );
+
+  invariant(row, "Row should exist");
+  return row.count;
+});
 
 export async function markNotificationRead(notificationId: number) {
   await ensureUser();
