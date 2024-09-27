@@ -32,6 +32,9 @@ export const AtUri = z.string().transform((value, ctx) => {
   };
 });
 
+export const atUriToString = (uri: z.infer<typeof AtUri>) =>
+  `at://${[uri.authority, uri.collection, uri.rkey].join("/")}`;
+
 export function createAtUriParser<TCollection extends z.ZodType>(
   collectionSchema: TCollection,
 ): z.ZodType<

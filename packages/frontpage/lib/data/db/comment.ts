@@ -9,6 +9,7 @@ import {
   and,
   InferSelectModel,
   isNotNull,
+  inArray,
 } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getUser, isAdmin } from "../user";
@@ -233,6 +234,17 @@ export const getUserComments = cache(async (userDid: DID) => {
     .leftJoin(hasVoted, eq(hasVoted.commentId, schema.Comment.id));
 
   return comments as LiveComment[];
+});
+
+export const getCommentsFromCids = cache(async (cids: string[]) => {
+  const comments = await db
+    .select()
+    .from(schema.Comment)
+    .where(
+      and(inArray(schema.Comment.cid, cids), eq(schema.Comment.status, "live")),
+    );
+
+  return comments;
 });
 
 export function shouldHideComment(comment: CommentModel) {
