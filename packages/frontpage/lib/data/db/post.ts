@@ -249,3 +249,5 @@ export async function unauthed_deletePost({ rkey, offset }: DeletePostInput) {
   });
   console.log("Done deleting post transaction");
 }
+
+export async function moderatePost(cid: string) {}

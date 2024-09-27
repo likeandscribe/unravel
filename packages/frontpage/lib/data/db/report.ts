@@ -2,17 +2,74 @@ import "server-only";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
 import { cache } from "react";
-import { InferSelectModel } from "drizzle-orm";
+import { InferSelectModel, eq } from "drizzle-orm";
 
-export const getReports = cache(async () => {
+export type ReportDTO = {
+  actionedAt?: Date | null;
+  actionedBy?: string | null;
+  subjectUri: string;
+  subjectDid: string;
+  subjectCollection?: string | null;
+  subjectRkey?: string | null;
+  subjectCid?: string | null;
+  createdBy: string;
+  createdAt: Date;
+  creatorComment?: string | null;
+  reportReason?: string | null;
+  status?: "pending" | "accepted" | "rejected" | null;
+};
+
+export type Report = InferSelectModel<typeof schema.Report>;
+
+export const getReport = cache(
+  async (reportId: number): Promise<Report | null> => {
+    const [report] = await db
+      .select()
+      .from(schema.Report)
+      .where(eq(schema.Report.id, reportId));
+
+    return report ?? null;
+  },
+);
+
+export const getModeratorReportStats = async () => {
   const reports = await db.select().from(schema.Report);
 
-  return reports;
-});
+  return {
+    total: reports.length,
+    pending: reports.filter((r) => r.status === "pending").length,
+    accepted: reports.filter((r) => r.status === "accepted").length,
+    rejected: reports.filter((r) => r.status === "rejected").length,
+  };
+};
 
-type ReportInfer = InferSelectModel<typeof schema.Report>;
+export const getReports = async (
+  status: "pending" | "accepted" | "rejected" | null,
+): Promise<Report[]> => {
+  if (status) {
+    return await db
+      .select()
+      .from(schema.Report)
+      .where(eq(schema.Report.status, status));
+  } else {
+    return await db.select().from(schema.Report);
+  }
+};
 
-export const createReport = async (report: ReportInfer) => {
+export const updateReport = async (
+  reportId: number,
+  status: "pending" | "accepted" | "rejected",
+  actionedBy?: string,
+) => {
+  await db
+    .update(schema.Report)
+    .set({ status, actionedBy, actionedAt: new Date() })
+    .where(eq(schema.Report.id, reportId));
+
+  return;
+};
+
+export const createReport = async (report: ReportDTO) => {
   await db.insert(schema.Report).values(report);
 
   //   await sendDiscordMessage({

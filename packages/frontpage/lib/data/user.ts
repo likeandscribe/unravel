@@ -64,18 +64,17 @@ export const isBetaUser = cache(async () => {
   );
 });
 
-export const hasRole = cache(async (role: string) => {
+export const isAdmin = cache(async () => {
   const user = await getUser();
   if (!user) {
     return false;
   }
 
-  return Boolean(
-    role === "moderator",
-    // await db.query.User.findFirst({
-    // where: and(eq(schema.User.did, user.did), eq(schema.User.role, role)),
-    // }),
-  );
+  const isAdmin = await db.query.AdminUser.findFirst({
+    where: and(eq(schema.AdminUser.did, user.did)),
+  });
+
+  return isAdmin;
 });
 
 const ProfileResponse = z.object({

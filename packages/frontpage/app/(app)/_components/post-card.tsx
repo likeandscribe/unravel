@@ -8,6 +8,8 @@ import { PostCollection } from "@/lib/data/atproto/post";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import type { DID } from "@/lib/data/atproto/did";
+import { ReportButton } from "./report-button";
+import { createReport } from "@/lib/data/db/report";
 
 type PostProps = {
   id: number;
@@ -71,6 +73,26 @@ export async function PostCard({
                 : "unvoted"
           }
           votes={votes}
+        />
+        <ReportButton
+          reportAction={async () => {
+            "use server";
+            const user = await ensureUser();
+
+            await createReport({
+              actionedAt: new Date(),
+              subjectUri: `at://${author}/${PostCollection}/${rkey}`,
+              subjectDid: author,
+              subjectCollection: PostCollection,
+              subjectRkey: rkey,
+              subjectCid: cid,
+              createdBy: user.did,
+              createdAt: new Date(),
+              creatorComment: "This post is spam",
+              reportReason: "spam",
+              status: "pending",
+            });
+          }}
         />
       </div>
       <div className="w-full">

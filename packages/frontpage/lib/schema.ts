@@ -124,6 +124,12 @@ export const BetaUser = sqliteTable("beta_users", {
   did: did("did").notNull().unique(),
 });
 
+export const AdminUser = sqliteTable("admin_users", {
+  id: integer("id").primaryKey(),
+  createdAt: dateIsoText("created_at").notNull(),
+  did: did("did").notNull().unique(),
+});
+
 export const ConsumedOffset = sqliteTable("consumed_offsets", {
   offset: integer("offset").primaryKey(),
 });
