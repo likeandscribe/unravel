@@ -103,7 +103,7 @@ export async function POST(request: Request) {
             .set({ status: "deleted" })
             .where(
               and(
-                eq(schema.Comment.cid, rkey),
+                eq(schema.Comment.rkey, rkey),
                 eq(schema.Comment.authorDid, repo),
               ),
             );
