@@ -230,18 +230,18 @@ export async function unauthed_createPost({
 }
 
 type DeletePostInput = {
-  rkey: string;
+  cid: string;
   offset: number;
 };
 
-export async function unauthed_deletePost({ rkey, offset }: DeletePostInput) {
-  console.log("Deleting post", rkey, offset);
+export async function unauthed_deletePost({ cid, offset }: DeletePostInput) {
+  console.log("Deleting post", cid, offset);
   await db.transaction(async (tx) => {
-    console.log("Updating post status to deleted", rkey);
+    console.log("Updating post status to deleted", cid);
     await tx
       .update(schema.Post)
       .set({ status: "deleted" })
-      .where(eq(schema.Post.rkey, rkey));
+      .where(eq(schema.Post.cid, cid));
 
     console.log("Inserting consumed offset", offset);
     await tx.insert(schema.ConsumedOffset).values({ offset });
