@@ -9,6 +9,7 @@ import { AtUri } from "@atproto/syntax";
 import { DidCollections } from "../_lib/collection-server";
 import { getPds } from "@atproto/identity";
 import { describeRepo } from "@/lib/atproto";
+import { isDidWeb } from "@atproto/did";
 
 export default async function IdentifierPage({
   params,
@@ -34,11 +35,11 @@ export default async function IdentifierPage({
       <h2>PDS Collections</h2>
 
       {!pds ? (
-        <p>Failed to fetch collections (No PDS).</p>
+        <p>🚨 Failed to fetch collections (No PDS).</p>
       ) : !repo ? (
-        <p>Failed to fetch collections (repo not found)</p>
+        <p>🚨 Failed to fetch collections (repo not found)</p>
       ) : (
-        <ErrorBoundary fallback={<p>Failed to fetch collections.</p>}>
+        <ErrorBoundary fallback={<p>🚨 Failed to fetch collections.</p>}>
           <DidCollections identifier={identityResult.didDocument.id} />
         </ErrorBoundary>
       )}
@@ -47,11 +48,15 @@ export default async function IdentifierPage({
       <DidDoc did={identityResult.didDocument.id} />
 
       <h2>History</h2>
-      <Suspense fallback={<p>Loading history...</p>}>
-        <ErrorBoundary fallback={<p>Failed to fetch history.</p>}>
-          <DidHistory identifier={params.identifier} />
-        </ErrorBoundary>
-      </Suspense>
+      {isDidWeb(identityResult.didDocument.id) ? (
+        <p>🚨 Failed to fetch history. (No history on did:web)</p>
+      ) : (
+        <Suspense fallback={<p>Loading history...</p>}>
+          <ErrorBoundary fallback={<p>🚨 Failed to fetch history.</p>}>
+            <DidHistory identifier={params.identifier} />
+          </ErrorBoundary>
+        </Suspense>
+      )}
     </>
   );
 }

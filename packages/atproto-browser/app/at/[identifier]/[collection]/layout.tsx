@@ -10,7 +10,7 @@ export default async function Layout({
 }) {
   const identityResult = await resolveIdentity(params.identifier);
   if (!identityResult.success) {
-    return <div>{identityResult.error}</div>;
+    return <div>🚨 {identityResult.error}</div>;
   }
   const didDocument = identityResult.didDocument;
 

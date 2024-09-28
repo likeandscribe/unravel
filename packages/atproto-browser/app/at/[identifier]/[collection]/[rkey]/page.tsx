@@ -15,16 +15,16 @@ export default async function RkeyPage({
 }) {
   const identityResult = await resolveIdentity(params.identifier);
   if (!identityResult.success) {
-    return <div>{identityResult.error}</div>;
+    return <div>🚨 {identityResult.error}</div>;
   }
   const didDocument = identityResult.didDocument;
   const handle = getHandle(didDocument);
   if (!handle) {
-    return <div>No handle found for DID: {didDocument.id}</div>;
+    return <div>🚨 No handle found for DID: {didDocument.id}</div>;
   }
   const pds = getPds(didDocument);
   if (!pds) {
-    return <div>No PDS found for DID: {didDocument.id}</div>;
+    return <div>🚨 No PDS found for DID: {didDocument.id}</div>;
   }
 
   const getRecordUrl = new URL(`${pds}/xrpc/com.atproto.repo.getRecord`);
@@ -42,7 +42,7 @@ export default async function RkeyPage({
   if (!response.ok) {
     return (
       <div>
-        Failed to fetch record: {response.statusText}. URL:{" "}
+        🚨 Failed to fetch record: {response.statusText}. URL:{" "}
         {getRecordUrl.toString()}
       </div>
     );

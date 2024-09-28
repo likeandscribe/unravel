@@ -17,7 +17,7 @@ export default async function CollectionPage({
   const { didDocument } = identityResult;
   const pds = getPds(didDocument);
   if (!pds) {
-    return <div>No PDS found for DID: {didDocument.id}</div>;
+    return <div>🚨 No PDS found for DID: {didDocument.id}</div>;
   }
 
   const fetchKey =
