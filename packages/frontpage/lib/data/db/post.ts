@@ -256,5 +256,3 @@ export async function unauthed_deletePost({
   });
   console.log("Done deleting post transaction");
 }
-
-export async function moderatePost(cid: string) {}
