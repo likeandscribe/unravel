@@ -8,8 +8,8 @@ import { PostCollection } from "@/lib/data/atproto/post";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import type { DID } from "@/lib/data/atproto/did";
-import { ReportButton } from "./report-button";
 import { createReport } from "@/lib/data/db/report";
+import { EllipsisDropdown } from "./ellipsis-dropdown";
 
 type PostProps = {
   id: number;
@@ -74,26 +74,6 @@ export async function PostCard({
           }
           votes={votes}
         />
-        <ReportButton
-          reportAction={async () => {
-            "use server";
-            const user = await ensureUser();
-
-            await createReport({
-              actionedAt: new Date(),
-              subjectUri: `at://${author}/${PostCollection}/${rkey}`,
-              subjectDid: author,
-              subjectCollection: PostCollection,
-              subjectRkey: rkey,
-              subjectCid: cid,
-              createdBy: user.did,
-              createdAt: new Date(),
-              creatorComment: "This post is spam",
-              reportReason: "spam",
-              status: "pending",
-            });
-          }}
-        />
       </div>
       <div className="w-full">
         <h2 className="mb-1 text-xl">
@@ -109,7 +89,7 @@ export async function PostCard({
         </h2>
         <div className="flex flex-wrap text-gray-500 dark:text-gray-400 sm:gap-4">
           <div className="flex gap-2 flex-wrap md:flex-nowrap">
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <span aria-hidden>•</span>
               <UserHoverCard did={author} asChild>
                 <Link href={`/profile/${handle}`} className="hover:underline">
@@ -129,6 +109,35 @@ export async function PostCard({
                 {commentCount} comments
               </Link>
             </div>
+          </div>
+          <div className="ml-auto">
+            <EllipsisDropdown
+              isAuthor={false}
+              onDelete={async () => {
+                "use server";
+                console.log("Deleting post", rkey);
+                return;
+              }}
+              onReport={async () => {
+                "use server";
+                const user = await ensureUser();
+
+                console.log("Reporting post", rkey);
+
+                await createReport({
+                  subjectUri: `at://${author}/${PostCollection}/${rkey}`,
+                  subjectDid: author,
+                  subjectCollection: PostCollection,
+                  subjectRkey: rkey,
+                  subjectCid: cid,
+                  createdBy: user.did,
+                  createdAt: new Date(),
+                  creatorComment: "This post is terrible",
+                  reportReason: "spam",
+                  status: "pending",
+                });
+              }}
+            />
           </div>
         </div>
       </div>
