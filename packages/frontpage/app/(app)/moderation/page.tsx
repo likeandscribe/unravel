@@ -78,12 +78,6 @@ export default async function Moderation({
   );
 
   const stats = await getModeratorReportStats();
-  // const stats = {
-  //   total: reports.length,
-  //   pending: reports.filter((r) => r.status === "pending").length,
-  //   accepted: reports.filter((r) => r.status === "accepted").length,
-  //   rejected: reports.filter((r) => r.status === "rejected").length,
-  // };
 
   if (await isAdmin()) {
     return (
