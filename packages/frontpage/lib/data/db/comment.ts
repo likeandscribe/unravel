@@ -232,3 +232,27 @@ export function shouldHideComment(comment: CommentModel) {
     comment.children.length === 0
   );
 }
+
+type ModerateCommentInput = {
+  rkey: string;
+  authorDid: DID;
+  cid: string;
+  hide: boolean;
+};
+export async function moderateComment({
+  rkey,
+  authorDid,
+  cid,
+  hide,
+}: ModerateCommentInput) {
+  await db
+    .update(schema.Comment)
+    .set({ status: hide ? "moderator_hidden" : "live" })
+    .where(
+      and(
+        eq(schema.Comment.rkey, rkey),
+        eq(schema.Comment.authorDid, authorDid),
+        eq(schema.Comment.cid, cid),
+      ),
+    );
+}

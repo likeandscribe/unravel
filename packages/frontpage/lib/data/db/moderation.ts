@@ -1,5 +1,5 @@
-import { db } from "@/lib/db";
 import "server-only";
+import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
 
 export type ModerationEventDTO = {
@@ -19,4 +19,5 @@ export async function createModerationEvent(
   moderationEvent: ModerationEventDTO,
 ) {
   await db.insert(schema.ModerationEvent).values(moderationEvent);
+  return;
 }

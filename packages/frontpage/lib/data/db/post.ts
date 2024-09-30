@@ -256,3 +256,28 @@ export async function unauthed_deletePost({
   });
   console.log("Done deleting post transaction");
 }
+
+type ModeratePostInput = {
+  rkey: string;
+  authorDid: DID;
+  cid: string;
+  hide: boolean;
+};
+export async function moderatePost({
+  rkey,
+  authorDid,
+  cid,
+  hide,
+}: ModeratePostInput) {
+  console.log("Moderating post", rkey, hide);
+  await db
+    .update(schema.Post)
+    .set({ status: hide ? "moderator_hidden" : "live" })
+    .where(
+      and(
+        eq(schema.Post.rkey, rkey),
+        eq(schema.Post.authorDid, authorDid),
+        eq(schema.Post.cid, cid),
+      ),
+    );
+}

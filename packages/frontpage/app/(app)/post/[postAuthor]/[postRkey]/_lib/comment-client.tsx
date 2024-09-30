@@ -19,6 +19,7 @@ import {
   commentVoteAction,
   createCommentAction,
   deleteCommentAction,
+  reportCommentAction,
 } from "./actions";
 import { ChatBubbleIcon, TrashIcon } from "@radix-ui/react-icons";
 import {
@@ -37,6 +38,7 @@ import { DID } from "@/lib/data/atproto/did";
 import { InputLengthIndicator } from "@/lib/components/input-length-indicator";
 import { MAX_COMMENT_LENGTH } from "@/lib/data/db/constants";
 import type { CommentModel } from "@/lib/data/db/comment";
+import { EllipsisDropdown } from "@/app/(app)/_components/ellipsis-dropdown";
 
 export type CommentClientProps = Pick<
   CommentModel,
@@ -93,6 +95,25 @@ export function CommentClientWrapperWithToolbar({
             </Button>
           </SimpleTooltip>
           {hasAuthored ? <DeleteCommentButton rkey={rkey} /> : null}
+          <SimpleTooltip content="action-menu" side="bottom">
+            <EllipsisDropdown
+              isAuthor={false}
+              //TODO: implement onDeleteAction
+              onDeleteAction={async () => {
+                return;
+              }}
+              //TODO: fix this, it's not working
+              onReportAction={async (creatorComment, reportReason) => {
+                reportCommentAction.bind(null, {
+                  creatorComment: creatorComment,
+                  reportReason: reportReason,
+                  authorDid: authorDid,
+                  cid: cid,
+                  rkey: rkey,
+                });
+              }}
+            />
+          </SimpleTooltip>
         </div>
       </div>
       {showNewComment ? (

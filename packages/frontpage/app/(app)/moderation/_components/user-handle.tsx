@@ -6,7 +6,7 @@ export async function UserHandle({ userDid }: { userDid: DID }) {
   const handle = (await getVerifiedHandle(userDid)) ?? userDid;
 
   return (
-    <Link href={`/profile/${handle}`} className="underline">
+    <Link href={`/profile/${handle}`} className="underline text-blue-500">
       {handle}
     </Link>
   );

@@ -1,5 +1,6 @@
 "use server";
 
+import { ReportReason } from "@/lib/constants";
 import {
   CommentCollection,
   createComment,
@@ -10,6 +11,7 @@ import { deletePost } from "@/lib/data/atproto/post";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
+import { createReport } from "@/lib/data/db/report";
 import { getVoteForComment } from "@/lib/data/db/vote";
 import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
@@ -71,6 +73,31 @@ export async function deletePostAction(rkey: string) {
 export async function deleteCommentAction(rkey: string) {
   await ensureUser();
   await deleteComment(rkey);
+}
+
+export async function reportCommentAction(input: {
+  creatorComment: string;
+  reportReason: ReportReason;
+  authorDid: DID;
+  rkey: string;
+  cid: string;
+}) {
+  console.log("Reporting comment", input);
+  const user = await ensureUser();
+
+  await createReport({
+    //TODO: double check this is the correct uri
+    subjectUri: `at://${input.authorDid}/${CommentCollection}/${input.rkey}`,
+    subjectDid: input.authorDid,
+    subjectCollection: CommentCollection,
+    subjectRkey: input.rkey,
+    subjectCid: input.cid,
+    createdBy: user.did,
+    createdAt: new Date(),
+    creatorComment: input.creatorComment,
+    reportReason: input.reportReason,
+    status: "pending",
+  });
 }
 
 export async function commentVoteAction(input: {

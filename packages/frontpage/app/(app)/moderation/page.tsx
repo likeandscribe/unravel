@@ -1,3 +1,4 @@
+"use server";
 import { Shield } from "lucide-react";
 import {
   Card,
@@ -23,6 +24,10 @@ import { CommentCollection } from "@/lib/data/atproto/comment";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { ReportCard } from "./_components/report-card";
+import { moderatePost } from "@/lib/data/db/post";
+import { DID } from "@/lib/data/atproto/did";
+import { moderateComment } from "@/lib/data/db/comment";
+import { moderateUser } from "@/lib/data/db/user";
 
 export async function performModerationAction(
   input: { reportId: number; status: "accepted" | "rejected" },
@@ -56,9 +61,30 @@ export async function performModerationAction(
     newModEvent.subjectCid = report.subjectCid;
   }
 
+  const modAction = async () =>
+    report.subjectCollection === PostCollection
+      ? moderatePost({
+          rkey: report.subjectRkey!,
+          authorDid: report.subjectDid! as DID,
+          cid: report.subjectCid!,
+          hide: input.status === "accepted",
+        })
+      : report.subjectCollection === CommentCollection
+        ? moderateComment({
+            rkey: report.subjectRkey!,
+            authorDid: report.subjectDid! as DID,
+            cid: report.subjectCid!,
+            hide: input.status === "accepted",
+          })
+        : moderateUser({
+            userDid: report.subjectDid as DID,
+            hide: input.status === "accepted",
+          });
+
   await Promise.all([
     createModerationEvent(newModEvent),
     updateReport(report.id, input.status, user.did),
+    modAction(),
   ]);
 
   revalidatePath("/moderation");
@@ -73,8 +99,10 @@ export default async function Moderation({
   const status =
     (searchParams.status as "pending" | "accepted" | "rejected") ?? null;
 
-  const reports = await getReports(status).then((reports) =>
-    reports.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+  const reportList = await getReports(status);
+
+  const reports = reportList.sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
   );
 
   const stats = await getModeratorReportStats();
@@ -155,7 +183,7 @@ export default async function Moderation({
           </CardContent>
         </Card>
         {reports.map((report) => (
-          <ReportCard key={report.subjectCid} report={report} />
+          <ReportCard key={report.id} report={report} />
         ))}
       </>
     );

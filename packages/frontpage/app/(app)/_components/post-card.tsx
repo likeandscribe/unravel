@@ -10,6 +10,7 @@ import { UserHoverCard } from "@/lib/components/user-hover-card";
 import type { DID } from "@/lib/data/atproto/did";
 import { createReport } from "@/lib/data/db/report";
 import { EllipsisDropdown } from "./ellipsis-dropdown";
+import { ReportReason } from "@/lib/constants";
 
 type PostProps = {
   id: number;
@@ -110,35 +111,39 @@ export async function PostCard({
               </Link>
             </div>
           </div>
-          <div className="ml-auto">
-            <EllipsisDropdown
-              isAuthor={false}
-              onDelete={async () => {
-                "use server";
-                console.log("Deleting post", rkey);
-                return;
-              }}
-              onReport={async () => {
-                "use server";
-                const user = await ensureUser();
 
-                console.log("Reporting post", rkey);
+          {(await getUser()) ? (
+            <div className="ml-auto">
+              <EllipsisDropdown
+                isAuthor={false}
+                onDeleteAction={async () => {
+                  "use server";
+                  console.log("Deleting post", rkey);
+                  return;
+                }}
+                onReportAction={async (
+                  creatorComment: string,
+                  reportReason: ReportReason,
+                ) => {
+                  "use server";
+                  const user = await ensureUser();
 
-                await createReport({
-                  subjectUri: `at://${author}/${PostCollection}/${rkey}`,
-                  subjectDid: author,
-                  subjectCollection: PostCollection,
-                  subjectRkey: rkey,
-                  subjectCid: cid,
-                  createdBy: user.did,
-                  createdAt: new Date(),
-                  creatorComment: "This post is terrible",
-                  reportReason: "spam",
-                  status: "pending",
-                });
-              }}
-            />
-          </div>
+                  await createReport({
+                    subjectUri: `at://${author}/${PostCollection}/${rkey}`,
+                    subjectDid: author,
+                    subjectCollection: PostCollection,
+                    subjectRkey: rkey,
+                    subjectCid: cid,
+                    createdBy: user.did,
+                    createdAt: new Date(),
+                    creatorComment,
+                    reportReason,
+                    status: "pending",
+                  });
+                }}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </article>
