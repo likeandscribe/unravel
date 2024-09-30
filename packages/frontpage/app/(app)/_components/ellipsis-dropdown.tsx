@@ -35,10 +35,7 @@ import {
 import { ReportReason } from "@/lib/constants";
 
 type EllipsisDropdownProps = {
-  onReportAction: (
-    creatorComment: string,
-    reportReason: ReportReason,
-  ) => Promise<void>;
+  onReportAction: (formData: FormData) => Promise<void>;
   onDeleteAction: () => Promise<void>;
   isAuthor: boolean;
 };
@@ -49,8 +46,6 @@ export function EllipsisDropdown({
   isAuthor,
 }: EllipsisDropdownProps) {
   const [open, setOpen] = React.useState(false);
-  const [input, setInput] = React.useState("");
-  const [reportReason, setReportReason] = React.useState("SPAM");
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -80,51 +75,60 @@ export function EllipsisDropdown({
                   This will report the post. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <Select value={reportReason} onValueChange={setReportReason}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Please select one" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(ReportReason).map((reason) => (
-                    <SelectItem key={reason} value={reason}>
-                      {reason}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Textarea
-                value={input}
-                onChange={(event) => {
-                  setInput(event.target.value);
-                }}
-                id="textArea"
-                name="reportReason"
-                placeholder="Enter your report reason here..."
-                // disabled={isPending}
-                className="resize-y flex-1"
-              />
-              <AlertDialogFooter>
-                <AlertDialogAction
-                  onClick={() => {
-                    console.log(reportReason);
-                    void onReportAction(input, reportReason as ReportReason);
+              <form
+                action={async (formData) => {
+                  try {
+                    await onReportAction(formData);
+                  } catch (_) {
                     toast({
-                      title: "Post reported",
+                      title: "Something went wrong",
                       type: "foreground",
                     });
-                    setOpen(false);
-                  }}
-                >
-                  Confirm
-                </AlertDialogAction>
-                <AlertDialogCancel onClick={() => setOpen(false)}>
-                  Cancel
-                </AlertDialogCancel>
-              </AlertDialogFooter>
+                    return;
+                  }
+                  toast({
+                    title: "Post reported",
+                    type: "foreground",
+                  });
+                  setOpen(false);
+                }}
+              >
+                <Select name="reportReason">
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Please select one" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(ReportReason).map((reason) => (
+                      <SelectItem key={reason} value={reason}>
+                        {reason}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Textarea
+                  id="textArea"
+                  name="creatorComment"
+                  placeholder="Enter your report reason here..."
+                  // disabled={isPending}
+                  className="resize-y flex-1"
+                  maxLength={250}
+                />
+                <AlertDialogFooter>
+                  <Button variant="success" type="submit">
+                    Confirm
+                  </Button>
+                  <AlertDialogCancel
+                    type="button"
+                    onClick={() => setOpen(false)}
+                  >
+                    Cancel
+                  </AlertDialogCancel>
+                </AlertDialogFooter>
+              </form>
             </AlertDialogContent>
           </AlertDialog>
           {/* TODO: delete the true bit when done */}
-          {isAuthor || true ? (
+          {isAuthor ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <DropdownMenuItem

@@ -15,6 +15,7 @@ import { createReport } from "@/lib/data/db/report";
 import { getVoteForComment } from "@/lib/data/db/vote";
 import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
+import { string } from "zod";
 
 export async function createCommentAction(
   input: { parentRkey?: string; postRkey: string; postAuthorDid: DID },
@@ -75,18 +76,29 @@ export async function deleteCommentAction(rkey: string) {
   await deleteComment(rkey);
 }
 
-export async function reportCommentAction(input: {
-  creatorComment: string;
-  reportReason: ReportReason;
-  authorDid: DID;
-  rkey: string;
-  cid: string;
-}) {
+export async function reportCommentAction(
+  input: {
+    authorDid: DID;
+    rkey: string;
+    cid: string;
+  },
+  formData: FormData,
+) {
   console.log("Reporting comment", input);
+
   const user = await ensureUser();
+  const creatorComment = formData.get("creatorComment") as string;
+  const reportReason = formData.get("reportReason") as ReportReason;
+
+  if (
+    typeof creatorComment !== "string" ||
+    !reportReason ||
+    creatorComment.length >= 250
+  ) {
+    throw new Error("Missing creatorComment or reportReason");
+  }
 
   await createReport({
-    //TODO: double check this is the correct uri
     subjectUri: `at://${input.authorDid}/${CommentCollection}/${input.rkey}`,
     subjectDid: input.authorDid,
     subjectCollection: CommentCollection,
@@ -94,8 +106,8 @@ export async function reportCommentAction(input: {
     subjectCid: input.cid,
     createdBy: user.did,
     createdAt: new Date(),
-    creatorComment: input.creatorComment,
-    reportReason: input.reportReason,
+    creatorComment: creatorComment,
+    reportReason: reportReason,
     status: "pending",
   });
 }

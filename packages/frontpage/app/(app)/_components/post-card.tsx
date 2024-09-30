@@ -4,7 +4,7 @@ import { getVoteForPost } from "@/lib/data/db/vote";
 import { ensureUser, getUser } from "@/lib/data/user";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { VoteButton } from "./vote-button";
-import { PostCollection } from "@/lib/data/atproto/post";
+import { PostCollection, deletePost } from "@/lib/data/atproto/post";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import type { DID } from "@/lib/data/atproto/did";
@@ -115,19 +115,30 @@ export async function PostCard({
           {(await getUser()) ? (
             <div className="ml-auto">
               <EllipsisDropdown
-                isAuthor={false}
+                isAuthor={(await getUser())?.did === author}
                 onDeleteAction={async () => {
                   "use server";
-                  console.log("Deleting post", rkey);
-                  return;
+                  await ensureUser();
+                  await deletePost(rkey);
                 }}
-                onReportAction={async (
-                  creatorComment: string,
-                  reportReason: ReportReason,
-                ) => {
+                onReportAction={async (formData: FormData) => {
                   "use server";
                   const user = await ensureUser();
 
+                  const creatorComment = formData.get(
+                    "creatorComment",
+                  ) as string;
+                  const reportReason = formData.get(
+                    "reportReason",
+                  ) as ReportReason;
+
+                  if (
+                    typeof creatorComment !== "string" ||
+                    !reportReason ||
+                    creatorComment.length >= 250
+                  ) {
+                    throw new Error("Missing creatorComment or reportReason");
+                  }
                   await createReport({
                     subjectUri: `at://${author}/${PostCollection}/${rkey}`,
                     subjectDid: author,

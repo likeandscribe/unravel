@@ -281,3 +281,25 @@ export async function moderatePost({
       ),
     );
 }
+
+export async function getPostFromComment({
+  rkey,
+  did,
+}: {
+  rkey: string;
+  did: DID;
+}) {
+  const [join] = await db
+    .select()
+    .from(schema.Comment)
+    .where(
+      and(eq(schema.Comment.rkey, rkey), eq(schema.Comment.authorDid, did)),
+    )
+    .leftJoin(schema.Post, eq(schema.Comment.postId, schema.Post.id));
+
+  if (!join || !join.posts) {
+    return null;
+  }
+
+  return { postRkey: join.posts.rkey, postAuthor: join.posts.authorDid };
+}

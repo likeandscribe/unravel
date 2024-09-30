@@ -97,21 +97,13 @@ export function CommentClientWrapperWithToolbar({
           {hasAuthored ? <DeleteCommentButton rkey={rkey} /> : null}
           <SimpleTooltip content="action-menu" side="bottom">
             <EllipsisDropdown
-              isAuthor={false}
-              //TODO: implement onDeleteAction
-              onDeleteAction={async () => {
-                return;
-              }}
-              //TODO: fix this, it's not working
-              onReportAction={async (creatorComment, reportReason) => {
-                reportCommentAction.bind(null, {
-                  creatorComment: creatorComment,
-                  reportReason: reportReason,
-                  authorDid: authorDid,
-                  cid: cid,
-                  rkey: rkey,
-                });
-              }}
+              isAuthor={hasAuthored}
+              onDeleteAction={deleteCommentAction.bind(null, rkey)}
+              onReportAction={reportCommentAction.bind(null, {
+                authorDid: authorDid,
+                cid: cid,
+                rkey: rkey,
+              })}
             />
           </SimpleTooltip>
         </div>

@@ -2,7 +2,7 @@
 
 Frontpage AppView and frontend client.
 
-## Running locally
+<!-- ## Running locally -->
 
 If you just need to work on the app in a logged-out state, then you just need to run the following:
 

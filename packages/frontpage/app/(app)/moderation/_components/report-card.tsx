@@ -13,6 +13,7 @@ import { UserHandle } from "./user-handle";
 import { PostCollection } from "@/lib/data/atproto/post";
 import { CommentCollection } from "@/lib/data/atproto/comment";
 import Link from "next/link";
+import { getPostFromComment } from "@/lib/data/db/post";
 
 const statusClasses = {
   pending: "bg-yellow-500 text-yellow-900",
@@ -20,19 +21,23 @@ const statusClasses = {
   rejected: "bg-red-500 text-red-900",
 };
 
-const createLink = (
+const createLink = async (
   collection?: string | null,
-  postAuthor?: string | null,
-  postRkey?: string | null,
-  commentAuthor?: string | null,
-  commentRkey?: string | null,
+  author?: DID | null,
+  rkey?: string | null,
 ) => {
   if (collection === PostCollection) {
-    return `/post/${postAuthor}/${postRkey}/`;
+    return `/post/${author}/${rkey}/`;
   } else if (collection === CommentCollection) {
-    return `/post/${postAuthor}/${postRkey}/${commentAuthor}/${commentRkey}/`;
+    console.log(rkey, author);
+    const { postRkey, postAuthor } = (await getPostFromComment({
+      rkey: rkey!,
+      did: author!,
+    }))!;
+    console.log(postRkey, postAuthor);
+    return `/post/${postAuthor}/${postRkey}/${author}/${rkey}/`;
   } else {
-    return `/profile/${postAuthor}/`;
+    return `/profile/${author}/`;
   }
 };
 
@@ -110,12 +115,10 @@ export async function ReportCard({ report }: { report: Report }) {
           </form>
           <Link
             className="ml-2"
-            href={createLink(
+            href={await createLink(
               report.subjectCollection,
-              report.subjectDid,
+              report.subjectDid as DID,
               report.subjectRkey,
-              report.subjectDid,
-              report.subjectCid,
             )}
             target="_blank"
           >
