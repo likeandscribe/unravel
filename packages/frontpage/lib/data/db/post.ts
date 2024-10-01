@@ -84,7 +84,7 @@ export const getFrontpagePosts = cache(async () => {
     )
     .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
     .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
-    .fullJoin(
+    .leftJoin(
       bannedUserSubQuery,
       eq(bannedUserSubQuery.did, schema.Post.authorDid),
     )
