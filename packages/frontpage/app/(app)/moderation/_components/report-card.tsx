@@ -29,12 +29,10 @@ const createLink = async (
   if (collection === PostCollection) {
     return `/post/${author}/${rkey}/`;
   } else if (collection === CommentCollection) {
-    console.log(rkey, author);
     const { postRkey, postAuthor } = (await getPostFromComment({
       rkey: rkey!,
       did: author!,
     }))!;
-    console.log(postRkey, postAuthor);
     return `/post/${postAuthor}/${postRkey}/${author}/${rkey}/`;
   } else {
     return `/profile/${author}/`;
@@ -46,7 +44,7 @@ export async function ReportCard({ report }: { report: Report }) {
     <Card className="dark:bg-gray-700 border-gray-600 mb-4">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center justify-between text-blue-400">
-          <p>Reported {report.subjectCollection}</p>
+          <p>Reported {report.subjectCollection ?? "User"}</p>
           <p
             className={`px-2 py-1 rounded-full text-xs 
               ${
@@ -61,6 +59,12 @@ export async function ReportCard({ report }: { report: Report }) {
       </CardHeader>
       <CardContent>
         <div className="flex flex-col mb-4 gap-1 flex-wrap">
+          <p>
+            <strong>Reported User: </strong>
+            {!report.subjectCollection ? (
+              <UserHandle key={report.id} userDid={report.subjectDid as DID} />
+            ) : null}
+          </p>
           <p>
             <strong className="mr-2">Reason:</strong>
             {report.reportReason}
@@ -90,11 +94,10 @@ export async function ReportCard({ report }: { report: Report }) {
           </div>
         ) : null}
         <div className="flex">
-          <form>
+          <form className="space-x-2">
             <Button
               variant="success"
               type="submit"
-              className="mr-2"
               formAction={performModerationAction.bind(null, {
                 reportId: report.id,
                 status: "accepted",

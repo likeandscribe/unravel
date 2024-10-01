@@ -94,7 +94,6 @@ export function CommentClientWrapperWithToolbar({
               <span className="sr-only">Reply</span>
             </Button>
           </SimpleTooltip>
-          {hasAuthored ? <DeleteCommentButton rkey={rkey} /> : null}
           <SimpleTooltip content="action-menu" side="bottom">
             <EllipsisDropdown
               isAuthor={hasAuthored}
@@ -171,63 +170,6 @@ export function CommentClientWrapperWithToolbar({
         />
       ) : null}
     </>
-  );
-}
-
-function DeleteCommentButton({ rkey }: { rkey: string }) {
-  const [_, deleteAction, isDeletePending] = useActionState(
-    deleteCommentAction.bind(null, rkey),
-    undefined,
-  );
-  const { toast } = useToast();
-
-  return (
-    <form
-      action={deleteAction}
-      onSubmit={(e) => {
-        // Prevent default form submission
-        // Action is dispatched on dialog action
-        e.preventDefault();
-      }}
-    >
-      <AlertDialog>
-        <SimpleTooltip content="Delete">
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="ghost-destructive"
-              size="icon"
-              disabled={isDeletePending}
-            >
-              <TrashIcon className="w-4 h-4" />
-              <span className="sr-only">Delete</span>
-            </Button>
-          </AlertDialogTrigger>
-        </SimpleTooltip>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will delete your comment. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                deleteAction();
-                toast({
-                  title: "Comment will be deleted shortly",
-                  type: "foreground",
-                });
-              }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </form>
   );
 }
 

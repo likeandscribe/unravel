@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
 import { cache } from "react";
 import { InferSelectModel, eq } from "drizzle-orm";
+import { sendDiscordMessage } from "@/lib/discord";
 
 export type ReportDTO = {
   actionedAt?: Date | null;
@@ -73,26 +74,26 @@ export const updateReport = async (
 export const createReport = async (report: ReportDTO) => {
   await db.insert(schema.Report).values(report);
 
-  //   await sendDiscordMessage({
-  //     embeds: [
-  //       {
-  //         title: "New report on Frontpage",
-  //         description:
-  //           report.creatorComment ?? report.reportReason ?? "No reason provided",
-  //         url: report.subjectUri,
-  //         color: 10181046,
-  //         author: {
-  //           name: report.createdBy,
-  //           icon_url: "",
-  //           url: "",
-  //         },
-  //         fields: [
-  //           {
-  //             name: "Link",
-  //             value: "https://frontpage.fyi/moderation",
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //   });
+  await sendDiscordMessage({
+    embeds: [
+      {
+        title: "New report on Frontpage",
+        description:
+          report.creatorComment ?? report.reportReason ?? "No reason provided",
+        url: report.subjectUri,
+        color: 10181046,
+        author: {
+          name: report.createdBy,
+          icon_url: "",
+          url: "",
+        },
+        fields: [
+          {
+            name: "Link",
+            value: "https://frontpage.fyi/moderation",
+          },
+        ],
+      },
+    ],
+  });
 };

@@ -11,6 +11,9 @@ import type { DID } from "@/lib/data/atproto/did";
 import { createReport } from "@/lib/data/db/report";
 import { EllipsisDropdown } from "./ellipsis-dropdown";
 import { ReportReason } from "@/lib/constants";
+import { revalidatePath } from "next/cache";
+import { ReportButton } from "./report-button";
+import { DeleteButton } from "./delete-button";
 
 type PostProps = {
   id: number;
@@ -114,49 +117,68 @@ export async function PostCard({
 
           {(await getUser()) ? (
             <div className="ml-auto">
-              <EllipsisDropdown
-                isAuthor={(await getUser())?.did === author}
-                onDeleteAction={async () => {
-                  "use server";
-                  await ensureUser();
-                  await deletePost(rkey);
-                }}
-                onReportAction={async (formData: FormData) => {
-                  "use server";
-                  const user = await ensureUser();
-
-                  const creatorComment = formData.get(
-                    "creatorComment",
-                  ) as string;
-                  const reportReason = formData.get(
-                    "reportReason",
-                  ) as ReportReason;
-
-                  if (
-                    typeof creatorComment !== "string" ||
-                    !reportReason ||
-                    creatorComment.length >= 250
-                  ) {
-                    throw new Error("Missing creatorComment or reportReason");
-                  }
-                  await createReport({
-                    subjectUri: `at://${author}/${PostCollection}/${rkey}`,
-                    subjectDid: author,
-                    subjectCollection: PostCollection,
-                    subjectRkey: rkey,
-                    subjectCid: cid,
-                    createdBy: user.did,
-                    createdAt: new Date(),
-                    creatorComment,
-                    reportReason,
-                    status: "pending",
-                  });
-                }}
-              />
+              <EllipsisDropdown>
+                <ReportButton
+                  reportAction={ReportPostAction.bind(null, {
+                    rkey,
+                    cid,
+                    author,
+                  })}
+                />
+                {(await getUser())?.did === author ? (
+                  <DeleteButton
+                    deleteAction={DeletePostAction.bind(null, rkey)}
+                  />
+                ) : null}
+              </EllipsisDropdown>
             </div>
           ) : null}
         </div>
       </div>
     </article>
   );
+}
+
+export async function DeletePostAction(rkey: string) {
+  "use server";
+  await ensureUser();
+  await deletePost(rkey);
+
+  revalidatePath("/");
+}
+
+export async function ReportPostAction(
+  input: {
+    rkey: string;
+    cid: string;
+    author: DID;
+  },
+  formData: FormData,
+) {
+  "use server";
+  const user = await ensureUser();
+
+  const creatorComment = formData.get("creatorComment") as string;
+  const reportReason = formData.get("reportReason") as ReportReason;
+
+  if (
+    typeof creatorComment !== "string" ||
+    !reportReason ||
+    creatorComment.length >= 250
+  ) {
+    throw new Error("Missing creatorComment or reportReason");
+  }
+  await createReport({
+    subjectUri: `at://${input.author}/${PostCollection}/${input.rkey}`,
+    subjectDid: input.author,
+    subjectCollection: PostCollection,
+    subjectRkey: input.rkey,
+    subjectCid: input.cid,
+    createdBy: user.did,
+    createdAt: new Date(),
+    creatorComment,
+    reportReason,
+    status: "pending",
+  });
+  revalidatePath("/");
 }
