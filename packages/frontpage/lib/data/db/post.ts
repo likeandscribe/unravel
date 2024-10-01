@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { eq, sql, count, desc, and } from "drizzle-orm";
+import { eq, sql, count, desc, and, isNull, or } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getBlueskyProfile, getUser } from "../user";
 import * as atprotoPost from "../atproto/post";
@@ -40,6 +40,14 @@ const commentCountSubQuery = db
   .groupBy(schema.Comment.postId, schema.Comment.status)
   .as("commentCount");
 
+const bannedUserSubQuery = db
+  .select({
+    did: schema.LabelledProfile.did,
+    isHidden: schema.LabelledProfile.isHidden,
+  })
+  .from(schema.LabelledProfile)
+  .as("bannedUser");
+
 export const getFrontpagePosts = cache(async () => {
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
   // We should closely monitor this and consider alternatives if it gets slow over time
@@ -76,7 +84,19 @@ export const getFrontpagePosts = cache(async () => {
     )
     .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
     .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
-    .where(eq(schema.Post.status, "live"))
+    .fullJoin(
+      bannedUserSubQuery,
+      eq(bannedUserSubQuery.did, schema.Post.authorDid),
+    )
+    .where(
+      and(
+        eq(schema.Post.status, "live"),
+        or(
+          isNull(bannedUserSubQuery.isHidden),
+          eq(bannedUserSubQuery.isHidden, false),
+        ),
+      ),
+    )
     .orderBy(desc(rank));
 
   return rows.map((row) => ({

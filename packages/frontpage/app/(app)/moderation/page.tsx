@@ -61,25 +61,32 @@ export async function performModerationAction(
     newModEvent.subjectCid = report.subjectCid;
   }
 
-  const modAction = async () =>
-    report.subjectCollection === PostCollection
-      ? moderatePost({
+  const modAction = async () => {
+    switch (report.subjectCollection) {
+      case PostCollection:
+        return await moderatePost({
           rkey: report.subjectRkey!,
           authorDid: report.subjectDid! as DID,
           cid: report.subjectCid!,
           hide: input.status === "accepted",
-        })
-      : report.subjectCollection === CommentCollection
-        ? moderateComment({
-            rkey: report.subjectRkey!,
-            authorDid: report.subjectDid! as DID,
-            cid: report.subjectCid!,
-            hide: input.status === "accepted",
-          })
-        : moderateUser({
-            userDid: report.subjectDid as DID,
-            hide: input.status === "accepted",
-          });
+        });
+
+      case CommentCollection:
+        return await moderateComment({
+          rkey: report.subjectRkey!,
+          authorDid: report.subjectDid! as DID,
+          cid: report.subjectCid!,
+          hide: input.status === "accepted",
+        });
+
+      default:
+        return await moderateUser({
+          userDid: report.subjectDid as DID,
+          hide: input.status === "accepted",
+          label: report.reportReason ?? "",
+        });
+    }
+  };
 
   await Promise.all([
     createModerationEvent(newModEvent),

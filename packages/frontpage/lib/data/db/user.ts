@@ -1,16 +1,23 @@
 import { db } from "@/lib/db";
-import { eq } from "drizzle-orm";
 import { DID } from "../atproto/did";
 import * as schema from "@/lib/schema";
 
 type ModerateUserInput = {
   userDid: DID;
   hide: boolean;
+  label?: string;
 };
 
-export async function moderateUser({ userDid, hide }: ModerateUserInput) {
+export async function moderateUser({
+  userDid,
+  hide,
+  label,
+}: ModerateUserInput) {
   await db
-    .update(schema.LabelledProfile)
-    .set({ isHidden: hide })
-    .where(eq(schema.LabelledProfile.did, userDid));
+    .insert(schema.LabelledProfile)
+    .values({ did: userDid, isHidden: hide, labels: label })
+    .onConflictDoUpdate({
+      target: schema.LabelledProfile.did,
+      set: { isHidden: hide, labels: label },
+    });
 }

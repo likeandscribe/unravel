@@ -53,6 +53,16 @@ const buildUserHasVotedQuery = cache(async () => {
     .as("hasVoted");
 });
 
+//TODO: implement banned user query for comments
+
+// const bannedUserSubQuery = db
+//   .select({
+//     did: schema.LabelledProfile.did,
+//     isHidden: schema.LabelledProfile.isHidden,
+//   })
+//   .from(schema.LabelledProfile)
+//   .as("bannedUser");
+
 export const getCommentsForPost = cache(async (postId: number) => {
   const votes = db
     .select({
