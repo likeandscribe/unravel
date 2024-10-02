@@ -34,7 +34,7 @@ export const getReport = cache(
   },
 );
 
-export const getModeratorReportStats = async () => {
+export const getModeratorReportStats = cache(async () => {
   const reports = await db.select().from(schema.Report);
 
   return {
@@ -43,20 +43,22 @@ export const getModeratorReportStats = async () => {
     accepted: reports.filter((r) => r.status === "accepted").length,
     rejected: reports.filter((r) => r.status === "rejected").length,
   };
-};
+});
 
-export const getReports = async (
-  status: "pending" | "accepted" | "rejected" | null,
-): Promise<Report[]> => {
-  if (status) {
-    return await db
-      .select()
-      .from(schema.Report)
-      .where(eq(schema.Report.status, status));
-  } else {
-    return await db.select().from(schema.Report);
-  }
-};
+export const getReports = cache(
+  async (
+    status: "pending" | "accepted" | "rejected" | null,
+  ): Promise<Report[]> => {
+    if (status) {
+      return await db
+        .select()
+        .from(schema.Report)
+        .where(eq(schema.Report.status, status));
+    } else {
+      return await db.select().from(schema.Report);
+    }
+  },
+);
 
 export const updateReport = async (
   reportId: number,
