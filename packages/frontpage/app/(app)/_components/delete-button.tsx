@@ -15,8 +15,8 @@ import {
   AlertDialogCancel,
 } from "@/lib/components/ui/alert-dialog";
 import { DropdownMenuItem } from "@/lib/components/ui/dropdown-menu";
-import { Trash } from "lucide-react";
 import { useEllipsisDropdownContext } from "./ellipsis-dropdown";
+import { TrashIcon } from "@radix-ui/react-icons";
 
 type DeleteButtonProps = {
   deleteAction: () => Promise<void>;
@@ -33,7 +33,7 @@ export function DeleteButton({ deleteAction }: DeleteButtonProps) {
             e.preventDefault();
           }}
         >
-          <Trash className="mr-2 h-4 w-4" />
+          <TrashIcon className="mr-2 scale-125" />
           Delete
         </DropdownMenuItem>
       </AlertDialogTrigger>

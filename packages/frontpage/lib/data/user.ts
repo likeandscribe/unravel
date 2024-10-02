@@ -74,7 +74,7 @@ export const isAdmin = cache(async () => {
     where: and(eq(schema.AdminUser.did, user.did)),
   });
 
-  return isAdmin;
+  return Boolean(isAdmin);
 });
 
 const ProfileResponse = z.object({

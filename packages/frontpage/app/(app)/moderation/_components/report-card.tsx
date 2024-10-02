@@ -14,12 +14,7 @@ import { PostCollection } from "@/lib/data/atproto/post";
 import { CommentCollection } from "@/lib/data/atproto/comment";
 import Link from "next/link";
 import { getPostFromComment } from "@/lib/data/db/post";
-
-const statusClasses = {
-  pending: "bg-yellow-500 text-yellow-900",
-  accepted: "bg-green-500 text-green-900",
-  rejected: "bg-red-500 text-red-900",
-};
+import { cn } from "@/lib/utils";
 
 const createLink = async (
   collection?: string | null,
@@ -50,11 +45,14 @@ export async function ReportCard({ report }: { report: Report }) {
           <p>Reported {report.subjectCollection ?? "User"}</p>
           <p
             className={`px-2 py-1 rounded-full text-xs 
-              ${
-                report.status
-                  ? statusClasses[report.status]
-                  : "bg-red-500 text-red-900"
-              }`}
+              ${cn({
+                "bg-yellow-500 text-destructive-foreground":
+                  report.status === "pending",
+                "bg-success text-success-foreground":
+                  report.status === "accepted",
+                "bg-destructive text-destructive-foreground":
+                  report.status === "rejected",
+              })}`}
           >
             {report.status}
           </p>

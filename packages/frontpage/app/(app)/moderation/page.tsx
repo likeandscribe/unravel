@@ -1,5 +1,4 @@
 "use server";
-import { Shield } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -28,6 +27,7 @@ import { moderatePost } from "@/lib/data/db/post";
 import { DID } from "@/lib/data/atproto/did";
 import { moderateComment } from "@/lib/data/db/comment";
 import { moderateUser } from "@/lib/data/db/user";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
 export async function performModerationAction(
   input: { reportId: number; status: "accepted" | "rejected" },
@@ -98,13 +98,14 @@ export async function performModerationAction(
   return;
 }
 
+type StatusTypes = "pending" | "accepted" | "rejected";
+
 export default async function Moderation({
   searchParams,
 }: {
   searchParams: { status: string };
 }) {
-  const status =
-    (searchParams.status as "pending" | "accepted" | "rejected") ?? null;
+  const status = (searchParams.status as StatusTypes) ?? null;
 
   const reportList = await getReports(status);
 
@@ -120,7 +121,7 @@ export default async function Moderation({
         <Card className="bg-gray-800 border-gray-700 mb-6">
           <CardHeader>
             <CardTitle className="text-2xl font-bold flex items-center gap-2 text-blue-300">
-              <Shield className="h-6 w-6" />
+              <ExclamationTriangleIcon className="scale-150 mr-1" />
               Moderation Dashboard
             </CardTitle>
             <CardDescription className="text-gray-300">

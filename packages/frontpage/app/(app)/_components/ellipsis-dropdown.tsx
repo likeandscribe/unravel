@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/lib/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 import React, { ReactNode } from "react";
 
 interface EllipsisDropdownProps {
@@ -27,10 +27,10 @@ export function EllipsisDropdown({ children }: EllipsisDropdownProps) {
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm">
-            <MoreHorizontal />
+            <DotsHorizontalIcon className="scale-125" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[200px]">
+        <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuGroup>{children}</DropdownMenuGroup>
         </DropdownMenuContent>

@@ -6,6 +6,13 @@ import { cache } from "react";
 import { InferSelectModel, eq } from "drizzle-orm";
 import { sendDiscordMessage } from "@/lib/discord";
 
+export enum ReportReason {
+  SPAM = "spam",
+  MISLEADING = "misleading",
+  SEXUAL = "sexual",
+  OTHER = "other",
+}
+
 export type ReportDTO = {
   actionedAt?: Date | null;
   actionedBy?: string | null;
@@ -17,7 +24,7 @@ export type ReportDTO = {
   createdBy: string;
   createdAt: Date;
   creatorComment?: string | null;
-  reportReason?: string | null;
+  reportReason?: ReportReason | null;
   status?: "pending" | "accepted" | "rejected" | null;
 };
 

@@ -13,7 +13,6 @@ import {
 import { Button } from "@/lib/components/ui/button";
 import { Textarea } from "@/lib/components/ui/textarea";
 import { toast } from "@/lib/components/ui/use-toast";
-import { ReportReason } from "@/lib/constants";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useEllipsisDropdownContext } from "./ellipsis-dropdown";
 import { DropdownMenuItem } from "@/lib/components/ui/dropdown-menu";
@@ -25,6 +24,7 @@ import {
   SelectValue,
 } from "@/lib/components/ui/select";
 import { useState } from "react";
+import { ReportReason } from "@/lib/data/db/report";
 
 interface ReportButtonProps {
   reportAction: (formData: FormData) => Promise<void>;
@@ -65,7 +65,7 @@ export function ReportButtonIcon({ reportAction }: ReportButtonProps) {
           }}
         >
           <Select name="reportReason">
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-44">
               <SelectValue placeholder="Please select one" />
             </SelectTrigger>
             <SelectContent>
@@ -80,7 +80,6 @@ export function ReportButtonIcon({ reportAction }: ReportButtonProps) {
             id="textArea"
             name="creatorComment"
             placeholder="Enter your report reason here..."
-            // disabled={isPending}
             className="resize-y my-3"
             maxLength={250}
           />
@@ -103,6 +102,9 @@ export function ReportButton({ reportAction }: ReportButtonProps) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <DropdownMenuItem
+          //this prevents the alert dialog from closing when the dropdown item is clicked
+          //alternatively wrap the whole dropdown in the dialog as per https://github.com/radix-ui/primitives/issues/1836
+          //but that defeats the purpose of this reusable component
           onSelect={(e) => {
             e.preventDefault();
           }}
@@ -137,7 +139,7 @@ export function ReportButton({ reportAction }: ReportButtonProps) {
           }}
         >
           <Select name="reportReason">
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-44">
               <SelectValue placeholder="Please select one" />
             </SelectTrigger>
             <SelectContent>
@@ -152,7 +154,6 @@ export function ReportButton({ reportAction }: ReportButtonProps) {
             id="textArea"
             name="creatorComment"
             placeholder="Enter your report reason here..."
-            // disabled={isPending}
             className="resize-y my-3"
             maxLength={250}
           />

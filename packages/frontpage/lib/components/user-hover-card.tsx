@@ -4,8 +4,7 @@ import { DID } from "../data/atproto/did";
 import { getVerifiedHandle } from "../data/atproto/identity";
 import { UserHoverCardClient } from "./user-hover-card-client";
 import { ensureUser } from "../data/user";
-import { ReportReason } from "../constants";
-import { createReport } from "../data/db/report";
+import { ReportReason, createReport } from "../data/db/report";
 
 type Props = {
   did: DID;

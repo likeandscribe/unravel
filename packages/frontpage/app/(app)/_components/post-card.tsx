@@ -8,9 +8,8 @@ import { PostCollection, deletePost } from "@/lib/data/atproto/post";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import type { DID } from "@/lib/data/atproto/did";
-import { createReport } from "@/lib/data/db/report";
+import { ReportReason, createReport } from "@/lib/data/db/report";
 import { EllipsisDropdown } from "./ellipsis-dropdown";
-import { ReportReason } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import { ReportButton } from "./report-button";
 import { DeleteButton } from "./delete-button";
@@ -167,7 +166,7 @@ export async function ReportPostAction(
     !reportReason ||
     creatorComment.length >= 250
   ) {
-    throw new Error("Missing creatorComment or reportReason");
+    throw new Error("Missing creatorComment or reportReason or length > 250");
   }
   await createReport({
     subjectUri: `at://${input.author}/${PostCollection}/${input.rkey}`,

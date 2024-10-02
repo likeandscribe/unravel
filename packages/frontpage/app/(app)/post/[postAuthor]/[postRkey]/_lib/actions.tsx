@@ -1,6 +1,5 @@
 "use server";
 
-import { ReportReason } from "@/lib/constants";
 import {
   CommentCollection,
   createComment,
@@ -10,7 +9,7 @@ import { DID } from "@/lib/data/atproto/did";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
-import { createReport } from "@/lib/data/db/report";
+import { ReportReason, createReport } from "@/lib/data/db/report";
 import { getVoteForComment } from "@/lib/data/db/vote";
 import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
@@ -22,7 +21,6 @@ export async function createCommentAction(
 ) {
   const content = formData.get("comment") as string;
   const user = await ensureUser();
-  console.log(input);
 
   const [post, comment] = await Promise.all([
     getPost(input.postAuthorDid, input.postRkey),
@@ -79,8 +77,6 @@ export async function reportCommentAction(
   },
   formData: FormData,
 ) {
-  console.log("Reporting comment", input);
-
   const user = await ensureUser();
   const creatorComment = formData.get("creatorComment") as string;
   const reportReason = formData.get("reportReason") as ReportReason;
@@ -90,7 +86,9 @@ export async function reportCommentAction(
     !reportReason ||
     creatorComment.length >= 250
   ) {
-    throw new Error("Missing creatorComment or reportReason");
+    throw new Error(
+      "Missing creatorComment or reportReason or comment length > 250",
+    );
   }
 
   await createReport({
