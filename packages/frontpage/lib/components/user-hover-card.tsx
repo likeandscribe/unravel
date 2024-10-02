@@ -23,7 +23,7 @@ export async function UserHoverCard({ did, children, asChild }: Props) {
         did={did}
         asChild={asChild}
         initialHandle={handle ?? ""}
-        reportAction={ReportUserAction.bind(null, { did })}
+        reportAction={reportUserAction.bind(null, { did })}
       >
         {children}
       </UserHoverCardClient>
@@ -31,7 +31,7 @@ export async function UserHoverCard({ did, children, asChild }: Props) {
   );
 }
 
-export async function ReportUserAction(
+export async function reportUserAction(
   input: {
     did: DID;
   },
