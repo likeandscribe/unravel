@@ -255,6 +255,7 @@ export async function moderateComment({
   cid,
   hide,
 }: ModerateCommentInput) {
+  console.log(`Moderating comment, setting hidden to ${hide}`);
   await db
     .update(schema.Comment)
     .set({ status: hide ? "moderator_hidden" : "live" })

@@ -39,6 +39,8 @@ import { InputLengthIndicator } from "@/lib/components/input-length-indicator";
 import { MAX_COMMENT_LENGTH } from "@/lib/data/db/constants";
 import type { CommentModel } from "@/lib/data/db/comment";
 import { EllipsisDropdown } from "@/app/(app)/_components/ellipsis-dropdown";
+import { ReportButton } from "@/app/(app)/_components/report-button";
+import { DeleteButton } from "@/app/(app)/_components/delete-button";
 
 export type CommentClientProps = Pick<
   CommentModel,
@@ -95,15 +97,20 @@ export function CommentClientWrapperWithToolbar({
             </Button>
           </SimpleTooltip>
           <SimpleTooltip content="action-menu" side="bottom">
-            <EllipsisDropdown
-              isAuthor={hasAuthored}
-              onDeleteAction={deleteCommentAction.bind(null, rkey)}
-              onReportAction={reportCommentAction.bind(null, {
-                authorDid: authorDid,
-                cid: cid,
-                rkey: rkey,
-              })}
-            />
+            <EllipsisDropdown>
+              <ReportButton
+                reportAction={reportCommentAction.bind(null, {
+                  authorDid: authorDid,
+                  cid: cid,
+                  rkey: rkey,
+                })}
+              />
+              {hasAuthored ? (
+                <DeleteButton
+                  deleteAction={deleteCommentAction.bind(null, rkey)}
+                />
+              ) : null}
+            </EllipsisDropdown>
           </SimpleTooltip>
         </div>
       </div>

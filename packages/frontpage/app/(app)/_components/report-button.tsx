@@ -24,14 +24,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/lib/components/ui/select";
+import { useState } from "react";
 
 interface ReportButtonProps {
   reportAction: (formData: FormData) => Promise<void>;
 }
 
 export function ReportButtonIcon({ reportAction }: ReportButtonProps) {
+  const [open, setOpen] = useState(false);
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         <Button size="icon" variant="outline">
           <ExclamationTriangleIcon className="h-4 w-4 text-red-500" />
@@ -59,6 +61,7 @@ export function ReportButtonIcon({ reportAction }: ReportButtonProps) {
               title: "Report submitted",
               type: "foreground",
             });
+            setOpen(false);
           }}
         >
           <Select name="reportReason">

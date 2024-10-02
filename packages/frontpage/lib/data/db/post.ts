@@ -289,7 +289,7 @@ export async function moderatePost({
   cid,
   hide,
 }: ModeratePostInput) {
-  console.log("Moderating post", rkey, hide);
+  console.log(`Moderating post, setting hidden to ${hide}`);
   await db
     .update(schema.Post)
     .set({ status: hide ? "moderator_hidden" : "live" })

@@ -13,6 +13,7 @@ export async function moderateUser({
   hide,
   label,
 }: ModerateUserInput) {
+  console.log(`Moderating user, setting hidden to ${hide}`);
   await db
     .insert(schema.LabelledProfile)
     .values({ did: userDid, isHidden: hide, labels: label })
