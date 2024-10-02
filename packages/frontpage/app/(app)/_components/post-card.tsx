@@ -42,6 +42,7 @@ export async function PostCard({
 }: PostProps) {
   const handle = await getVerifiedHandle(author);
   const postHref = `/post/${handle}/${rkey}`;
+  const user = await getUser();
 
   return (
     // TODO: Make article route to postHref via onClick on card except innser links or buttons
@@ -115,7 +116,7 @@ export async function PostCard({
             </div>
           </div>
 
-          {(await getUser()) ? (
+          {user ? (
             <div className="ml-auto">
               <EllipsisDropdown>
                 <ReportButton
@@ -125,7 +126,7 @@ export async function PostCard({
                     author,
                   })}
                 />
-                {(await getUser())?.did === author ? (
+                {user?.did === author ? (
                   <DeleteButton
                     deleteAction={DeletePostAction.bind(null, rkey)}
                   />

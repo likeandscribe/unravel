@@ -26,16 +26,19 @@ const createLink = async (
   author?: DID | null,
   rkey?: string | null,
 ) => {
-  if (collection === PostCollection) {
-    return `/post/${author}/${rkey}/`;
-  } else if (collection === CommentCollection) {
-    const { postRkey, postAuthor } = (await getPostFromComment({
-      rkey: rkey!,
-      did: author!,
-    }))!;
-    return `/post/${postAuthor}/${postRkey}/${author}/${rkey}/`;
-  } else {
-    return `/profile/${author}/`;
+  switch (collection) {
+    case PostCollection:
+      return `/post/${author}/${rkey}/`;
+
+    case CommentCollection:
+      const { postRkey, postAuthor } = (await getPostFromComment({
+        rkey: rkey!,
+        did: author!,
+      }))!;
+      return `/post/${postAuthor}/${postRkey}/${author}/${rkey}/`;
+
+    default:
+      return `/profile/${author}/`;
   }
 };
 
