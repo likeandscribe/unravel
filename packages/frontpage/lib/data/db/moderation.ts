@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
 import { DID } from "../atproto/did";
+import { isAdmin } from "../user";
 
 export type ModerationEventDTO = {
   subjectUri: string;
@@ -19,6 +20,12 @@ export type ModerationEventDTO = {
 export async function createModerationEvent(
   moderationEvent: ModerationEventDTO,
 ) {
+  const adminUser = await isAdmin();
+
+  if (!adminUser) {
+    throw new Error("User is not an admin");
+  }
+
   await db.insert(schema.ModerationEvent).values(moderationEvent);
   return;
 }

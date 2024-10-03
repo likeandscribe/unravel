@@ -147,9 +147,6 @@ importers:
       '@radix-ui/react-popover':
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@18.3.0)(@types/react@18.3.10)(react-dom@19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522))(react@19.0.0-rc-f994737d14-20240522)
-      '@radix-ui/react-scroll-area':
-        specifier: ^1.1.0
-        version: 1.1.0(@types/react-dom@18.3.0)(@types/react@18.3.10)(react-dom@19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522))(react@19.0.0-rc-f994737d14-20240522)
       '@radix-ui/react-select':
         specifier: ^2.1.1
         version: 2.1.1(@types/react-dom@18.3.0)(@types/react@18.3.10)(react-dom@19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522))(react@19.0.0-rc-f994737d14-20240522)
@@ -2038,19 +2035,6 @@ packages:
 
   '@radix-ui/react-roving-focus@1.1.0':
     resolution: {integrity: sha512-EA6AMGeq9AEeQDeSH0aZgG198qkfHSbvWTf1HvoDmOB5bBG/qTxjYMWUKMnYiV6J/iP/J8MEFSuB2zRU2n7ODA==}
-    peerDependencies:
-      '@types/react': '*'
-      '@types/react-dom': '*'
-      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      '@types/react-dom':
-        optional: true
-
-  '@radix-ui/react-scroll-area@1.1.0':
-    resolution: {integrity: sha512-9ArIZ9HWhsrfqS765h+GZuLoxaRHD/j0ZWOWilsCvYTpYJp8XwCqNG7Dt9Nu/TItKOdgLGkOPCodQvDc+UMwYg==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-dom': '*'
@@ -8083,23 +8067,6 @@ snapshots:
       '@radix-ui/react-primitive': 2.0.0(@types/react-dom@18.3.0)(@types/react@18.3.10)(react-dom@19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522))(react@19.0.0-rc-f994737d14-20240522)
       '@radix-ui/react-use-callback-ref': 1.1.0(@types/react@18.3.10)(react@19.0.0-rc-f994737d14-20240522)
       '@radix-ui/react-use-controllable-state': 1.1.0(@types/react@18.3.10)(react@19.0.0-rc-f994737d14-20240522)
-      react: 19.0.0-rc-f994737d14-20240522
-      react-dom: 19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522)
-    optionalDependencies:
-      '@types/react': 18.3.10
-      '@types/react-dom': 18.3.0
-
-  '@radix-ui/react-scroll-area@1.1.0(@types/react-dom@18.3.0)(@types/react@18.3.10)(react-dom@19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522))(react@19.0.0-rc-f994737d14-20240522)':
-    dependencies:
-      '@radix-ui/number': 1.1.0
-      '@radix-ui/primitive': 1.1.0
-      '@radix-ui/react-compose-refs': 1.1.0(@types/react@18.3.10)(react@19.0.0-rc-f994737d14-20240522)
-      '@radix-ui/react-context': 1.1.0(@types/react@18.3.10)(react@19.0.0-rc-f994737d14-20240522)
-      '@radix-ui/react-direction': 1.1.0(@types/react@18.3.10)(react@19.0.0-rc-f994737d14-20240522)
-      '@radix-ui/react-presence': 1.1.0(@types/react-dom@18.3.0)(@types/react@18.3.10)(react-dom@19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522))(react@19.0.0-rc-f994737d14-20240522)
-      '@radix-ui/react-primitive': 2.0.0(@types/react-dom@18.3.0)(@types/react@18.3.10)(react-dom@19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522))(react@19.0.0-rc-f994737d14-20240522)
-      '@radix-ui/react-use-callback-ref': 1.1.0(@types/react@18.3.10)(react@19.0.0-rc-f994737d14-20240522)
-      '@radix-ui/react-use-layout-effect': 1.1.0(@types/react@18.3.10)(react@19.0.0-rc-f994737d14-20240522)
       react: 19.0.0-rc-f994737d14-20240522
       react-dom: 19.0.0-rc-f994737d14-20240522(react@19.0.0-rc-f994737d14-20240522)
     optionalDependencies:

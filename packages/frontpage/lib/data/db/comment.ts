@@ -11,7 +11,7 @@ import {
   isNotNull,
 } from "drizzle-orm";
 import * as schema from "@/lib/schema";
-import { getUser } from "../user";
+import { getUser, isAdmin } from "../user";
 import { DID } from "../atproto/did";
 import { Prettify } from "@/lib/utils";
 
@@ -255,6 +255,12 @@ export async function moderateComment({
   cid,
   hide,
 }: ModerateCommentInput) {
+  const adminUser = await isAdmin();
+
+  if (!adminUser) {
+    throw new Error("User is not an admin");
+  }
+
   console.log(`Moderating comment, setting hidden to ${hide}`);
   await db
     .update(schema.Comment)

@@ -6,6 +6,7 @@ import { cache } from "react";
 import { InferSelectModel, eq } from "drizzle-orm";
 import { sendDiscordMessage } from "@/lib/discord";
 import { DID } from "../atproto/did";
+import { ensureUser, isAdmin } from "../user";
 
 export const ReportReasons = ["spam", "misleading", "sexual", "other"] as const;
 export type ReportReasonType = (typeof ReportReasons)[number];
@@ -29,6 +30,12 @@ export type Report = InferSelectModel<typeof schema.Report>;
 
 export const getReport = cache(
   async (reportId: number): Promise<Report | null> => {
+    const adminUser = await isAdmin();
+
+    if (!adminUser) {
+      throw new Error("User is not an admin");
+    }
+
     const [report] = await db
       .select()
       .from(schema.Report)
@@ -39,6 +46,12 @@ export const getReport = cache(
 );
 
 export const getModeratorReportStats = cache(async () => {
+  const adminUser = await isAdmin();
+
+  if (!adminUser) {
+    throw new Error("User is not an admin");
+  }
+
   const reports = await db.select().from(schema.Report);
 
   return {
@@ -53,6 +66,12 @@ export const getReports = cache(
   async (
     status: "pending" | "accepted" | "rejected" | null,
   ): Promise<Report[]> => {
+    const adminUser = await isAdmin();
+
+    if (!adminUser) {
+      throw new Error("User is not an admin");
+    }
+
     if (status) {
       return await db
         .select()
@@ -69,6 +88,12 @@ export const updateReport = async (
   status: "pending" | "accepted" | "rejected",
   actionedBy?: string,
 ) => {
+  const adminUser = await isAdmin();
+
+  if (!adminUser) {
+    throw new Error("User is not an admin");
+  }
+
   await db
     .update(schema.Report)
     .set({ status, actionedBy, actionedAt: new Date() })
@@ -78,6 +103,12 @@ export const updateReport = async (
 };
 
 export const createReport = async (report: ReportDTO) => {
+  const user = await ensureUser();
+
+  if (!user) {
+    throw new Error("The user is not authenticated");
+  }
+
   await db.insert(schema.Report).values(report);
 
   await sendDiscordMessage({

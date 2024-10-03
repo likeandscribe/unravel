@@ -180,6 +180,8 @@ export const LabelledProfile = sqliteTable("labelled_profiles", {
   did: text("did").notNull().unique(),
   isHidden: integer("is_hidden", { mode: "boolean" }).notNull().default(false),
   labels: text("labels"),
+  createdAt: dateIsoText("created_at").notNull(),
+  updatedAt: dateIsoText("updated_at").notNull(),
 });
 
 export const Report = sqliteTable("reports", {

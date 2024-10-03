@@ -4,7 +4,7 @@ import { cache } from "react";
 import { db } from "@/lib/db";
 import { eq, sql, count, desc, and, isNull, or } from "drizzle-orm";
 import * as schema from "@/lib/schema";
-import { getBlueskyProfile, getUser } from "../user";
+import { getBlueskyProfile, getUser, isAdmin } from "../user";
 import * as atprotoPost from "../atproto/post";
 import { DID } from "../atproto/did";
 import { sendDiscordMessage } from "@/lib/discord";
@@ -289,6 +289,11 @@ export async function moderatePost({
   cid,
   hide,
 }: ModeratePostInput) {
+  const adminUser = await isAdmin();
+
+  if (!adminUser) {
+    throw new Error("User is not an admin");
+  }
   console.log(`Moderating post, setting hidden to ${hide}`);
   await db
     .update(schema.Post)
@@ -302,24 +307,20 @@ export async function moderatePost({
     );
 }
 
-export async function getPostFromComment({
-  rkey,
-  did,
-}: {
-  rkey: string;
-  did: DID;
-}) {
-  const [join] = await db
-    .select()
-    .from(schema.Comment)
-    .where(
-      and(eq(schema.Comment.rkey, rkey), eq(schema.Comment.authorDid, did)),
-    )
-    .leftJoin(schema.Post, eq(schema.Comment.postId, schema.Post.id));
+export const getPostFromComment = cache(
+  async ({ did, rkey }: { did: DID; rkey: string }) => {
+    const [join] = await db
+      .select()
+      .from(schema.Comment)
+      .where(
+        and(eq(schema.Comment.rkey, rkey), eq(schema.Comment.authorDid, did)),
+      )
+      .leftJoin(schema.Post, eq(schema.Comment.postId, schema.Post.id));
 
-  if (!join || !join.posts) {
-    return null;
-  }
+    if (!join || !join.posts) {
+      return null;
+    }
 
-  return { postRkey: join.posts.rkey, postAuthor: join.posts.authorDid };
-}
+    return { postRkey: join.posts.rkey, postAuthor: join.posts.authorDid };
+  },
+);
