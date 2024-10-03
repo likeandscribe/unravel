@@ -8,7 +8,8 @@ import { PostCollection, deletePost } from "@/lib/data/atproto/post";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import type { DID } from "@/lib/data/atproto/did";
-import { ReportReasonType, createReport } from "@/lib/data/db/report";
+import { ReportReasonType } from "@/lib/data/db/report-shared";
+import { createReport } from "@/lib/data/db/report";
 import { EllipsisDropdown } from "./ellipsis-dropdown";
 import { revalidatePath } from "next/cache";
 import { ReportButton } from "./report-button";
@@ -119,7 +120,7 @@ export async function PostCard({
             <div className="ml-auto">
               <EllipsisDropdown>
                 <ReportButton
-                  reportAction={ReportPostAction.bind(null, {
+                  reportAction={reportPostAction.bind(null, {
                     rkey,
                     cid,
                     author,
@@ -127,7 +128,7 @@ export async function PostCard({
                 />
                 {user?.did === author ? (
                   <DeleteButton
-                    deleteAction={DeletePostAction.bind(null, rkey)}
+                    deleteAction={deletePostAction.bind(null, rkey)}
                   />
                 ) : null}
               </EllipsisDropdown>
@@ -139,7 +140,7 @@ export async function PostCard({
   );
 }
 
-export async function DeletePostAction(rkey: string) {
+export async function deletePostAction(rkey: string) {
   "use server";
   await ensureUser();
   await deletePost(rkey);
@@ -147,7 +148,7 @@ export async function DeletePostAction(rkey: string) {
   revalidatePath("/");
 }
 
-export async function ReportPostAction(
+export async function reportPostAction(
   input: {
     rkey: string;
     cid: string;
@@ -172,8 +173,6 @@ export async function ReportPostAction(
     subjectUri: `at://${input.author}/${PostCollection}/${input.rkey}`,
     subjectDid: input.author,
     subjectCollection: PostCollection,
-    subjectRkey: input.rkey,
-    subjectCid: input.cid,
     createdBy: user.did as DID,
     createdAt: new Date(),
     creatorComment,

@@ -17,15 +17,35 @@ export type ModerationEventDTO = {
   creatorReportReason?: string | null;
 };
 
-export async function createModerationEvent(
-  moderationEvent: ModerationEventDTO,
-) {
+export async function createModerationEvent({
+  subjectUri,
+  subjectDid,
+  subjectCollection,
+  subjectRkey,
+  subjectCid,
+  createdBy,
+  createdAt,
+  labelsAdded,
+  labelsRemoved,
+  creatorReportReason,
+}: ModerationEventDTO) {
   const adminUser = await isAdmin();
 
   if (!adminUser) {
     throw new Error("User is not an admin");
   }
 
-  await db.insert(schema.ModerationEvent).values(moderationEvent);
+  await db.insert(schema.ModerationEvent).values({
+    subjectUri,
+    subjectDid,
+    subjectCollection,
+    subjectRkey,
+    subjectCid,
+    createdBy,
+    createdAt,
+    labelsAdded,
+    labelsRemoved,
+    creatorReportReason,
+  });
   return;
 }

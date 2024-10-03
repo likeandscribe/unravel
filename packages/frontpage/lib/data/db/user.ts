@@ -23,9 +23,15 @@ export async function moderateUser({
   console.log(`Moderating user, setting hidden to ${hide}`);
   await db
     .insert(schema.LabelledProfile)
-    .values({ did: userDid, isHidden: hide, labels: label })
+    .values({
+      did: userDid,
+      isHidden: hide,
+      labels: label,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
     .onConflictDoUpdate({
       target: schema.LabelledProfile.did,
-      set: { isHidden: hide, labels: label },
+      set: { isHidden: hide, labels: label, updatedAt: new Date() },
     });
 }

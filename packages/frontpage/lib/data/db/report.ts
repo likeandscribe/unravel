@@ -7,9 +7,7 @@ import { InferSelectModel, eq } from "drizzle-orm";
 import { sendDiscordMessage } from "@/lib/discord";
 import { DID } from "../atproto/did";
 import { ensureUser, isAdmin } from "../user";
-
-export const ReportReasons = ["spam", "misleading", "sexual", "other"] as const;
-export type ReportReasonType = (typeof ReportReasons)[number];
+import { ReportReasonType } from "./report-shared";
 
 export type ReportDTO = {
   actionedAt?: Date | null;
@@ -102,25 +100,50 @@ export const updateReport = async (
   return;
 };
 
-export const createReport = async (report: ReportDTO) => {
+export const createReport = async ({
+  actionedAt,
+  actionedBy,
+  subjectUri,
+  subjectDid,
+  subjectCollection,
+  subjectRkey,
+  subjectCid,
+  createdBy,
+  createdAt,
+  creatorComment,
+  reportReason,
+  status,
+}: ReportDTO) => {
   const user = await ensureUser();
 
   if (!user) {
     throw new Error("The user is not authenticated");
   }
 
-  await db.insert(schema.Report).values(report);
+  await db.insert(schema.Report).values({
+    actionedAt,
+    actionedBy,
+    subjectUri,
+    subjectDid,
+    subjectCollection,
+    subjectRkey,
+    subjectCid,
+    createdBy,
+    createdAt,
+    creatorComment,
+    reportReason,
+    status,
+  });
 
   await sendDiscordMessage({
     embeds: [
       {
         title: "New report on Frontpage",
-        description:
-          report.creatorComment ?? report.reportReason ?? "No reason provided",
-        url: report.subjectUri,
+        description: creatorComment ?? reportReason ?? "No reason provided",
+        url: subjectUri,
         color: 10181046,
         author: {
-          name: report.createdBy,
+          name: createdBy,
           icon_url: "",
           url: "",
         },

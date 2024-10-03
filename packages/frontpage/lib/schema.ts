@@ -12,6 +12,7 @@ import {
   MAX_POST_TITLE_LENGTH,
   MAX_POST_URL_LENGTH,
 } from "./data/db/constants";
+import { sql } from "drizzle-orm";
 
 const did = customType<{ data: DID }>({
   dataType() {
@@ -180,8 +181,12 @@ export const LabelledProfile = sqliteTable("labelled_profiles", {
   did: text("did").notNull().unique(),
   isHidden: integer("is_hidden", { mode: "boolean" }).notNull().default(false),
   labels: text("labels"),
-  createdAt: dateIsoText("created_at").notNull(),
-  updatedAt: dateIsoText("updated_at").notNull(),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+  updatedAt: dateIsoText("updated_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
 });
 
 export const Report = sqliteTable("reports", {

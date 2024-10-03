@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/lib/components/ui/select";
 import { useState } from "react";
-import { ReportReasons } from "@/lib/data/db/report";
+import { ReportReasons } from "@/lib/data/db/report-shared";
 
 interface ReportButtonProps {
   reportAction: (formData: FormData) => Promise<void>;

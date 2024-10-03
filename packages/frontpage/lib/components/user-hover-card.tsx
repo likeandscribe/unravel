@@ -4,7 +4,8 @@ import { DID } from "../data/atproto/did";
 import { getVerifiedHandle } from "../data/atproto/identity";
 import { UserHoverCardClient } from "./user-hover-card-client";
 import { ensureUser } from "../data/user";
-import { ReportReasonType, createReport } from "../data/db/report";
+import { ReportReasonType } from "../data/db/report-shared";
+import { createReport } from "../data/db/report";
 
 type Props = {
   did: DID;
@@ -57,8 +58,6 @@ export async function reportUserAction(
     subjectDid: input.did,
     createdBy: user.did as DID,
     createdAt: new Date(),
-    creatorComment,
-    reportReason,
     status: "pending",
   });
 }

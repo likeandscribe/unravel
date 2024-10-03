@@ -26,7 +26,7 @@ const createLink = async (
       return `/post/${author}/${rkey}/`;
 
     case CommentCollection:
-      const { postRkey, postAuthor } = (await getPostFromComment({
+      const { postAuthor, postRkey } = (await getPostFromComment({
         rkey: rkey!,
         did: author!,
       }))!;
@@ -62,9 +62,7 @@ export async function ReportCard({ report }: { report: Report }) {
         <div className="flex flex-col mb-4 gap-1 flex-wrap">
           <p>
             <strong>Reported User: </strong>
-            {!report.subjectCollection ? (
-              <UserHandle key={report.id} userDid={report.subjectDid as DID} />
-            ) : null}
+            <UserHandle key={report.id} userDid={report.subjectDid as DID} />
           </p>
           <p>
             <strong className="mr-2">Reason:</strong>
