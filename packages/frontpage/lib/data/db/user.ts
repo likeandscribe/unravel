@@ -5,7 +5,7 @@ import * as schema from "@/lib/schema";
 type ModerateUserInput = {
   userDid: DID;
   hide: boolean;
-  label?: string;
+  label?: string | null;
 };
 
 export async function moderateUser({

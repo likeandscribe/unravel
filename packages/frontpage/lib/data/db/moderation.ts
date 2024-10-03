@@ -1,14 +1,15 @@
 import "server-only";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
+import { DID } from "../atproto/did";
 
 export type ModerationEventDTO = {
   subjectUri: string;
-  subjectDid: string;
+  subjectDid: DID;
   subjectCollection?: string | null;
   subjectRkey?: string | null;
   subjectCid?: string | null;
-  createdBy: string;
+  createdBy: DID;
   createdAt: Date;
   labelsAdded?: string | null;
   labelsRemoved?: string | null;

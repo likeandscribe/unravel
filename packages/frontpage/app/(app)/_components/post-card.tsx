@@ -8,7 +8,7 @@ import { PostCollection, deletePost } from "@/lib/data/atproto/post";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import type { DID } from "@/lib/data/atproto/did";
-import { ReportReason, createReport } from "@/lib/data/db/report";
+import { ReportReasonType, createReport } from "@/lib/data/db/report";
 import { EllipsisDropdown } from "./ellipsis-dropdown";
 import { revalidatePath } from "next/cache";
 import { ReportButton } from "./report-button";
@@ -159,7 +159,7 @@ export async function ReportPostAction(
   const user = await ensureUser();
 
   const creatorComment = formData.get("creatorComment") as string;
-  const reportReason = formData.get("reportReason") as ReportReason;
+  const reportReason = formData.get("reportReason") as ReportReasonType;
 
   if (
     typeof creatorComment !== "string" ||
@@ -174,7 +174,7 @@ export async function ReportPostAction(
     subjectCollection: PostCollection,
     subjectRkey: input.rkey,
     subjectCid: input.cid,
-    createdBy: user.did,
+    createdBy: user.did as DID,
     createdAt: new Date(),
     creatorComment,
     reportReason,

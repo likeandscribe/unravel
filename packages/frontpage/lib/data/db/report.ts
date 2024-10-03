@@ -5,26 +5,23 @@ import * as schema from "@/lib/schema";
 import { cache } from "react";
 import { InferSelectModel, eq } from "drizzle-orm";
 import { sendDiscordMessage } from "@/lib/discord";
+import { DID } from "../atproto/did";
 
-export enum ReportReason {
-  SPAM = "spam",
-  MISLEADING = "misleading",
-  SEXUAL = "sexual",
-  OTHER = "other",
-}
+export const ReportReasons = ["spam", "misleading", "sexual", "other"] as const;
+export type ReportReasonType = (typeof ReportReasons)[number];
 
 export type ReportDTO = {
   actionedAt?: Date | null;
   actionedBy?: string | null;
   subjectUri: string;
-  subjectDid: string;
+  subjectDid: DID;
   subjectCollection?: string | null;
   subjectRkey?: string | null;
   subjectCid?: string | null;
-  createdBy: string;
+  createdBy: DID;
   createdAt: Date;
   creatorComment?: string | null;
-  reportReason?: ReportReason | null;
+  reportReason?: ReportReasonType | null;
   status?: "pending" | "accepted" | "rejected" | null;
 };
 

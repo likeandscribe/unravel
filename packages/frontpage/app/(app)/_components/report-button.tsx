@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/lib/components/ui/select";
 import { useState } from "react";
-import { ReportReason } from "@/lib/data/db/report";
+import { ReportReasons } from "@/lib/data/db/report";
 
 interface ReportButtonProps {
   reportAction: (formData: FormData) => Promise<void>;
@@ -69,7 +69,7 @@ export function ReportButtonIcon({ reportAction }: ReportButtonProps) {
               <SelectValue placeholder="Please select one" />
             </SelectTrigger>
             <SelectContent>
-              {Object.keys(ReportReason).map((reason) => (
+              {ReportReasons.map((reason) => (
                 <SelectItem key={reason} value={reason}>
                   {reason}
                 </SelectItem>
@@ -143,7 +143,7 @@ export function ReportButton({ reportAction }: ReportButtonProps) {
               <SelectValue placeholder="Please select one" />
             </SelectTrigger>
             <SelectContent>
-              {Object.keys(ReportReason).map((reason) => (
+              {ReportReasons.map((reason) => (
                 <SelectItem key={reason} value={reason}>
                   {reason}
                 </SelectItem>

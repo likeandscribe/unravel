@@ -4,7 +4,7 @@ import { DID } from "../data/atproto/did";
 import { getVerifiedHandle } from "../data/atproto/identity";
 import { UserHoverCardClient } from "./user-hover-card-client";
 import { ensureUser } from "../data/user";
-import { ReportReason, createReport } from "../data/db/report";
+import { ReportReasonType, createReport } from "../data/db/report";
 
 type Props = {
   did: DID;
@@ -40,20 +40,22 @@ export async function reportUserAction(
   const user = await ensureUser();
 
   const creatorComment = formData.get("creatorComment") as string;
-  const reportReason = formData.get("reportReason") as ReportReason;
+  const reportReason = formData.get("reportReason") as ReportReasonType;
 
   if (
     typeof creatorComment !== "string" ||
     !reportReason ||
     creatorComment.length >= 250
   ) {
-    throw new Error("Missing creatorComment or reportReason");
+    throw new Error(
+      "Missing creatorComment or reportReason or comment length > 250",
+    );
   }
 
   await createReport({
     subjectUri: `at://${input.did}`,
     subjectDid: input.did,
-    createdBy: user.did,
+    createdBy: user.did as DID,
     createdAt: new Date(),
     creatorComment,
     reportReason,

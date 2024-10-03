@@ -43,8 +43,8 @@ export async function performModerationAction(
 
   const newModEvent: ModerationEventDTO = {
     subjectUri: report.subjectUri,
-    subjectDid: report.subjectDid,
-    createdBy: user.did,
+    subjectDid: report.subjectDid as DID,
+    createdBy: user.did as DID,
     createdAt: new Date(),
     labelsAdded: report.reportReason,
     creatorReportReason: report.creatorComment,
@@ -83,7 +83,7 @@ export async function performModerationAction(
         return await moderateUser({
           userDid: report.subjectDid as DID,
           hide: input.status === "accepted",
-          label: report.reportReason ?? "",
+          label: report.reportReason,
         });
     }
   };

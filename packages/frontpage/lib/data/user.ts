@@ -65,7 +65,7 @@ export const isBetaUser = cache(async () => {
 });
 
 export const isAdmin = cache(async () => {
-  const user = await getUser();
+  const user = await ensureUser();
   if (!user) {
     return false;
   }
