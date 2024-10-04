@@ -55,7 +55,7 @@ export async function signIn(identifier: string) {
     };
   }
 
-  const client = getClientMetadata();
+  const client = await getClientMetadata();
 
   const state = generateRandomState();
   const pkceVerifier = generateRandomCodeVerifier();
@@ -67,7 +67,7 @@ export async function signIn(identifier: string) {
   const makeParRequest = async (dpopNonce?: string) => {
     return pushedAuthorizationRequest(
       authServer,
-      getOauthClientOptions(),
+      await getOauthClientOptions(),
       {
         response_type: "code",
         code_challenge: await calculatePKCECodeChallenge(pkceVerifier),

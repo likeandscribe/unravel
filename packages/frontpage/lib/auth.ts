@@ -50,10 +50,10 @@ export const getPublicJwk = cache(async () => {
   return jwk;
 });
 
-export const getClientMetadata = cache(() => {
+export const getClientMetadata = cache(async () => {
   const host =
     process.env.NODE_ENV === "development"
-      ? headers().get("host")
+      ? (await headers()).get("host")
       : process.env.VERCEL_ENV === "production"
         ? process.env.VERCEL_PROJECT_PRODUCTION_URL!
         : process.env.VERCEL_BRANCH_URL!;
@@ -80,10 +80,11 @@ export const getClientMetadata = cache(() => {
   } satisfies OAuthClientMetadata;
 });
 
-export const getOauthClientOptions = () =>
+export const getOauthClientOptions = async () =>
   ({
-    client_id: getClientMetadata().client_id,
-    token_endpoint_auth_method: getClientMetadata().token_endpoint_auth_method,
+    client_id: (await getClientMetadata()).client_id,
+    token_endpoint_auth_method: (await getClientMetadata())
+      .token_endpoint_auth_method,
   }) satisfies OauthClient;
 
 export async function getClientPrivateKey() {
@@ -188,7 +189,7 @@ export const handlers = {
 
       const callbackParams = validateAuthResponse(
         authServer,
-        getOauthClientOptions(),
+        await getOauthClientOptions(),
         url.searchParams,
         state,
       );
@@ -233,10 +234,10 @@ export const handlers = {
         throw new Error("Invalid state");
       }
 
-      const client = getClientMetadata();
+      const client = await getClientMetadata();
       const params = validateAuthResponse(
         authServer,
-        getOauthClientOptions(),
+        await getOauthClientOptions(),
         url.searchParams,
         row.state,
       );
@@ -254,7 +255,7 @@ export const handlers = {
       // TODO: Use processAuthorizationCodeOAuth2Response
       const authCodeResponse = await authorizationCodeGrantRequest(
         authServer,
-        getOauthClientOptions(),
+        await getOauthClientOptions(),
         params,
         client.redirect_uris[0],
         row.pkceVerifier,
@@ -334,7 +335,7 @@ export const handlers = {
           await getPrivateJwk(),
         );
 
-      cookies().set(AUTH_COOKIE_NAME, userToken, {
+      (await cookies()).set(AUTH_COOKIE_NAME, userToken, {
         httpOnly: true,
         secure: true,
         sameSite: "lax",
@@ -366,7 +367,7 @@ export async function signOut() {
 
   await revocationRequest(
     authServer,
-    getOauthClientOptions(),
+    await getOauthClientOptions(),
     session.user.accessToken,
     {
       clientPrivateKey: await getClientPrivateKey(),
@@ -379,7 +380,7 @@ export async function signOut() {
 }
 
 export const getSession = cache(async () => {
-  const tokenCookie = cookies().get(AUTH_COOKIE_NAME);
+  const tokenCookie = (await cookies()).get(AUTH_COOKIE_NAME);
   if (!tokenCookie) {
     return null;
   }
