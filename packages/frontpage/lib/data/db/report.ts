@@ -126,7 +126,7 @@ export const createReport = async ({
     status: "pending",
   });
 
-  const rootUrl = getRootUrl();
+  const rootUrl = await getRootUrl();
 
   await sendDiscordMessage({
     embeds: [
