@@ -9,7 +9,7 @@ import { ChatBubbleIcon, Link1Icon } from "@radix-ui/react-icons";
 import { ApiRouteResponse } from "../api-route";
 import type { GET as GetHoverCardContent } from "@/app/api/hover-card-content/route";
 import Link from "next/link";
-import { ReportButtonIcon } from "@/app/(app)/_components/report-button";
+import { ReportDialogIcon } from "@/app/(app)/_components/report-dialog";
 import { Separator } from "./ui/separator";
 
 type Props = {
@@ -52,7 +52,7 @@ export function UserHoverCardClient({
         </div>
         <Separator className="my-2" />
         <div>
-          <ReportButtonIcon reportAction={reportAction} />
+          <ReportDialogIcon reportAction={reportAction} />
         </div>
       </HoverCardContent>
     </>

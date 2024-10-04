@@ -39,7 +39,7 @@ import { InputLengthIndicator } from "@/lib/components/input-length-indicator";
 import { MAX_COMMENT_LENGTH } from "@/lib/data/db/constants";
 import type { CommentModel } from "@/lib/data/db/comment";
 import { EllipsisDropdown } from "@/app/(app)/_components/ellipsis-dropdown";
-import { ReportButton } from "@/app/(app)/_components/report-button";
+import { ReportDialogDropdownButton } from "@/app/(app)/_components/report-dialog";
 import { DeleteButton } from "@/app/(app)/_components/delete-button";
 
 export type CommentClientProps = Pick<
@@ -98,7 +98,7 @@ export function CommentClientWrapperWithToolbar({
           </SimpleTooltip>
           <SimpleTooltip content="action-menu" side="bottom">
             <EllipsisDropdown>
-              <ReportButton
+              <ReportDialogDropdownButton
                 reportAction={reportCommentAction.bind(null, {
                   authorDid: authorDid,
                   cid: cid,

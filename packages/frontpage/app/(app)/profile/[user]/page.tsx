@@ -16,7 +16,7 @@ import { Comment } from "../../post/[postAuthor]/[postRkey]/_lib/comment";
 import { Suspense } from "react";
 import { getDidFromHandleOrDid } from "@/lib/data/atproto/identity";
 import { EllipsisDropdown } from "../../_components/ellipsis-dropdown";
-import { ReportButton } from "../../_components/report-button";
+import { ReportDialogDropdownButton } from "../../_components/report-dialog";
 import { reportUserAction } from "@/lib/components/user-hover-card";
 
 type Params = {
@@ -54,7 +54,9 @@ export default async function Profile({ params }: { params: Params }) {
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="md:text-2xl font-bold">{bskyProfile.handle}</h1>
           <EllipsisDropdown>
-            <ReportButton reportAction={reportUserAction.bind(null, { did })} />
+            <ReportDialogDropdownButton
+              reportAction={reportUserAction.bind(null, { did })}
+            />
           </EllipsisDropdown>
         </div>
       </div>

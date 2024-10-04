@@ -12,7 +12,7 @@ import { parseReportForm } from "@/lib/data/db/report-shared";
 import { createReport } from "@/lib/data/db/report";
 import { EllipsisDropdown } from "./ellipsis-dropdown";
 import { revalidatePath } from "next/cache";
-import { ReportButton } from "./report-button";
+import { ReportDialogDropdownButton } from "./report-dialog";
 import { DeleteButton } from "./delete-button";
 
 type PostProps = {
@@ -121,7 +121,7 @@ export async function PostCard({
           {user ? (
             <div className="ml-auto">
               <EllipsisDropdown>
-                <ReportButton
+                <ReportDialogDropdownButton
                   reportAction={reportPostAction.bind(null, {
                     rkey,
                     cid,
@@ -174,5 +174,4 @@ export async function reportPostAction(
     subjectRkey: input.rkey,
     subjectCid: input.cid,
   });
-  revalidatePath("/");
 }
