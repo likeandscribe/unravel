@@ -123,13 +123,17 @@ async function LoginOrLogout() {
               Profile
             </Link>
           </DropdownMenuItem>
-          {(await isAdmin()) ? (
-            <DropdownMenuItem asChild>
-              <Link href="/moderation" className="cursor-pointer">
-                Moderation
-              </Link>
-            </DropdownMenuItem>
-          ) : null}
+          <Suspense fallback={null}>
+            {isAdmin().then((isAdmin) =>
+              isAdmin ? (
+                <DropdownMenuItem asChild>
+                  <Link href="/moderation" className="cursor-pointer">
+                    Moderation
+                  </Link>
+                </DropdownMenuItem>
+              ) : null,
+            )}
+          </Suspense>
           <DropdownMenuSeparator />
           <form
             action={async () => {
