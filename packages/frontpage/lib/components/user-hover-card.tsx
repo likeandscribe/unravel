@@ -38,7 +38,7 @@ export async function reportUserAction(
   formData: FormData,
 ) {
   "use server";
-  const user = await ensureUser();
+  await ensureUser();
 
   const creatorComment = formData.get("creatorComment") as string;
   const reportReason = formData.get("reportReason") as ReportReasonType;
@@ -56,10 +56,7 @@ export async function reportUserAction(
   await createReport({
     subjectUri: `at://${input.did}`,
     subjectDid: input.did,
-    createdBy: user.did as DID,
-    createdAt: new Date(),
     creatorComment: creatorComment,
     reportReason: reportReason,
-    status: "pending",
   });
 }

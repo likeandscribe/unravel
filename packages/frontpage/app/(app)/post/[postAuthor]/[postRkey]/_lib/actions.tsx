@@ -78,7 +78,7 @@ export async function reportCommentAction(
   },
   formData: FormData,
 ) {
-  const user = await ensureUser();
+  await ensureUser();
   const creatorComment = formData.get("creatorComment") as string;
   const reportReason = formData.get("reportReason") as ReportReasonType;
 
@@ -98,11 +98,8 @@ export async function reportCommentAction(
     subjectCollection: CommentCollection,
     subjectRkey: input.rkey,
     subjectCid: input.cid,
-    createdBy: user.did as DID,
-    createdAt: new Date(),
     creatorComment: creatorComment,
     reportReason: reportReason,
-    status: "pending",
   });
 }
 

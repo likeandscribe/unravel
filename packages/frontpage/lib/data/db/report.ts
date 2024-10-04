@@ -10,21 +10,6 @@ import { ensureUser, isAdmin } from "../user";
 import { ReportReasonType } from "./report-shared";
 import { createFrontPageLink, getRootUrl } from "./shared";
 
-export type ReportDTO = {
-  actionedAt?: Date | null;
-  actionedBy?: string | null;
-  subjectUri: string;
-  subjectDid: DID;
-  subjectCollection?: string | null;
-  subjectRkey?: string | null;
-  subjectCid?: string | null;
-  createdBy: DID;
-  createdAt: Date;
-  creatorComment?: string | null;
-  reportReason?: ReportReasonType | null;
-  status?: "pending" | "accepted" | "rejected" | null;
-};
-
 export type Report = InferSelectModel<typeof schema.Report>;
 
 export const getReport = cache(
@@ -101,39 +86,44 @@ export const updateReport = async (
   return;
 };
 
+type CreateReportOptions = {
+  subjectUri: string;
+  creatorComment: string;
+  reportReason: ReportReasonType;
+  subjectDid: DID;
+  subjectCollection?: string;
+  subjectRkey?: string;
+  subjectCid?: string;
+};
+
 export const createReport = async ({
-  actionedAt,
-  actionedBy,
   subjectUri,
   subjectDid,
   subjectCollection,
   subjectRkey,
   subjectCid,
-  createdBy,
-  createdAt,
   creatorComment,
   reportReason,
-  status,
-}: ReportDTO) => {
+}: CreateReportOptions) => {
   const user = await ensureUser();
 
   if (!user) {
     throw new Error("The user is not authenticated");
   }
 
+  const createdBy = user.did;
+
   await db.insert(schema.Report).values({
-    actionedAt,
-    actionedBy,
     subjectUri,
     subjectDid,
     subjectCollection,
     subjectRkey,
     subjectCid,
     createdBy,
-    createdAt,
+    createdAt: new Date(),
     creatorComment,
     reportReason,
-    status,
+    status: "pending",
   });
 
   const rootUrl = getRootUrl();
@@ -153,7 +143,7 @@ export const createReport = async ({
         fields: [
           {
             name: "Link to post/comment/user",
-            value: `${rootUrl}${await createFrontPageLink(subjectCollection, subjectDid, subjectRkey)}`,
+            value: `${rootUrl}${await createFrontPageLink(subjectDid, subjectCollection, subjectRkey)}`,
           },
         ],
       },

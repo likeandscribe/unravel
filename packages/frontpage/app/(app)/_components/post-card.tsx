@@ -159,7 +159,7 @@ export async function reportPostAction(
   formData: FormData,
 ) {
   "use server";
-  const user = await ensureUser();
+  await ensureUser();
 
   const creatorComment = formData.get("creatorComment") as string;
   const reportReason = formData.get("reportReason") as ReportReasonType;
@@ -178,11 +178,8 @@ export async function reportPostAction(
     subjectCollection: PostCollection,
     subjectRkey: input.rkey,
     subjectCid: input.cid,
-    createdBy: user.did as DID,
-    createdAt: new Date(),
     creatorComment,
     reportReason,
-    status: "pending",
   });
   revalidatePath("/");
 }

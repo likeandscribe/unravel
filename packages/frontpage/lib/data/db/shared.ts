@@ -16,9 +16,9 @@ export const getRootUrl = () => {
 };
 
 export const createFrontPageLink = async (
-  collection?: string | null,
-  author?: DID | null,
-  rkey?: string | null,
+  author: DID,
+  collection?: string,
+  rkey?: string,
 ) => {
   switch (collection) {
     case PostCollection:
