@@ -8,7 +8,7 @@ import { PostCollection, deletePost } from "@/lib/data/atproto/post";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import type { DID } from "@/lib/data/atproto/did";
-import { ReportReasonType } from "@/lib/data/db/report-shared";
+import { parseReportForm } from "@/lib/data/db/report-shared";
 import { createReport } from "@/lib/data/db/report";
 import { EllipsisDropdown } from "./ellipsis-dropdown";
 import { revalidatePath } from "next/cache";
@@ -161,25 +161,18 @@ export async function reportPostAction(
   "use server";
   await ensureUser();
 
-  const creatorComment = formData.get("creatorComment") as string;
-  const reportReason = formData.get("reportReason") as ReportReasonType;
-
-  if (
-    typeof creatorComment !== "string" ||
-    !reportReason ||
-    creatorComment.length >= 250
-  ) {
-    throw new Error("Missing creatorComment or reportReason or length > 250");
+  const formResult = parseReportForm(formData);
+  if (!formResult.success) {
+    throw new Error("Invalid form data");
   }
 
   await createReport({
+    ...formResult.data,
     subjectUri: `at://${input.author}/${PostCollection}/${input.rkey}`,
     subjectDid: input.author,
     subjectCollection: PostCollection,
     subjectRkey: input.rkey,
     subjectCid: input.cid,
-    creatorComment,
-    reportReason,
   });
   revalidatePath("/");
 }

@@ -9,7 +9,7 @@ import { DID } from "@/lib/data/atproto/did";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
-import { ReportReasonType } from "@/lib/data/db/report-shared";
+import { parseReportForm } from "@/lib/data/db/report-shared";
 import { createReport } from "@/lib/data/db/report";
 import { getVoteForComment } from "@/lib/data/db/vote";
 import { ensureUser } from "@/lib/data/user";
@@ -79,27 +79,18 @@ export async function reportCommentAction(
   formData: FormData,
 ) {
   await ensureUser();
-  const creatorComment = formData.get("creatorComment") as string;
-  const reportReason = formData.get("reportReason") as ReportReasonType;
-
-  if (
-    typeof creatorComment !== "string" ||
-    !reportReason ||
-    creatorComment.length >= 250
-  ) {
-    throw new Error(
-      "Missing creatorComment or reportReason or comment length > 250",
-    );
+  const formResult = parseReportForm(formData);
+  if (!formResult.success) {
+    throw new Error("Invalid form data");
   }
 
   await createReport({
+    ...formResult.data,
     subjectUri: `at://${input.authorDid}/${CommentCollection}/${input.rkey}`,
     subjectDid: input.authorDid,
     subjectCollection: CommentCollection,
     subjectRkey: input.rkey,
     subjectCid: input.cid,
-    creatorComment: creatorComment,
-    reportReason: reportReason,
   });
 }
 

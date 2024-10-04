@@ -4,7 +4,7 @@ import { DID } from "../data/atproto/did";
 import { getVerifiedHandle } from "../data/atproto/identity";
 import { UserHoverCardClient } from "./user-hover-card-client";
 import { ensureUser } from "../data/user";
-import { ReportReasonType } from "../data/db/report-shared";
+import { parseReportForm } from "../data/db/report-shared";
 import { createReport } from "../data/db/report";
 
 type Props = {
@@ -40,23 +40,14 @@ export async function reportUserAction(
   "use server";
   await ensureUser();
 
-  const creatorComment = formData.get("creatorComment") as string;
-  const reportReason = formData.get("reportReason") as ReportReasonType;
-
-  if (
-    typeof creatorComment !== "string" ||
-    !reportReason ||
-    creatorComment.length >= 250
-  ) {
-    throw new Error(
-      "Missing creatorComment or reportReason or comment length > 250",
-    );
+  const formResult = parseReportForm(formData);
+  if (!formResult.success) {
+    throw new Error("Invalid form data");
   }
 
   await createReport({
+    ...formResult.data,
     subjectUri: `at://${input.did}`,
     subjectDid: input.did,
-    creatorComment: creatorComment,
-    reportReason: reportReason,
   });
 }
