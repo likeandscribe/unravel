@@ -31,6 +31,7 @@ import { db } from "./db";
 import * as schema from "./schema";
 import { eq } from "drizzle-orm";
 import { getDidFromHandleOrDid } from "./data/atproto/identity";
+import { startSpan } from "@sentry/nextjs";
 
 const USER_AGENT = "appview/@frontpage.fyi (@tom-sherman.com)";
 
@@ -379,37 +380,39 @@ export async function signOut() {
     .where(eq(schema.OauthSession.sessionId, session.user.sessionId));
 }
 
-export const getSession = cache(async () => {
-  const tokenCookie = (await cookies()).get(AUTH_COOKIE_NAME);
-  if (!tokenCookie) {
-    return null;
-  }
+export const getSession = cache(() =>
+  startSpan({ name: "getSession" }, async () => {
+    const tokenCookie = (await cookies()).get(AUTH_COOKIE_NAME);
+    if (!tokenCookie) {
+      return null;
+    }
 
-  let token;
-  try {
-    token = await jwtVerify(tokenCookie.value, await getPublicJwk());
-  } catch (e) {
-    console.error("Failed to verify token", e);
-    return null;
-  }
+    let token;
+    try {
+      token = await jwtVerify(tokenCookie.value, await getPublicJwk());
+    } catch (e) {
+      console.error("Failed to verify token", e);
+      return null;
+    }
 
-  if (!token.payload.jti) {
-    return null;
-  }
+    if (!token.payload.jti) {
+      return null;
+    }
 
-  const [session] = await db
-    .select()
-    .from(schema.OauthSession)
-    .where(eq(schema.OauthSession.sessionId, Number(token.payload.jti)));
+    const [session] = await db
+      .select()
+      .from(schema.OauthSession)
+      .where(eq(schema.OauthSession.sessionId, Number(token.payload.jti)));
 
-  if (!session) {
-    return null;
-  }
+    if (!session) {
+      return null;
+    }
 
-  return {
-    user: session,
-  };
-});
+    return {
+      user: session,
+    };
+  }),
+);
 
 export async function importDpopJwks({
   privateJwk,
