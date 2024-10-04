@@ -7,6 +7,14 @@ export default async function Home() {
   const posts = await getFrontpagePosts();
   return (
     <div className="space-y-6">
+      <form
+        action={async () => {
+          "use server";
+          throw new Error("Server error");
+        }}
+      >
+        <button type="submit">Server error</button>
+      </form>
       {posts.map((post) => (
         <PostCard
           key={post.id}
