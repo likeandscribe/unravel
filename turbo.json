@@ -14,7 +14,8 @@
         "PUBLIC_JWK",
         "VERCEL_BRANCH_URL",
         "VERCEL_ENV",
-        "CRON_SECRET"
+        "CRON_SECRET",
+        "NEXT_RUNTIME"
       ]
     },
     "type-check": {},
