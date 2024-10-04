@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/lib/components/ui/select";
-import { useState } from "react";
 import { ReportReasons } from "@/lib/data/db/report-shared";
 
 interface ReportButtonProps {
@@ -31,9 +30,8 @@ interface ReportButtonProps {
 }
 
 export function ReportButtonIcon({ reportAction }: ReportButtonProps) {
-  const [open, setOpen] = useState(false);
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button size="icon" variant="outline">
           <ExclamationTriangleIcon className="h-4 w-4 text-red-500" />
@@ -61,7 +59,6 @@ export function ReportButtonIcon({ reportAction }: ReportButtonProps) {
               title: "Report submitted",
               type: "foreground",
             });
-            setOpen(false);
           }}
         >
           <Select name="reportReason">
