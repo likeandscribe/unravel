@@ -41,7 +41,7 @@
     "drizzle-orm": "^0.33.0",
     "import-in-the-middle": "1.11.2",
     "jose": "^5.4.0",
-    "next": "15.0.0-canary.168",
+    "next": "15.0.0-canary.178",
     "next-themes": "^0.3.0",
     "oauth4webapi": "^2.12.1",
     "react": "19.0.0-rc-f994737d14-20240522",
