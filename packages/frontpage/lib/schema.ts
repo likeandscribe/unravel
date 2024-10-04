@@ -127,7 +127,9 @@ export const BetaUser = sqliteTable("beta_users", {
 
 export const AdminUser = sqliteTable("admin_users", {
   id: integer("id").primaryKey(),
-  createdAt: dateIsoText("created_at").notNull(),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
   did: did("did").notNull().unique(),
 });
 

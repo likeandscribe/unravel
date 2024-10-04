@@ -19,29 +19,8 @@
     {
       "idx": 2,
       "version": "6",
-      "when": 1727293406638,
-      "tag": "0002_windy_ezekiel_stane",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1727320432120,
-      "tag": "0003_superb_lilandra",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1727472551203,
-      "tag": "0004_jittery_random",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1727983880995,
-      "tag": "0005_remarkable_mister_fear",
+      "when": 1728073629189,
+      "tag": "0002_nifty_nick_fury",
       "breakpoints": true
     }
   ]
