@@ -158,7 +158,7 @@ export const handlers = {
     const url = new URL(request.url);
 
     if (url.pathname.endsWith("/client-metadata.json")) {
-      return Response.json(getClientMetadata());
+      return Response.json(await getClientMetadata());
     }
 
     const key = await exportJWK(await getPublicJwk());
