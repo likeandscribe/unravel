@@ -4,10 +4,16 @@ import { getVoteForPost } from "@/lib/data/db/vote";
 import { ensureUser, getUser } from "@/lib/data/user";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { VoteButton } from "./vote-button";
-import { PostCollection } from "@/lib/data/atproto/post";
+import { PostCollection, deletePost } from "@/lib/data/atproto/post";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import type { DID } from "@/lib/data/atproto/did";
+import { parseReportForm } from "@/lib/data/db/report-shared";
+import { createReport } from "@/lib/data/db/report";
+import { EllipsisDropdown } from "./ellipsis-dropdown";
+import { revalidatePath } from "next/cache";
+import { ReportDialogDropdownButton } from "./report-dialog";
+import { DeleteButton } from "./delete-button";
 
 type PostProps = {
   id: number;
@@ -34,7 +40,10 @@ export async function PostCard({
   cid,
   isUpvoted,
 }: PostProps) {
-  const handle = await getVerifiedHandle(author);
+  const [handle, user] = await Promise.all([
+    getVerifiedHandle(author),
+    getUser(),
+  ]);
   const postHref = `/post/${handle}/${rkey}`;
 
   return (
@@ -87,7 +96,7 @@ export async function PostCard({
         </h2>
         <div className="flex flex-wrap text-gray-500 dark:text-gray-400 sm:gap-4">
           <div className="flex gap-2 flex-wrap md:flex-nowrap">
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <span aria-hidden>•</span>
               <UserHoverCard did={author} asChild>
                 <Link href={`/profile/${handle}`} className="hover:underline">
@@ -108,8 +117,61 @@ export async function PostCard({
               </Link>
             </div>
           </div>
+
+          {user ? (
+            <div className="ml-auto">
+              <EllipsisDropdown>
+                <ReportDialogDropdownButton
+                  reportAction={reportPostAction.bind(null, {
+                    rkey,
+                    cid,
+                    author,
+                  })}
+                />
+                {user?.did === author ? (
+                  <DeleteButton
+                    deleteAction={deletePostAction.bind(null, rkey)}
+                  />
+                ) : null}
+              </EllipsisDropdown>
+            </div>
+          ) : null}
         </div>
       </div>
     </article>
   );
+}
+
+export async function deletePostAction(rkey: string) {
+  "use server";
+  await ensureUser();
+  await deletePost(rkey);
+
+  revalidatePath("/");
+}
+
+export async function reportPostAction(
+  input: {
+    rkey: string;
+    cid: string;
+    author: DID;
+  },
+  formData: FormData,
+) {
+  "use server";
+  await ensureUser();
+
+  const formResult = parseReportForm(formData);
+  if (!formResult.success) {
+    throw new Error("Invalid form data");
+  }
+
+  await createReport({
+    ...formResult.data,
+    subjectUri: `at://${input.author}/${PostCollection}/${input.rkey}`,
+    subjectDid: input.author,
+    subjectCollection: PostCollection,
+    subjectRkey: input.rkey,
+    subjectCid: input.cid,
+  });
 }

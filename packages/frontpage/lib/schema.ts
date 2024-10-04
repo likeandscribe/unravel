@@ -12,6 +12,7 @@ import {
   MAX_POST_TITLE_LENGTH,
   MAX_POST_URL_LENGTH,
 } from "./data/db/constants";
+import { sql } from "drizzle-orm";
 
 const did = customType<{ data: DID }>({
   dataType() {
@@ -124,6 +125,14 @@ export const BetaUser = sqliteTable("beta_users", {
   did: did("did").notNull().unique(),
 });
 
+export const AdminUser = sqliteTable("admin_users", {
+  id: integer("id").primaryKey(),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+  did: did("did").notNull().unique(),
+});
+
 export const ConsumedOffset = sqliteTable("consumed_offsets", {
   offset: integer("offset").primaryKey(),
 });
@@ -153,4 +162,53 @@ export const OauthSession = sqliteTable("oauth_sessions", {
   dpopPublicJwk: text("dpop_public_jwk").notNull(),
   expiresAt: dateIsoText("expires_at").notNull(),
   createdAt: dateIsoText("created_at").notNull(),
+});
+
+export const ModerationEvent = sqliteTable("moderation_events", {
+  id: integer("id").primaryKey(),
+  subjectUri: text("subject_uri").notNull(),
+  subjectDid: text("subject_did").notNull(),
+  subjectCollection: text("subject_collection"),
+  subjectRkey: text("subject_rkey"),
+  subjectCid: text("subject_cid"),
+  createdBy: text("created_by").notNull(),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+  labelsAdded: text("labels_added"),
+  labelsRemoved: text("labels_removed"),
+  creatorReportReason: text("report_type"),
+});
+
+export const LabelledProfile = sqliteTable("labelled_profiles", {
+  id: integer("id").primaryKey(),
+  did: text("did").notNull().unique(),
+  isHidden: integer("is_hidden", { mode: "boolean" }).notNull().default(false),
+  labels: text("labels"),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+  updatedAt: dateIsoText("updated_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+});
+
+export const Report = sqliteTable("reports", {
+  id: integer("id").primaryKey(),
+  actionedAt: dateIsoText("actioned_at"),
+  actionedBy: text("actioned_by"),
+  subjectUri: text("subject_uri").notNull(),
+  subjectDid: text("subject_did").notNull(),
+  subjectCollection: text("subject_collection"),
+  subjectRkey: text("subject_rkey"),
+  subjectCid: text("subject_cid"),
+  createdBy: text("created_by").notNull(),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+  creatorComment: text("creator_comment"),
+  reportReason: text("report_reason"),
+  status: text("status", {
+    enum: ["pending", "accepted", "rejected"],
+  }).default("pending"),
 });

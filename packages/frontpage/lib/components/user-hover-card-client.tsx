@@ -9,6 +9,8 @@ import { ChatBubbleIcon, Link1Icon } from "@radix-ui/react-icons";
 import { ApiRouteResponse } from "../api-route";
 import type { GET as GetHoverCardContent } from "@/app/api/hover-card-content/route";
 import Link from "next/link";
+import { ReportDialogIcon } from "@/app/(app)/_components/report-dialog";
+import { Separator } from "./ui/separator";
 
 type Props = {
   did: DID;
@@ -16,6 +18,7 @@ type Props = {
   asChild?: boolean;
   avatar: ReactNode;
   initialHandle: string;
+  reportAction: (formData: FormData) => Promise<void>;
 };
 
 export function UserHoverCardClient({
@@ -24,6 +27,7 @@ export function UserHoverCardClient({
   asChild,
   avatar,
   initialHandle,
+  reportAction,
 }: Props) {
   return (
     <>
@@ -45,6 +49,10 @@ export function UserHoverCardClient({
               <Content did={did} />
             </Suspense>
           </div>
+        </div>
+        <Separator className="my-2" />
+        <div>
+          <ReportDialogIcon reportAction={reportAction} />
         </div>
       </HoverCardContent>
     </>

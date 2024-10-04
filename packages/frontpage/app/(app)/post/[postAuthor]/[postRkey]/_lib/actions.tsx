@@ -6,10 +6,11 @@ import {
   deleteComment,
 } from "@/lib/data/atproto/comment";
 import { DID } from "@/lib/data/atproto/did";
-import { deletePost } from "@/lib/data/atproto/post";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
 import { getPost } from "@/lib/data/db/post";
+import { parseReportForm } from "@/lib/data/db/report-shared";
+import { createReport } from "@/lib/data/db/report";
 import { getVoteForComment } from "@/lib/data/db/vote";
 import { ensureUser } from "@/lib/data/user";
 import { revalidatePath } from "next/cache";
@@ -21,7 +22,6 @@ export async function createCommentAction(
 ) {
   const content = formData.get("comment") as string;
   const user = await ensureUser();
-  console.log(input);
 
   const [post, comment] = await Promise.all([
     getPost(input.postAuthorDid, input.postRkey),
@@ -64,13 +64,34 @@ async function waitForComment(rkey: string) {
   }
 }
 
-export async function deletePostAction(rkey: string) {
-  await deletePost(rkey);
-}
-
 export async function deleteCommentAction(rkey: string) {
   await ensureUser();
   await deleteComment(rkey);
+  revalidatePath("/post");
+}
+
+export async function reportCommentAction(
+  input: {
+    authorDid: DID;
+    rkey: string;
+    cid: string;
+  },
+  formData: FormData,
+) {
+  await ensureUser();
+  const formResult = parseReportForm(formData);
+  if (!formResult.success) {
+    throw new Error("Invalid form data");
+  }
+
+  await createReport({
+    ...formResult.data,
+    subjectUri: `at://${input.authorDid}/${CommentCollection}/${input.rkey}`,
+    subjectDid: input.authorDid,
+    subjectCollection: CommentCollection,
+    subjectRkey: input.rkey,
+    subjectCid: input.cid,
+  });
 }
 
 export async function commentVoteAction(input: {

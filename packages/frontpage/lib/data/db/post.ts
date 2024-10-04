@@ -2,9 +2,9 @@ import "server-only";
 
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { eq, sql, count, desc, and } from "drizzle-orm";
+import { eq, sql, count, desc, and, isNull, or } from "drizzle-orm";
 import * as schema from "@/lib/schema";
-import { getBlueskyProfile, getUser } from "../user";
+import { getBlueskyProfile, getUser, isAdmin } from "../user";
 import * as atprotoPost from "../atproto/post";
 import { DID } from "../atproto/did";
 import { sendDiscordMessage } from "@/lib/discord";
@@ -39,6 +39,14 @@ const commentCountSubQuery = db
   .where(eq(schema.Comment.status, "live"))
   .groupBy(schema.Comment.postId, schema.Comment.status)
   .as("commentCount");
+
+const bannedUserSubQuery = db
+  .select({
+    did: schema.LabelledProfile.did,
+    isHidden: schema.LabelledProfile.isHidden,
+  })
+  .from(schema.LabelledProfile)
+  .as("bannedUser");
 
 export const getFrontpagePosts = cache(async () => {
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
@@ -76,7 +84,19 @@ export const getFrontpagePosts = cache(async () => {
     )
     .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
     .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
-    .where(eq(schema.Post.status, "live"))
+    .leftJoin(
+      bannedUserSubQuery,
+      eq(bannedUserSubQuery.did, schema.Post.authorDid),
+    )
+    .where(
+      and(
+        eq(schema.Post.status, "live"),
+        or(
+          isNull(bannedUserSubQuery.isHidden),
+          eq(bannedUserSubQuery.isHidden, false),
+        ),
+      ),
+    )
     .orderBy(desc(rank));
 
   return rows.map((row) => ({
@@ -256,3 +276,51 @@ export async function unauthed_deletePost({
   });
   console.log("Done deleting post transaction");
 }
+
+type ModeratePostInput = {
+  rkey: string;
+  authorDid: DID;
+  cid: string;
+  hide: boolean;
+};
+export async function moderatePost({
+  rkey,
+  authorDid,
+  cid,
+  hide,
+}: ModeratePostInput) {
+  const adminUser = await isAdmin();
+
+  if (!adminUser) {
+    throw new Error("User is not an admin");
+  }
+  console.log(`Moderating post, setting hidden to ${hide}`);
+  await db
+    .update(schema.Post)
+    .set({ status: hide ? "moderator_hidden" : "live" })
+    .where(
+      and(
+        eq(schema.Post.rkey, rkey),
+        eq(schema.Post.authorDid, authorDid),
+        eq(schema.Post.cid, cid),
+      ),
+    );
+}
+
+export const getPostFromComment = cache(
+  async ({ did, rkey }: { did: DID; rkey: string }) => {
+    const [join] = await db
+      .select()
+      .from(schema.Comment)
+      .where(
+        and(eq(schema.Comment.rkey, rkey), eq(schema.Comment.authorDid, did)),
+      )
+      .leftJoin(schema.Post, eq(schema.Comment.postId, schema.Post.id));
+
+    if (!join || !join.posts) {
+      return null;
+    }
+
+    return { postRkey: join.posts.rkey, postAuthor: join.posts.authorDid };
+  },
+);

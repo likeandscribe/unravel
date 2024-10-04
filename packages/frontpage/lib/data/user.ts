@@ -64,6 +64,19 @@ export const isBetaUser = cache(async () => {
   );
 });
 
+export const isAdmin = cache(async () => {
+  const user = await ensureUser();
+  if (!user) {
+    return false;
+  }
+
+  const isAdmin = await db.query.AdminUser.findFirst({
+    where: and(eq(schema.AdminUser.did, user.did)),
+  });
+
+  return Boolean(isAdmin);
+});
+
 const ProfileResponse = z.object({
   avatar: z.string(),
   handle: z.string(),

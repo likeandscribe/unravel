@@ -15,6 +15,9 @@ import { getUserComments } from "@/lib/data/db/comment";
 import { Comment } from "../../post/[postAuthor]/[postRkey]/_lib/comment";
 import { Suspense } from "react";
 import { getDidFromHandleOrDid } from "@/lib/data/atproto/identity";
+import { EllipsisDropdown } from "../../_components/ellipsis-dropdown";
+import { ReportDialogDropdownButton } from "../../_components/report-dialog";
+import { reportUserAction } from "@/lib/components/user-hover-card";
 
 type Params = {
   user: string;
@@ -48,7 +51,14 @@ export default async function Profile({ params }: { params: Params }) {
     <>
       <div className="flex items-center space-x-4 mb-4">
         <UserAvatar did={did} size="medium" />
-        <h1 className="text-2xl font-bold">{bskyProfile.handle}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="md:text-2xl font-bold">{bskyProfile.handle}</h1>
+          <EllipsisDropdown>
+            <ReportDialogDropdownButton
+              reportAction={reportUserAction.bind(null, { did })}
+            />
+          </EllipsisDropdown>
+        </div>
       </div>
       <Tabs defaultValue="overview">
         <TabsList>

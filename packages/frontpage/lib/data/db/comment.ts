@@ -11,7 +11,7 @@ import {
   isNotNull,
 } from "drizzle-orm";
 import * as schema from "@/lib/schema";
-import { getUser } from "../user";
+import { getUser, isAdmin } from "../user";
 import { DID } from "../atproto/did";
 import { Prettify } from "@/lib/utils";
 
@@ -52,6 +52,16 @@ const buildUserHasVotedQuery = cache(async () => {
     .where(user ? eq(schema.CommentVote.authorDid, user.did) : sql`false`)
     .as("hasVoted");
 });
+
+//TODO: implement banned user query for comments
+
+// const bannedUserSubQuery = db
+//   .select({
+//     did: schema.LabelledProfile.did,
+//     isHidden: schema.LabelledProfile.isHidden,
+//   })
+//   .from(schema.LabelledProfile)
+//   .as("bannedUser");
 
 export const getCommentsForPost = cache(async (postId: number) => {
   const votes = db
@@ -231,4 +241,35 @@ export function shouldHideComment(comment: CommentModel) {
     comment.children &&
     comment.children.length === 0
   );
+}
+
+type ModerateCommentInput = {
+  rkey: string;
+  authorDid: DID;
+  cid: string;
+  hide: boolean;
+};
+export async function moderateComment({
+  rkey,
+  authorDid,
+  cid,
+  hide,
+}: ModerateCommentInput) {
+  const adminUser = await isAdmin();
+
+  if (!adminUser) {
+    throw new Error("User is not an admin");
+  }
+
+  console.log(`Moderating comment, setting hidden to ${hide}`);
+  await db
+    .update(schema.Comment)
+    .set({ status: hide ? "moderator_hidden" : "live" })
+    .where(
+      and(
+        eq(schema.Comment.rkey, rkey),
+        eq(schema.Comment.authorDid, authorDid),
+        eq(schema.Comment.cid, cid),
+      ),
+    );
 }

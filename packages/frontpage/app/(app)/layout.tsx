@@ -2,7 +2,7 @@ import { deleteAuthCookie, getSession, signOut } from "@/lib/auth";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/lib/components/ui/button";
-import { isBetaUser } from "@/lib/data/user";
+import { isAdmin, isBetaUser } from "@/lib/data/user";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "./_components/theme-toggle";
 import {
@@ -123,6 +123,17 @@ async function LoginOrLogout() {
               Profile
             </Link>
           </DropdownMenuItem>
+          <Suspense fallback={null}>
+            {isAdmin().then((isAdmin) =>
+              isAdmin ? (
+                <DropdownMenuItem asChild>
+                  <Link href="/moderation" className="cursor-pointer">
+                    Moderation
+                  </Link>
+                </DropdownMenuItem>
+              ) : null,
+            )}
+          </Suspense>
           <DropdownMenuSeparator />
           <form
             action={async () => {

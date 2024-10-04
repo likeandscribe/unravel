@@ -15,6 +15,13 @@
       "when": 1725476942887,
       "tag": "0001_confused_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1728073629189,
+      "tag": "0002_nifty_nick_fury",
+      "breakpoints": true
     }
   ]
 }
