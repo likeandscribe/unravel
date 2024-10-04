@@ -170,7 +170,9 @@ export const ModerationEvent = sqliteTable("moderation_events", {
   subjectRkey: text("subject_rkey"),
   subjectCid: text("subject_cid"),
   createdBy: text("created_by").notNull(),
-  createdAt: dateIsoText("created_at").notNull(),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
   labelsAdded: text("labels_added"),
   labelsRemoved: text("labels_removed"),
   creatorReportReason: text("report_type"),
@@ -199,7 +201,9 @@ export const Report = sqliteTable("reports", {
   subjectRkey: text("subject_rkey"),
   subjectCid: text("subject_cid"),
   createdBy: text("created_by").notNull(),
-  createdAt: dateIsoText("created_at").notNull(),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
   creatorComment: text("creator_comment"),
   reportReason: text("report_reason"),
   status: text("status", {

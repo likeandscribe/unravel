@@ -8,6 +8,7 @@ import { sendDiscordMessage } from "@/lib/discord";
 import { DID } from "../atproto/did";
 import { ensureUser, isAdmin } from "../user";
 import { ReportReasonType } from "./report-shared";
+import { createLink } from "./shared";
 
 export type ReportDTO = {
   actionedAt?: Date | null;
@@ -140,17 +141,17 @@ export const createReport = async ({
       {
         title: "New report on Frontpage",
         description: creatorComment ?? reportReason ?? "No reason provided",
-        url: subjectUri,
+        url: "https://frontpage.fyi/moderation?status=pending",
         color: 10181046,
         author: {
           name: createdBy,
           icon_url: "",
-          url: "",
+          url: `https://frontpage.fyi/profile/${createdBy}`,
         },
         fields: [
           {
-            name: "Link",
-            value: "https://frontpage.fyi/moderation",
+            name: "Link to post/comment/user",
+            value: `${await createLink(subjectCollection, subjectDid, subjectRkey)}`,
           },
         ],
       },

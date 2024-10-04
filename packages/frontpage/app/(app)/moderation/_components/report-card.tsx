@@ -9,11 +9,11 @@ import { DID } from "@/lib/data/atproto/did";
 import { Report } from "@/lib/data/db/report";
 import { performModerationAction } from "../page";
 import { UserHandle } from "./user-handle";
-import { PostCollection } from "@/lib/data/atproto/post";
-import { CommentCollection } from "@/lib/data/atproto/comment";
 import Link from "next/link";
-import { getPostFromComment } from "@/lib/data/db/post";
 import { cn } from "@/lib/utils";
+import { CommentCollection } from "@/lib/data/atproto/comment";
+import { PostCollection } from "@/lib/data/atproto/post";
+import { getPostFromComment } from "@/lib/data/db/post";
 
 const createLink = async (
   collection?: string | null,
@@ -34,7 +34,6 @@ const createLink = async (
     default:
       return `/profile/${author}/`;
   }
-};
 
 export async function ReportCard({ report }: { report: Report }) {
   return (
