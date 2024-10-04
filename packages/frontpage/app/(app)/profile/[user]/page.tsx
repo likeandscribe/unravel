@@ -23,7 +23,8 @@ type Params = {
   user: string;
 };
 
-export default async function Profile({ params }: { params: Params }) {
+export default async function Profile(props: { params: Promise<Params> }) {
+  const params = await props.params;
   unstable_noStore();
   const did = await getDidFromHandleOrDid(params.user);
   if (!did) {

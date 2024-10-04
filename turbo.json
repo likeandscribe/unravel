@@ -14,7 +14,13 @@
         "PUBLIC_JWK",
         "VERCEL_BRANCH_URL",
         "VERCEL_ENV",
-        "CRON_SECRET"
+        "CRON_SECRET",
+        "NEXT_RUNTIME",
+        "SENTRY_AUTH_TOKEN",
+        "VERCEL_GIT_COMMIT_SHA",
+        "SENTRY_PROJECT",
+        "SENTRY_ORG",
+        "NEXT_PUBLIC_SENTRY_DSN"
       ]
     },
     "type-check": {},

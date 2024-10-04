@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
       await oauthDiscoveryRequest(new URL(session.user.iss)),
     );
 
-    const client = getOauthClientOptions();
+    const client = await getOauthClientOptions();
 
     const { privateDpopKey, publicDpopKey } = await importDpopJwks({
       privateJwk: session.user.dpopPrivateJwk,

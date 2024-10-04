@@ -6,11 +6,10 @@ import { Metadata } from "next";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { PostPageParams, getPostPageData } from "./_lib/page-data";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: PostPageParams;
+export async function generateMetadata(props: {
+  params: Promise<PostPageParams>;
 }): Promise<Metadata> {
+  const params = await props.params;
   const { post } = await getPostPageData(params);
 
   const handle = await getVerifiedHandle(post.authorDid);
@@ -37,7 +36,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function Post({ params }: { params: PostPageParams }) {
+export default async function Post(props: { params: Promise<PostPageParams> }) {
+  const params = await props.params;
   const { post, authorDid } = await getPostPageData(params);
   const comments = await getCommentsForPost(post.id);
 

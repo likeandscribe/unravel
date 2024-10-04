@@ -4,10 +4,10 @@ import { DID } from "../atproto/did";
 import { PostCollection } from "../atproto/post";
 import { getPostFromComment } from "./post";
 
-export const getRootUrl = () => {
+export const getRootUrl = async () => {
   const host =
     process.env.NODE_ENV === "development"
-      ? headers().get("host")
+      ? (await headers()).get("host")
       : process.env.VERCEL_ENV === "production"
         ? process.env.VERCEL_PROJECT_PRODUCTION_URL!
         : process.env.VERCEL_BRANCH_URL!;

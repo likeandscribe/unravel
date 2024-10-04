@@ -139,7 +139,7 @@ async function LoginOrLogout() {
             action={async () => {
               "use server";
               await signOut();
-              deleteAuthCookie(cookies());
+              deleteAuthCookie(await cookies());
               revalidatePath("/", "layout");
             }}
           >

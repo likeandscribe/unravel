@@ -98,11 +98,10 @@ export async function performModerationAction(
 
 type StatusTypes = "pending" | "accepted" | "rejected";
 
-export default async function Moderation({
-  searchParams,
-}: {
-  searchParams: { status: string };
+export default async function Moderation(props: {
+  searchParams: Promise<{ status: string }>;
 }) {
+  const searchParams = await props.searchParams;
   if (!(await isAdmin())) {
     redirect("/");
   }
