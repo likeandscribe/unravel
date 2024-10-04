@@ -169,10 +169,13 @@ export async function reportPostAction(
   ) {
     throw new Error("Missing creatorComment or reportReason or length > 250");
   }
+
   await createReport({
     subjectUri: `at://${input.author}/${PostCollection}/${input.rkey}`,
     subjectDid: input.author,
     subjectCollection: PostCollection,
+    subjectRkey: input.rkey,
+    subjectCid: input.cid,
     createdBy: user.did as DID,
     createdAt: new Date(),
     creatorComment,

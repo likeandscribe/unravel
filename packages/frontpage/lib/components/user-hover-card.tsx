@@ -58,6 +58,8 @@ export async function reportUserAction(
     subjectDid: input.did,
     createdBy: user.did as DID,
     createdAt: new Date(),
+    creatorComment: creatorComment,
+    reportReason: reportReason,
     status: "pending",
   });
 }

@@ -39,12 +39,15 @@ const createLink = async (
 
 export async function ReportCard({ report }: { report: Report }) {
   return (
-    <Card className="dark:bg-gray-700 border-gray-600 mb-4">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center justify-between text-blue-400">
-          <p>Reported {report.subjectCollection ?? "User"}</p>
-          <p
-            className={`px-2 py-1 rounded-full text-xs 
+    <Card className="mb-2 flex flex-col">
+      <CardHeader>
+        <CardTitle className="text-blue-400">
+          {report.subjectCollection ?? "Reported User"}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p
+          className={`px-2 py-1 mb-2 rounded-full text-xs inline-flex
               ${cn({
                 "bg-yellow-500 text-destructive-foreground":
                   report.status === "pending",
@@ -53,12 +56,9 @@ export async function ReportCard({ report }: { report: Report }) {
                 "bg-destructive text-destructive-foreground":
                   report.status === "rejected",
               })}`}
-          >
-            {report.status}
-          </p>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        >
+          {report.status}
+        </p>
         <div className="flex flex-col mb-4 gap-1 flex-wrap">
           <p>
             <strong>Reported User: </strong>

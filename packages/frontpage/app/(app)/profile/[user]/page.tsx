@@ -51,10 +51,12 @@ export default async function Profile({ params }: { params: Params }) {
     <>
       <div className="flex items-center space-x-4 mb-4">
         <UserAvatar did={did} size="medium" />
-        <h1 className="text-2xl font-bold">{bskyProfile.handle}</h1>
-        <EllipsisDropdown>
-          <ReportButton reportAction={reportUserAction.bind(null, { did })} />
-        </EllipsisDropdown>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="md:text-2xl font-bold">{bskyProfile.handle}</h1>
+          <EllipsisDropdown>
+            <ReportButton reportAction={reportUserAction.bind(null, { did })} />
+          </EllipsisDropdown>
+        </div>
       </div>
       <Tabs defaultValue="overview">
         <TabsList>

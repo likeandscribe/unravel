@@ -26,7 +26,6 @@ import { moderatePost } from "@/lib/data/db/post";
 import { DID } from "@/lib/data/atproto/did";
 import { moderateComment } from "@/lib/data/db/comment";
 import { moderateUser } from "@/lib/data/db/user";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
 export async function performModerationAction(
   input: { reportId: number; status: "accepted" | "rejected" },
@@ -117,76 +116,73 @@ export default async function Moderation({
   if (await isAdmin()) {
     return (
       <>
-        <Card className="bg-gray-800 border-gray-700 mb-6">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold flex items-center gap-2 text-blue-300">
-              <ExclamationTriangleIcon className="scale-150 mr-1" />
+        <Card className="mb-4">
+          <CardHeader className="flex justify-evenly text-center">
+            <CardTitle className="text-2xl font-bold text-blue-300">
               Moderation Dashboard
             </CardTitle>
             <CardDescription className="text-gray-300">
               Review and take action on reported content
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Link href="/moderation">
-                <Card className="bg-gray-700 border-gray-600">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-400">
-                      Total Reports
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-blue-300">
-                      {stats.total}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-              <Link href="/moderation?status=pending">
-                <Card className="bg-gray-700 border-gray-600">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-400">
-                      Pending
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-yellow-300">
-                      {stats.pending}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-              <Link href="/moderation?status=accepted">
-                <Card className="bg-gray-700 border-gray-600">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-400">
-                      Accepted
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-300">
-                      {stats.accepted}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+          <CardContent className="flex flex-wrap">
+            <Link href="/moderation" className="flex-1">
+              <Card className="text-center">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">
+                    Total Reports
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-300">
+                    {stats.total}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/moderation?status=pending" className="flex-1">
+              <Card className="text-center">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">
+                    Pending
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-yellow-300">
+                    {stats.pending}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/moderation?status=accepted" className="flex-1">
+              <Card className="text-center">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">
+                    Accepted
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-300">
+                    {stats.accepted}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
 
-              <Link href="/moderation?status=rejected">
-                <Card className={`bg-gray-700 border-gray-600 `}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-400">
-                      Rejected
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-red-300">
-                      {stats.rejected}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            </div>
+            <Link href="/moderation?status=rejected" className="flex-1">
+              <Card className="text-center">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">
+                    Rejected
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-300">
+                    {stats.rejected}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           </CardContent>
         </Card>
         {reports.map((report) => (
