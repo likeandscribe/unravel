@@ -186,6 +186,9 @@ importers:
       drizzle-orm:
         specifier: ^0.33.0
         version: 0.33.0(@libsql/client@0.9.0(bufferutil@4.0.8)(utf-8-validate@6.0.3))(@neondatabase/serverless@0.7.2)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.10)(@types/pg@8.6.6)(@types/react@18.3.10)(@vercel/postgres@0.8.0)(better-sqlite3@11.0.0)(kysely@0.22.0)(react@19.0.0-rc-f994737d14-20240522)
+      import-in-the-middle:
+        specifier: 1.11.2
+        version: 1.11.2
       jose:
         specifier: ^5.4.0
         version: 5.4.0

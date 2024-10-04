@@ -39,6 +39,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.33.0",
+    "import-in-the-middle": "1.11.2",
     "jose": "^5.4.0",
     "next": "15.0.0-canary.168",
     "next-themes": "^0.3.0",
@@ -70,5 +71,8 @@
     "typescript": "^5",
     "vite-tsconfig-paths": "^4.3.2",
     "vitest": "^2.0.4"
+  },
+  "overrides": {
+    "import-in-the-middle": "1.7.4"
   }
 }
