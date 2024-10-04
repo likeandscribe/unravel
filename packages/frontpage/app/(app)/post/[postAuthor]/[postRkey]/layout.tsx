@@ -9,13 +9,14 @@ type Params = {
   postAuthor: string;
 };
 
-export default async function Post({
-  children,
-  params,
-}: {
+export default async function Post(props: {
   children: React.ReactNode;
-  params: Params;
+  params: Promise<Params>;
 }) {
+  const params = await props.params;
+
+  const { children } = props;
+
   void getUser(); // Prefetch user
   const didParam = await getDidFromHandleOrDid(params.postAuthor);
   if (!didParam) {

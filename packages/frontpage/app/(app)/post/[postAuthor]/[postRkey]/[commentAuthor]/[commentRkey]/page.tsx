@@ -11,11 +11,10 @@ function truncateText(text: string, maxLength: number) {
   return text;
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: CommentPageParams;
+export async function generateMetadata(props: {
+  params: Promise<CommentPageParams>;
 }): Promise<Metadata> {
+  const params = await props.params;
   const { comment, post } = await getCommentPageData(params);
 
   const handle = await getVerifiedHandle(comment.authorDid);
@@ -45,11 +44,10 @@ export async function generateMetadata({
   };
 }
 
-export default async function CommentPage({
-  params,
-}: {
-  params: CommentPageParams;
+export default async function CommentPage(props: {
+  params: Promise<CommentPageParams>;
 }) {
+  const params = await props.params;
   const { comment, post } = await getCommentPageData(params);
 
   return (
