@@ -1,7 +1,7 @@
 import { getUser } from "@/lib/data/user";
 import { notFound } from "next/navigation";
 import { PostCard } from "../../../_components/post-card";
-import { getPost } from "@/lib/data/db/post";
+import { Post } from "@/lib/data/db/post";
 import { getDidFromHandleOrDid } from "@/lib/data/atproto/identity";
 
 type Params = {
@@ -9,7 +9,7 @@ type Params = {
   postAuthor: string;
 };
 
-export default async function Post(props: {
+export default async function PostLayout(props: {
   children: React.ReactNode;
   params: Promise<Params>;
 }) {
@@ -22,7 +22,7 @@ export default async function Post(props: {
   if (!didParam) {
     notFound();
   }
-  const post = await getPost(didParam, params.postRkey);
+  const post = await Post.getPost(didParam, params.postRkey);
   if (!post) {
     notFound();
   }

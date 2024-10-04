@@ -3,7 +3,7 @@
 import { DID } from "@/lib/data/atproto/did";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 import { createPost } from "@/lib/data/atproto/post";
-import { uncached_doesPostExist } from "@/lib/data/db/post";
+import { Post } from "@/lib/data/db/post";
 import { DataLayerError } from "@/lib/data/error";
 import { ensureUser } from "@/lib/data/user";
 import { redirect } from "next/navigation";
@@ -44,7 +44,7 @@ async function waitForPost(authorDid: DID, rkey: string) {
   let exists = false;
   let polls = 0;
   while (!exists && polls < MAX_POLLS) {
-    exists = await uncached_doesPostExist(authorDid, rkey);
+    exists = await Post.uncached_doesPostExist(authorDid, rkey);
     await new Promise((resolve) => setTimeout(resolve, 250));
     polls++;
   }

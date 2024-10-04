@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { CommentCollection } from "../atproto/comment";
 import { DID } from "../atproto/did";
 import { PostCollection } from "../atproto/post";
-import { getPostFromComment } from "./post";
+import { Post } from "./post";
 
 export const getRootUrl = async () => {
   const host =
@@ -25,7 +25,7 @@ export const createFrontPageLink = async (
       return `/post/${author}/${rkey}/`;
 
     case CommentCollection:
-      const { postAuthor, postRkey } = (await getPostFromComment({
+      const { postAuthor, postRkey } = (await Post.getPostFromComment({
         rkey: rkey!,
         did: author!,
       }))!;

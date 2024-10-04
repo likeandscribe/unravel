@@ -1,6 +1,6 @@
 import "server-only";
 import { getDidFromHandleOrDid } from "@/lib/data/atproto/identity";
-import { getPost } from "@/lib/data/db/post";
+import { Post } from "@/lib/data/db/post";
 import { notFound } from "next/navigation";
 
 export type PostPageParams = {
@@ -13,7 +13,7 @@ export async function getPostPageData(params: PostPageParams) {
   if (!authorDid) {
     notFound();
   }
-  const post = await getPost(authorDid, params.postRkey);
+  const post = await Post.getPost(authorDid, params.postRkey);
   if (!post) {
     notFound();
   }

@@ -4,7 +4,7 @@ import {
   getCommentWithChildren,
   shouldHideComment,
 } from "@/lib/data/db/comment";
-import { getPost } from "@/lib/data/db/post";
+import { Post } from "@/lib/data/db/post";
 import { notFound } from "next/navigation";
 
 export type CommentPageParams = {
@@ -22,7 +22,7 @@ export async function getCommentPageData(params: CommentPageParams) {
   if (!postAuthorDid || !commentAuthorDid) {
     notFound();
   }
-  const post = await getPost(postAuthorDid, params.postRkey);
+  const post = await Post.getPost(postAuthorDid, params.postRkey);
   if (!post) {
     notFound();
   }

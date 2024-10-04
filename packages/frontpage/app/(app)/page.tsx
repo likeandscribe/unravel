@@ -1,10 +1,10 @@
-import { getFrontpagePosts } from "@/lib/data/db/post";
+import { Post } from "@/lib/data/db/post";
 import { PostCard } from "./_components/post-card";
 import { unstable_noStore } from "next/cache";
 
 export default async function Home() {
   unstable_noStore();
-  const posts = await getFrontpagePosts();
+  const posts = await Post.getFrontpagePosts();
   return (
     <div className="space-y-6">
       {posts.map((post) => (

@@ -40,7 +40,7 @@ export async function POST(request: Request) {
           rkey,
         });
         const postRecord = atprotoPost.PostRecord.parse(record.value);
-        await dbPost.unauthed_createPost({
+        await dbPost.Post.unauthed_createPost({
           post: postRecord,
           rkey,
           authorDid: repo,
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
           offset: seq,
         });
       } else if (op.action === "delete") {
-        await dbPost.unauthed_deletePost({
+        await dbPost.Post.unauthed_deletePost({
           rkey,
           authorDid: repo,
           offset: seq,

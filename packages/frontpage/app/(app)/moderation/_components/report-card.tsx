@@ -13,7 +13,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { CommentCollection } from "@/lib/data/atproto/comment";
 import { PostCollection } from "@/lib/data/atproto/post";
-import { getPostFromComment } from "@/lib/data/db/post";
+import { Post } from "@/lib/data/db/post";
 
 const createLink = async (
   collection?: string | null,
@@ -25,7 +25,7 @@ const createLink = async (
       return `/post/${author}/${rkey}/`;
 
     case CommentCollection:
-      const { postAuthor, postRkey } = (await getPostFromComment({
+      const { postAuthor, postRkey } = (await Post.getPostFromComment({
         rkey: rkey!,
         did: author!,
       }))!;

@@ -22,7 +22,7 @@ import { CommentCollection } from "@/lib/data/atproto/comment";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { ReportCard } from "./_components/report-card";
-import { moderatePost } from "@/lib/data/db/post";
+import { Post } from "@/lib/data/db/post";
 import { DID } from "@/lib/data/atproto/did";
 import { moderateComment } from "@/lib/data/db/comment";
 import { moderateUser } from "@/lib/data/db/user";
@@ -62,7 +62,7 @@ export async function performModerationAction(
   const modAction = async () => {
     switch (report.subjectCollection) {
       case PostCollection:
-        return await moderatePost({
+        return await Post.moderatePost({
           rkey: report.subjectRkey!,
           authorDid: report.subjectDid! as DID,
           cid: report.subjectCid!,

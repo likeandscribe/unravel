@@ -1,5 +1,5 @@
 import type { DID } from "@/lib/data/atproto/did";
-import { getUserPosts } from "@/lib/data/db/post";
+import { Post } from "@/lib/data/db/post";
 import { unstable_noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { PostCard } from "../../_components/post-card";
@@ -32,7 +32,7 @@ export default async function Profile(props: { params: Promise<Params> }) {
   }
 
   const [userPosts, userComments, bskyProfile] = await Promise.all([
-    getUserPosts(did),
+    Post.getUserPosts(did),
     getUserComments(did),
     getBlueskyProfile(did),
   ]);

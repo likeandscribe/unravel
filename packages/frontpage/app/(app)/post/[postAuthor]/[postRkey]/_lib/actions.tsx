@@ -8,7 +8,7 @@ import {
 import { DID } from "@/lib/data/atproto/did";
 import { createVote, deleteVote } from "@/lib/data/atproto/vote";
 import { getComment, uncached_doesCommentExist } from "@/lib/data/db/comment";
-import { getPost } from "@/lib/data/db/post";
+import { Post } from "@/lib/data/db/post";
 import { parseReportForm } from "@/lib/data/db/report-shared";
 import { createReport } from "@/lib/data/db/report";
 import { getVoteForComment } from "@/lib/data/db/vote";
@@ -24,7 +24,7 @@ export async function createCommentAction(
   const user = await ensureUser();
 
   const [post, comment] = await Promise.all([
-    getPost(input.postAuthorDid, input.postRkey),
+    Post.getPost(input.postAuthorDid, input.postRkey),
     input.parentRkey
       ? getComment(input.parentRkey).then((c) => {
           if (!c) throw new Error("Comment not found");
