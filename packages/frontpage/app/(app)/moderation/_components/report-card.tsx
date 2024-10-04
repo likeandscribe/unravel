@@ -34,6 +34,7 @@ const createLink = async (
     default:
       return `/profile/${author}/`;
   }
+};
 
 export async function ReportCard({ report }: { report: Report }) {
   return (
