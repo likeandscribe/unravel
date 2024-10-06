@@ -4,10 +4,10 @@ import { unstable_cache } from "next/cache";
 import { z } from "zod";
 import { startSpan } from "@sentry/nextjs";
 
-export const getVerifiedDid = cache(
-  unstable_cache(
-    (handle: string) =>
-      startSpan({ name: "getVerifiedDid" }, async () => {
+export const getVerifiedDid = cache((handle: string) =>
+  startSpan({ name: "getVerifiedDid" }, () =>
+    unstable_cache(
+      async () => {
         const [dnsDid, httpDid] = await Promise.all([
           getAtprotoDidFromDns(handle).catch((_) => {
             return null;
@@ -34,11 +34,12 @@ export const getVerifiedDid = cache(
         if (!plcHandle) return null;
 
         return plcHandle.toLowerCase() === handle.toLowerCase() ? did : null;
-      }),
-    ["getVerifiedDid"],
-    {
-      revalidate: 60 * 60 * 24, // 24 hours
-    },
+      },
+      ["getVerifiedDid", handle],
+      {
+        revalidate: 60 * 60 * 24, // 24 hours
+      },
+    )(),
   ),
 );
 
