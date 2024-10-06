@@ -2,35 +2,45 @@ import { cache } from "react";
 import { DID, getDidDoc, isDid, parseDid } from "./did";
 import { unstable_cache } from "next/cache";
 import { z } from "zod";
+import { startSpan } from "@sentry/nextjs";
 
-export const getVerifiedDid = cache(async (handle: string) => {
-  const [dnsDid, httpDid] = await Promise.all([
-    getAtprotoDidFromDns(handle).catch((_) => {
-      return null;
-    }),
-    getAtprotoFromHttps(handle).catch((_) => {
-      return null;
-    }),
-  ]);
+export const getVerifiedDid = cache(
+  unstable_cache(
+    (handle: string) =>
+      startSpan({ name: "getVerifiedDid" }, async () => {
+        const [dnsDid, httpDid] = await Promise.all([
+          getAtprotoDidFromDns(handle).catch((_) => {
+            return null;
+          }),
+          getAtprotoFromHttps(handle).catch((_) => {
+            return null;
+          }),
+        ]);
 
-  if (dnsDid && httpDid && dnsDid !== httpDid) {
-    return null;
-  }
+        if (dnsDid && httpDid && dnsDid !== httpDid) {
+          return null;
+        }
 
-  const did = dnsDid ?? (httpDid ? parseDid(httpDid) : null);
-  if (!did) {
-    return null;
-  }
+        const did = dnsDid ?? (httpDid ? parseDid(httpDid) : null);
+        if (!did) {
+          return null;
+        }
 
-  const plcDoc = await getDidDoc(did);
-  const plcHandle = plcDoc.alsoKnownAs
-    .find((handle) => handle.startsWith("at://"))
-    ?.replace("at://", "");
+        const plcDoc = await getDidDoc(did);
+        const plcHandle = plcDoc.alsoKnownAs
+          .find((handle) => handle.startsWith("at://"))
+          ?.replace("at://", "");
 
-  if (!plcHandle) return null;
+        if (!plcHandle) return null;
 
-  return plcHandle.toLowerCase() === handle.toLowerCase() ? did : null;
-});
+        return plcHandle.toLowerCase() === handle.toLowerCase() ? did : null;
+      }),
+    ["getVerifiedDid"],
+    {
+      revalidate: 60 * 60 * 24, // 24 hours
+    },
+  ),
+);
 
 const DnsQueryResponse = z.object({
   Answer: z.array(
@@ -44,7 +54,7 @@ const DnsQueryResponse = z.object({
 });
 
 // See https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/dns-json/
-async function getAtprotoDidFromDns(handle: string) {
+const getAtprotoDidFromDns = cache(async (handle: string) => {
   const url = new URL("https://cloudflare-dns.com/dns-query");
   url.searchParams.set("type", "TXT");
   url.searchParams.set("name", `_atproto.${handle}`);
@@ -52,9 +62,6 @@ async function getAtprotoDidFromDns(handle: string) {
   const response = await fetch(url, {
     headers: {
       Accept: "application/dns-json",
-    },
-    next: {
-      revalidate: 60 * 60 * 24, // 24 hours
     },
   });
 
@@ -65,31 +72,25 @@ async function getAtprotoDidFromDns(handle: string) {
     : null;
 
   return val ? parseDid(val) : null;
-}
+});
 
-const getAtprotoFromHttps = unstable_cache(
-  async (handle: string) => {
-    let res;
-    const timeoutSignal = AbortSignal.timeout(1500);
-    try {
-      res = await fetch(`https://${handle}/.well-known/atproto-did`, {
-        signal: timeoutSignal,
-      });
-    } catch (_e) {
-      // We're caching failures here, we should at some point invalidate the cache by listening to handle changes on the network
-      return null;
-    }
+const getAtprotoFromHttps = cache(async (handle: string) => {
+  let res;
+  const timeoutSignal = AbortSignal.timeout(1500);
+  try {
+    res = await fetch(`https://${handle}/.well-known/atproto-did`, {
+      signal: timeoutSignal,
+    });
+  } catch (_e) {
+    // We're caching failures here, we should at some point invalidate the cache by listening to handle changes on the network
+    return null;
+  }
 
-    if (!res.ok) {
-      return null;
-    }
-    return parseDid((await res.text()).trim());
-  },
-  ["did", "https"],
-  {
-    revalidate: 60 * 60 * 24, // 24 hours
-  },
-);
+  if (!res.ok) {
+    return null;
+  }
+  return parseDid((await res.text()).trim());
+});
 
 /**
  * Returns the DID of the the handle or the DID itself if it's a DID. Or null if the handle doesn't resolve to a DID.
