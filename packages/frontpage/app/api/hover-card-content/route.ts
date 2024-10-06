@@ -1,7 +1,7 @@
 import { badRequest, createApiRoute } from "@/lib/api-route";
 import { parseDid } from "@/lib/data/atproto/did";
 import { getVerifiedHandle } from "@/lib/data/atproto/identity";
-import { getTotalSubmissions } from "@/lib/data/user";
+import { getBlueskyProfile, getTotalSubmissions } from "@/lib/data/user";
 
 export const GET = createApiRoute(async (request) => {
   const url = new URL(request.url);
@@ -13,13 +13,15 @@ export const GET = createApiRoute(async (request) => {
     badRequest("Missing did parameter");
   }
 
-  const [submissions, handle] = await Promise.all([
+  const [submissions, handle, profile] = await Promise.all([
     getTotalSubmissions(did),
     getVerifiedHandle(did),
+    getBlueskyProfile(did),
   ]);
 
   return {
     ...submissions,
     handle,
+    avatar: profile.avatar,
   };
 });

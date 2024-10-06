@@ -11,12 +11,12 @@ import type { GET as GetHoverCardContent } from "@/app/api/hover-card-content/ro
 import Link from "next/link";
 import { ReportDialogIcon } from "@/app/(app)/_components/report-dialog";
 import { Separator } from "./ui/separator";
+import { AvatarFallback, AvatarImage } from "./user-avatar-shared";
 
 type Props = {
   did: DID;
   children: ReactNode;
   asChild?: boolean;
-  avatar: ReactNode;
   initialHandle: string;
   reportAction: (formData: FormData) => Promise<void>;
 };
@@ -25,7 +25,6 @@ export function UserHoverCardClient({
   did,
   children,
   asChild,
-  avatar,
   initialHandle,
   reportAction,
 }: Props) {
@@ -41,14 +40,9 @@ export function UserHoverCardClient({
       </HoverCardTrigger>
       <HoverCardContent className="w-80">
         <div className="flex gap-4">
-          <Link href={`/profile/${initialHandle}`} className="shrink-0">
-            {avatar}
-          </Link>
-          <div className="flex flex-col gap-1 basis-full">
-            <Suspense fallback={<Fallback handle={initialHandle} />}>
-              <Content did={did} />
-            </Suspense>
-          </div>
+          <Suspense fallback={<Fallback handle={initialHandle} />}>
+            <Content did={did} />
+          </Suspense>
         </div>
         <Separator className="my-2" />
         <div>
@@ -67,21 +61,29 @@ function Content({ did }: { did: DID }) {
 
   return (
     <>
-      <Link href={`/profile/${data.handle}`} className="text-sm font-semibold">
-        @{data.handle}
+      <Link href={`/profile/${data.handle}`} className="shrink-0">
+        <AvatarImage avatar={data.avatar} size="medium" />
       </Link>
-      <p
-        className="text-sm flex gap-2 items-center"
-        title={`${data.commentCount} comments`}
-      >
-        <ChatBubbleIcon /> {data.commentCount}
-      </p>
-      <p
-        className="text-sm flex gap-2 items-center"
-        title={`${data.postCount} posts`}
-      >
-        <Link1Icon /> {data.postCount}
-      </p>
+      <div className="flex flex-col gap-1 flex-grow">
+        <Link
+          href={`/profile/${data.handle}`}
+          className="text-sm font-semibold"
+        >
+          @{data.handle}
+        </Link>
+        <p
+          className="text-sm flex gap-2 items-center"
+          title={`${data.commentCount} comments`}
+        >
+          <ChatBubbleIcon /> {data.commentCount}
+        </p>
+        <p
+          className="text-sm flex gap-2 items-center"
+          title={`${data.postCount} posts`}
+        >
+          <Link1Icon /> {data.postCount}
+        </p>
+      </div>
     </>
   );
 }
@@ -89,11 +91,14 @@ function Content({ did }: { did: DID }) {
 function Fallback({ handle }: { handle: string }) {
   return (
     <>
-      <Link href={`/profile/${handle}`} className="text-sm font-semibold">
-        @{handle}
-      </Link>
-      <Skeleton className="h-5 w-12" />
-      <Skeleton className="h-5 w-12" />
+      <AvatarFallback size="medium" />
+      <div className="flex flex-col gap-1 flex-grow">
+        <Link href={`/profile/${handle}`} className="text-sm font-semibold">
+          @{handle}
+        </Link>
+        <Skeleton className="h-5 w-12" />
+        <Skeleton className="h-5 w-12" />
+      </div>
     </>
   );
 }
