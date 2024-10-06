@@ -76,16 +76,9 @@ const getAtprotoDidFromDns = cache(async (handle: string) => {
 });
 
 const getAtprotoFromHttps = cache(async (handle: string) => {
-  let res;
-  const timeoutSignal = AbortSignal.timeout(1500);
-  try {
-    res = await fetch(`https://${handle}/.well-known/atproto-did`, {
-      signal: timeoutSignal,
-    });
-  } catch (_e) {
-    // We're caching failures here, we should at some point invalidate the cache by listening to handle changes on the network
-    return null;
-  }
+  const res = await fetch(`https://${handle}/.well-known/atproto-did`, {
+    signal: AbortSignal.timeout(1500),
+  });
 
   if (!res.ok) {
     return null;
