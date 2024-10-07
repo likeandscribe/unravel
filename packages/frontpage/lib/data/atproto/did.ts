@@ -1,3 +1,4 @@
+import { startSpan } from "@sentry/nextjs";
 import { cache } from "react";
 import { z } from "zod";
 
@@ -15,17 +16,19 @@ export function parseDid(s: string): DID | null {
   return s;
 }
 
-export const getDidDoc = cache(async (did: DID) => {
-  const response = await fetch(`https://plc.directory/${did}`, {
-    next: {
-      // TODO: Also revalidate this when we receive an identity change event
-      // That would allow us to extend the revalidation time to 1 day
-      revalidate: 60 * 60, // 1 hour
-    },
-  });
+export const getDidDoc = cache(async (did: DID) =>
+  startSpan({ name: "getDidDoc" }, async () => {
+    const response = await fetch(`https://plc.directory/${did}`, {
+      next: {
+        // TODO: Also revalidate this when we receive an identity change event
+        // That would allow us to extend the revalidation time to 1 day
+        revalidate: 60 * 60, // 1 hour
+      },
+    });
 
-  return PlcDocument.parse(await response.json());
-});
+    return PlcDocument.parse(await response.json());
+  }),
+);
 
 export const getPdsUrl = cache(async (did: DID) => {
   const plc = await getDidDoc(did);
