@@ -25,7 +25,6 @@ export function PostList() {
     },
     async (cursor) => {
       const data = await getMorePostsAction({
-        limit: 10,
         nextCursor: cursor[1] as number,
       });
       return data;
