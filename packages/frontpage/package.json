@@ -46,6 +46,7 @@
     "oauth4webapi": "^2.12.1",
     "react": "19.0.0-rc-f994737d14-20240522",
     "react-dom": "19.0.0-rc-f994737d14-20240522",
+    "react-intersection-observer": "^9.13.1",
     "server-only": "^0.0.1",
     "swr": "2.2.6-beta.4",
     "tailwind-merge": "^2.3.0",
