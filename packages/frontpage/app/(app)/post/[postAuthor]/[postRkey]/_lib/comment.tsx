@@ -2,7 +2,7 @@ import { getUser } from "@/lib/data/user";
 import { CommentClientWrapperWithToolbar } from "./comment-client";
 import { CommentModel } from "@/lib/data/db/comment";
 import { TimeAgo } from "@/lib/components/time-ago";
-import { AvatarFallback, UserAvatar } from "@/lib/components/user-avatar";
+import { UserAvatar } from "@/lib/components/user-avatar";
 import Link from "next/link";
 import {
   getDidFromHandleOrDid,
@@ -11,6 +11,7 @@ import {
 import { UserHoverCard } from "@/lib/components/user-hover-card";
 import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { AvatarFallback } from "@/lib/components/user-avatar-shared";
 
 const commentVariants = cva(undefined, {
   variants: {

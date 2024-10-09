@@ -1,4 +1,3 @@
-import { UserAvatar } from "./user-avatar";
 import { HoverCard } from "@/lib/components/ui/hover-card";
 import { DID } from "../data/atproto/did";
 import { getVerifiedHandle } from "../data/atproto/identity";
@@ -19,7 +18,6 @@ export async function UserHoverCard({ did, children, asChild }: Props) {
   return (
     <HoverCard>
       <UserHoverCardClient
-        avatar={<UserAvatar did={did} size="medium" />}
         did={did}
         asChild={asChild}
         initialHandle={handle ?? ""}
