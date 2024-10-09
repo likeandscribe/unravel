@@ -20,6 +20,7 @@ export function PostList() {
   });
   const { data, size, setSize } = useSWRInfinite<Page>(
     (_, previousPageData) => {
+      if (previousPageData && !previousPageData.postCards.length) return null; // reached the end
       return ["posts", previousPageData?.nextCursor ?? 0] as [string, number];
     },
     async (cursor) => {
@@ -36,18 +37,22 @@ export function PostList() {
     <div className="space-y-6">
       {data?.map((page, indx) => {
         return (
-          <Fragment key={page.nextCursor}>
-            <Suspense>{page.postCards}</Suspense>
+          <Suspense
+            key={page.nextCursor}
+            fallback={<p className="text-center text-gray-400">Loading...</p>}
+          >
+            {page.postCards}
+
             {indx === data.length - 1 ? (
               page.postCards.length === 0 ? (
                 <p className="text-center text-gray-400">No posts remaining</p>
               ) : (
                 <p ref={inViewRef} className="text-center text-gray-400">
-                  Loading more posts
+                  Loading...
                 </p>
               )
             ) : null}
-          </Fragment>
+          </Suspense>
         );
       })}
     </div>
