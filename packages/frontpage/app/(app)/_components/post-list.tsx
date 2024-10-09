@@ -6,13 +6,6 @@ import { Fragment, startTransition } from "react";
 import { useInView } from "react-intersection-observer";
 
 export function PostList() {
-  const { ref: inViewRef } = useInView({
-    onChange: (inView) => {
-      if (inView) {
-        startTransition(() => void setSize(size + 1));
-      }
-    },
-  });
   const { data, size, setSize } = useSWRInfinite(
     (_, previousPageData: Page | null) => {
       if (previousPageData && !previousPageData.postCards.length) return null; // reached the end
@@ -23,6 +16,13 @@ export function PostList() {
     },
     { suspense: true, revalidateOnMount: false },
   );
+  const { ref: inViewRef } = useInView({
+    onChange: (inView) => {
+      if (inView) {
+        startTransition(() => void setSize(size + 1));
+      }
+    },
+  });
 
   // Data can't be undefined because we are using suspense. This is likely a bug in the swr types.
   const pages = data!;
