@@ -3,8 +3,8 @@
 import { getFrontpagePosts } from "@/lib/data/db/post";
 import { PostCard } from "./_components/post-card";
 
-export async function getMorePostsAction(input: { nextCursor: number }) {
-  const { posts, nextCursor } = await getFrontpagePosts(input.nextCursor);
+export async function getMorePostsAction(cursor: number) {
+  const { posts, nextCursor } = await getFrontpagePosts(cursor);
 
   return {
     postCards: posts.map((post) => (
@@ -22,6 +22,8 @@ export async function getMorePostsAction(input: { nextCursor: number }) {
         isUpvoted={post.userHasVoted}
       />
     )),
-    nextCursor: nextCursor,
+    nextCursor,
   };
 }
+
+export type Page = Awaited<ReturnType<typeof getMorePostsAction>>;

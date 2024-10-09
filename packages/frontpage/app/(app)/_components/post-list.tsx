@@ -1,14 +1,9 @@
 "use client";
 
 import useSWRInfinite from "swr/infinite";
-import { getMorePostsAction } from "../actions";
+import { getMorePostsAction, type Page } from "../actions";
 import { Fragment, startTransition } from "react";
 import { useInView } from "react-intersection-observer";
-
-export type Page = {
-  postCards: JSX.Element[];
-  nextCursor: number;
-};
 
 export function PostList() {
   const { ref: inViewRef } = useInView({
@@ -24,9 +19,7 @@ export function PostList() {
       return ["posts", previousPageData?.nextCursor ?? 0] as [string, number];
     },
     async (cursor) => {
-      const data = await getMorePostsAction({
-        nextCursor: cursor[1] as number,
-      });
+      const data = await getMorePostsAction(cursor[1] as number);
       return data;
     },
     { suspense: true, revalidateOnMount: false },
