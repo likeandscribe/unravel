@@ -2,7 +2,7 @@
 
 import useSWRInfinite from "swr/infinite";
 import { getMorePostsAction } from "../actions";
-import { Fragment, Suspense, startTransition } from "react";
+import { Fragment, startTransition } from "react";
 import { useInView } from "react-intersection-observer";
 
 export type Page = {
@@ -30,20 +30,20 @@ export function PostList() {
       });
       return data;
     },
-    { suspense: true },
+    { suspense: true, revalidateOnMount: false },
   );
+
+  // Data can't be undefined because we are using suspense. This is likely a bug in the swr types.
+  const pages = data!;
 
   return (
     <div className="space-y-6">
-      {data?.map((page, indx) => {
+      {pages.map((page, indx) => {
         return (
-          <Suspense
-            key={page.nextCursor}
-            fallback={<p className="text-center text-gray-400">Loading...</p>}
-          >
+          <Fragment key={page.nextCursor}>
             {page.postCards}
 
-            {indx === data.length - 1 ? (
+            {indx === pages.length - 1 ? (
               page.postCards.length === 0 ? (
                 <p className="text-center text-gray-400">No posts remaining</p>
               ) : (
@@ -52,7 +52,7 @@ export function PostList() {
                 </p>
               )
             ) : null}
-          </Suspense>
+          </Fragment>
         );
       })}
     </div>
