@@ -3,14 +3,8 @@
 import { getFrontpagePosts } from "@/lib/data/db/post";
 import { PostCard } from "./_components/post-card";
 
-export async function getMorePostsAction(input: {
-  limit: number;
-  nextCursor: number;
-}) {
-  const { posts, nextCursor } = await getFrontpagePosts(
-    input.limit,
-    input.nextCursor,
-  );
+export async function getMorePostsAction(input: { nextCursor: number }) {
+  const { posts, nextCursor } = await getFrontpagePosts(input.nextCursor);
 
   return {
     postCards: posts.map((post) => (

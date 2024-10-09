@@ -48,11 +48,11 @@ const bannedUserSubQuery = db
   .from(schema.LabelledProfile)
   .as("bannedUser");
 
-export const getFrontpagePosts = cache(
-  async (limit: number, offset: number) => {
-    // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
-    // We should closely monitor this and consider alternatives if it gets slow over time
-    const rank = sql<number>`
+export const getFrontpagePosts = cache(async (offset: number) => {
+  const POSTS_PER_PAGE = 10;
+  // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
+  // We should closely monitor this and consider alternatives if it gets slow over time
+  const rank = sql<number>`
   CAST(COALESCE(${votesSubQuery.voteCount}, 1) AS REAL) / (
     pow(
       (JULIANDAY('now') - JULIANDAY(${schema.Post.createdAt})) * 24 + 2,
@@ -61,66 +61,65 @@ export const getFrontpagePosts = cache(
   )
 `.as("rank");
 
-    const userHasVoted = await buildUserHasVotedQuery();
+  const userHasVoted = await buildUserHasVotedQuery();
 
-    const rows = await db
-      .select({
-        id: schema.Post.id,
-        rkey: schema.Post.rkey,
-        cid: schema.Post.cid,
-        title: schema.Post.title,
-        url: schema.Post.url,
-        createdAt: schema.Post.createdAt,
-        authorDid: schema.Post.authorDid,
-        voteCount: votesSubQuery.voteCount,
-        commentCount: commentCountSubQuery.commentCount,
-        rank: rank,
-        userHasVoted: userHasVoted.postId,
-        status: schema.Post.status,
-      })
-      .from(schema.Post)
-      .leftJoin(
-        commentCountSubQuery,
-        eq(commentCountSubQuery.postId, schema.Post.id),
-      )
-      .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
-      .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
-      .leftJoin(
-        bannedUserSubQuery,
-        eq(bannedUserSubQuery.did, schema.Post.authorDid),
-      )
-      .where(
-        and(
-          eq(schema.Post.status, "live"),
-          or(
-            isNull(bannedUserSubQuery.isHidden),
-            eq(bannedUserSubQuery.isHidden, false),
-          ),
+  const rows = await db
+    .select({
+      id: schema.Post.id,
+      rkey: schema.Post.rkey,
+      cid: schema.Post.cid,
+      title: schema.Post.title,
+      url: schema.Post.url,
+      createdAt: schema.Post.createdAt,
+      authorDid: schema.Post.authorDid,
+      voteCount: votesSubQuery.voteCount,
+      commentCount: commentCountSubQuery.commentCount,
+      rank: rank,
+      userHasVoted: userHasVoted.postId,
+      status: schema.Post.status,
+    })
+    .from(schema.Post)
+    .leftJoin(
+      commentCountSubQuery,
+      eq(commentCountSubQuery.postId, schema.Post.id),
+    )
+    .leftJoin(votesSubQuery, eq(votesSubQuery.postId, schema.Post.id))
+    .leftJoin(userHasVoted, eq(userHasVoted.postId, schema.Post.id))
+    .leftJoin(
+      bannedUserSubQuery,
+      eq(bannedUserSubQuery.did, schema.Post.authorDid),
+    )
+    .where(
+      and(
+        eq(schema.Post.status, "live"),
+        or(
+          isNull(bannedUserSubQuery.isHidden),
+          eq(bannedUserSubQuery.isHidden, false),
         ),
-      )
-      .orderBy(desc(rank))
-      .limit(limit)
-      .offset(offset);
+      ),
+    )
+    .orderBy(desc(rank))
+    .limit(POSTS_PER_PAGE)
+    .offset(offset);
 
-    const rowObject = rows.map((row) => ({
-      id: row.id,
-      rkey: row.rkey,
-      cid: row.cid,
-      title: row.title,
-      url: row.url,
-      createdAt: row.createdAt,
-      authorDid: row.authorDid,
-      voteCount: row.voteCount ?? 1,
-      commentCount: row.commentCount ?? 0,
-      userHasVoted: Boolean(row.userHasVoted),
-    }));
+  const rowObject = rows.map((row) => ({
+    id: row.id,
+    rkey: row.rkey,
+    cid: row.cid,
+    title: row.title,
+    url: row.url,
+    createdAt: row.createdAt,
+    authorDid: row.authorDid,
+    voteCount: row.voteCount ?? 1,
+    commentCount: row.commentCount ?? 0,
+    userHasVoted: Boolean(row.userHasVoted),
+  }));
 
-    return {
-      posts: rowObject,
-      nextCursor: offset + limit,
-    };
-  },
-);
+  return {
+    posts: rowObject,
+    nextCursor: offset + POSTS_PER_PAGE,
+  };
+});
 
 export const getUserPosts = cache(async (userDid: DID) => {
   const userHasVoted = await buildUserHasVotedQuery();

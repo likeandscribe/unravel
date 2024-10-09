@@ -7,7 +7,7 @@ import { getFrontpagePosts } from "@/lib/data/db/post";
 
 export default async function Home() {
   unstable_noStore();
-  const { posts, nextCursor } = await getFrontpagePosts(10, 0);
+  const { posts, nextCursor } = await getFrontpagePosts(0);
 
   return (
     <div className="space-y-6">
