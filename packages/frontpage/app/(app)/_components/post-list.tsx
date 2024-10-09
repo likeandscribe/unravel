@@ -8,7 +8,7 @@ import { useInView } from "react-intersection-observer";
 export function PostList() {
   const { data, size, setSize } = useSWRInfinite(
     (_, previousPageData: Page | null) => {
-      if (previousPageData && !previousPageData.postCards.length) return null; // reached the end
+      if (previousPageData && !previousPageData.postCount) return null; // reached the end
       return ["posts", previousPageData?.nextCursor ?? 0];
     },
     ([_, cursor]) => {
@@ -35,7 +35,7 @@ export function PostList() {
             {page.postCards}
 
             {indx === pages.length - 1 ? (
-              page.postCards.length === 0 ? (
+              page.postCount === 0 ? (
                 <p className="text-center text-gray-400">No posts remaining</p>
               ) : (
                 <p ref={inViewRef} className="text-center text-gray-400">
