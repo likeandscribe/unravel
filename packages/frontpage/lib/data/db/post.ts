@@ -48,9 +48,10 @@ const bannedUserSubQuery = db
   .from(schema.LabelledProfile)
   .as("bannedUser");
 
-export const getFrontpagePosts = cache(async () => {
+export const getFrontpagePosts = cache(async (offset: number) => {
+  const POSTS_PER_PAGE = 10;
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
-  // We should closely monitor this and consider alternatives if it gets slow over time
+  // We should closely monitor this and consider alternatives if it gets slow over time https://linear.app/likeandscribe/issue/UN-111/improve-algorithm-hotness-efficiency
   const rank = sql<number>`
   CAST(COALESCE(${votesSubQuery.voteCount}, 1) AS REAL) / (
     pow(
@@ -97,9 +98,11 @@ export const getFrontpagePosts = cache(async () => {
         ),
       ),
     )
-    .orderBy(desc(rank));
+    .orderBy(desc(rank))
+    .limit(POSTS_PER_PAGE)
+    .offset(offset);
 
-  return rows.map((row) => ({
+  const posts = rows.map((row) => ({
     id: row.id,
     rkey: row.rkey,
     cid: row.cid,
@@ -111,6 +114,11 @@ export const getFrontpagePosts = cache(async () => {
     commentCount: row.commentCount ?? 0,
     userHasVoted: Boolean(row.userHasVoted),
   }));
+
+  return {
+    posts,
+    nextCursor: offset + POSTS_PER_PAGE,
+  };
 });
 
 export const getUserPosts = cache(async (userDid: DID) => {
