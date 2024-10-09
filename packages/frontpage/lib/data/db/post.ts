@@ -51,7 +51,7 @@ const bannedUserSubQuery = db
 export const getFrontpagePosts = cache(async (offset: number) => {
   const POSTS_PER_PAGE = 10;
   // This ranking is very naive. I believe it'll need to consider every row in the table even if you limit the results.
-  // We should closely monitor this and consider alternatives if it gets slow over time
+  // We should closely monitor this and consider alternatives if it gets slow over time https://linear.app/likeandscribe/issue/UN-111/improve-algorithm-hotness-efficiency
   const rank = sql<number>`
   CAST(COALESCE(${votesSubQuery.voteCount}, 1) AS REAL) / (
     pow(
