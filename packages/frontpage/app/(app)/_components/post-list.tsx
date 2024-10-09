@@ -13,14 +13,13 @@ export function PostList() {
       }
     },
   });
-  const { data, size, setSize } = useSWRInfinite<Page>(
-    (_, previousPageData) => {
+  const { data, size, setSize } = useSWRInfinite(
+    (_, previousPageData: Page | null) => {
       if (previousPageData && !previousPageData.postCards.length) return null; // reached the end
-      return ["posts", previousPageData?.nextCursor ?? 0] as [string, number];
+      return ["posts", previousPageData?.nextCursor ?? 0];
     },
-    async (cursor) => {
-      const data = await getMorePostsAction(cursor[1] as number);
-      return data;
+    ([_, cursor]) => {
+      return getMorePostsAction(cursor);
     },
     { suspense: true, revalidateOnMount: false },
   );
