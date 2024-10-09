@@ -102,7 +102,7 @@ export const getFrontpagePosts = cache(async (offset: number) => {
     .limit(POSTS_PER_PAGE)
     .offset(offset);
 
-  const rowObject = rows.map((row) => ({
+  const posts = rows.map((row) => ({
     id: row.id,
     rkey: row.rkey,
     cid: row.cid,
@@ -116,7 +116,7 @@ export const getFrontpagePosts = cache(async (offset: number) => {
   }));
 
   return {
-    posts: rowObject,
+    posts,
     nextCursor: offset + POSTS_PER_PAGE,
   };
 });
