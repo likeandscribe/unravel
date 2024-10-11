@@ -230,7 +230,7 @@ export function NewComment({
         }
       }}
     >
-      <div className="flex items-end gap-2">
+      <div className="flex flex-col items-end gap-2">
         <Textarea
           value={input}
           onChange={(event) => {
@@ -245,19 +245,21 @@ export function NewComment({
           disabled={isPending}
           className="resize-y flex-1"
         />
-        <Button
-          className="flex flex-row gap-2"
-          disabled={isPending || input.length > MAX_COMMENT_LENGTH}
-        >
-          {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />}{" "}
-          Post
-        </Button>
-        {extraButton}
+        <div className="w-full flex justify-between">
+          <InputLengthIndicator
+            length={input.length}
+            maxLength={MAX_COMMENT_LENGTH}
+          />
+          <Button
+            className="flex flex-row gap-2"
+            disabled={isPending || input.length > MAX_COMMENT_LENGTH}
+          >
+            {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />}{" "}
+            Post
+          </Button>
+          {extraButton}
+        </div>
       </div>
-      <InputLengthIndicator
-        length={input.length}
-        maxLength={MAX_COMMENT_LENGTH}
-      />
     </form>
   );
 }
