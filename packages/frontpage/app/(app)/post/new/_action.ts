@@ -12,7 +12,7 @@ export async function newPostAction(_prevState: unknown, formData: FormData) {
   "use server";
   const user = await ensureUser();
   const title = formData.get("title");
-  const url = formData.get("url");
+  let url = formData.get("url") as string;
 
   if (typeof title !== "string" || typeof url !== "string" || !title || !url) {
     return { error: "Provide a title and url." };
@@ -20,6 +20,13 @@ export async function newPostAction(_prevState: unknown, formData: FormData) {
 
   if (title.length > 120) {
     return { error: "Title too long" };
+  }
+
+  const allowedProtocols = ["http", "https", "at"];
+  const protocolRegex = new RegExp(`^(${allowedProtocols.join("|")}):\/\/`);
+
+  if (!protocolRegex.test(url)) {
+    url = `https://${url}`;
   }
 
   if (!URL.canParse(url)) {

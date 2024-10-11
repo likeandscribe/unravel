@@ -49,7 +49,6 @@ export function NewPostForm() {
         <Input
           name="url"
           id={`${id}-url`}
-          type="url"
           value={url}
           onChange={(e) => {
             setUrl(e.currentTarget.value);
