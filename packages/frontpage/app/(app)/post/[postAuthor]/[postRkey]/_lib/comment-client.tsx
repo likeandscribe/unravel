@@ -229,36 +229,35 @@ export function NewComment({
           event.currentTarget.requestSubmit();
         }
       }}
+      className="space-y-2"
     >
-      <div className="flex flex-col items-end gap-2">
-        <Textarea
-          value={input}
-          onChange={(event) => {
-            setInput(event.target.value);
-          }}
-          id={textAreaId}
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus={autoFocus}
-          name="comment"
-          ref={textAreaRef}
-          placeholder="Write a comment..."
-          disabled={isPending}
-          className="resize-y flex-1"
+      <Textarea
+        value={input}
+        onChange={(event) => {
+          setInput(event.target.value);
+        }}
+        id={textAreaId}
+        // eslint-disable-next-line jsx-a11y/no-autofocus
+        autoFocus={autoFocus}
+        name="comment"
+        ref={textAreaRef}
+        placeholder="Write a comment..."
+        disabled={isPending}
+        className="resize-y flex-1"
+      />
+      <div className="w-full flex justify-between">
+        <InputLengthIndicator
+          length={input.length}
+          maxLength={MAX_COMMENT_LENGTH}
         />
-        <div className="w-full flex justify-between">
-          <InputLengthIndicator
-            length={input.length}
-            maxLength={MAX_COMMENT_LENGTH}
-          />
-          <Button
-            className="flex flex-row gap-2"
-            disabled={isPending || input.length > MAX_COMMENT_LENGTH}
-          >
-            {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />}{" "}
-            Post
-          </Button>
-          {extraButton}
-        </div>
+        <Button
+          className="flex flex-row gap-2"
+          disabled={isPending || input.length > MAX_COMMENT_LENGTH}
+        >
+          {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />}{" "}
+          Post
+        </Button>
+        {extraButton}
       </div>
     </form>
   );
