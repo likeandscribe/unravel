@@ -271,8 +271,11 @@ export const handlers = {
       );
 
       if (!authCodeResponse.ok) {
-        console.error("Auth code error: ", await authCodeResponse.text());
-        throw new Error("Failed to exchange auth code");
+        const errorText = await authCodeResponse.text();
+        console.error("Auth code error: ", errorText);
+        throw new Error("Failed to exchange auth code", {
+          cause: errorText,
+        });
       }
 
       const tokensResult = oauthTokenResponseSchema.safeParse(
