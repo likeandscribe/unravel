@@ -12,11 +12,10 @@ if (!URL || !AUTH_TOKEN) {
 }
 
 export default defineConfig({
+  dialect: "turso",
   schema: "./lib/schema.ts",
-  out: "./drizzle",
-  dialect: "sqlite",
-  driver: "turso",
   strict: true,
+  out: "./drizzle",
   dbCredentials: {
     url: URL,
     authToken: AUTH_TOKEN,
