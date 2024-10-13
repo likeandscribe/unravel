@@ -22,6 +22,11 @@ import { UserAvatar } from "@/lib/components/user-avatar";
 import { FRONTPAGE_ATPROTO_HANDLE } from "@/lib/constants";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  icons: "/frontpage-logo.svg",
+};
 
 export default async function Layout({
   children,
@@ -35,7 +40,8 @@ export default async function Layout({
       <div className="flex place-content-between items-center mb-8">
         <div className="flex">
           <Link href="/">
-            <span className="font-serif text-2xl font-bold">Frontpage</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/frontpage-logo.svg" alt="Frontpage" className="h-8" />
           </Link>
           {session ? (
             <Button className="ml-4" asChild>
