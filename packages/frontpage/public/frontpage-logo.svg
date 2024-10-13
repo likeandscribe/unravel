@@ -1,0 +1,30 @@
+<svg width="334" height="334" viewBox="0 0 334 334" fill="none" xmlns="http://www.w3.org/2000/svg">
+<style>
+  .stop-2 {
+    stop-color: #040818;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .stop-2 {
+      stop-color: #fff;
+    }
+  }
+</style>
+<path d="M95 225.903V101L162 62.0968V32L69 86V241L95 225.903Z" fill="url(#paint0_linear_8_11)" style=""/>
+<path d="M147 256.903V132L214 93.0968V63L121 117V272L147 256.903Z" fill="url(#paint1_linear_8_11)" style=""/>
+<path d="M266 93V129L204 165V198L266 162V198L204 234V284L173 302V147L266 93Z" fill="url(#paint2_linear_8_11)" style=""/>
+<defs>
+<linearGradient id="paint0_linear_8_11" x1="69" y1="84.5" x2="205.5" y2="167" gradientUnits="userSpaceOnUse">
+  <stop stop-color="#2E05FF"/>
+  <stop class="stop-2" offset="1" />
+</linearGradient>
+<linearGradient id="paint1_linear_8_11" x1="69" y1="84.5" x2="205.5" y2="167" gradientUnits="userSpaceOnUse">
+  <stop stop-color="#2E05FF"/>
+  <stop class="stop-2" offset="1" />
+</linearGradient>
+<linearGradient id="paint2_linear_8_11" x1="69" y1="84.5" x2="205.5" y2="167" gradientUnits="userSpaceOnUse">
+  <stop stop-color="#2E05FF"/>
+  <stop class="stop-2" offset="1" />
+</linearGradient>
+</defs>
+</svg>
