@@ -36,22 +36,23 @@ export default async function Layout({
   const session = await getSession();
   const isInBeta = await isBetaUser();
   return (
-    <div className="container mx-auto px-4 md:px-6 py-12 max-w-3xl">
+    <div className="container mx-auto px-4 md:px-6 pt-4 md:py-12 max-w-3xl">
       <div className="flex place-content-between items-center mb-8">
-        <div className="flex">
-          <Link href="/">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/frontpage-logo.svg" alt="Frontpage" className="h-8" />
-          </Link>
+        <Link href="/">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/frontpage-logo.svg" alt="Frontpage" className="h-12" />
+        </Link>
+
+        <div className="flex items-center gap-4">
           {session ? (
-            <Button className="ml-4" asChild>
+            <Button asChild>
               <Link href="/post/new">New</Link>
             </Button>
           ) : null}
+          <Suspense>
+            <LoginOrLogout />
+          </Suspense>
         </div>
-        <Suspense>
-          <LoginOrLogout />
-        </Suspense>
       </div>
 
       {session ? (
