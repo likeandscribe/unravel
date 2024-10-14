@@ -1,10 +1,10 @@
 import "server-only";
 import {
   atprotoCreateRecord,
-  createAtUriParser,
   atprotoDeleteRecord,
   atprotoGetRecord,
 } from "./record";
+import { createAtUriParser } from "./uri";
 import { DataLayerError } from "../error";
 import { z } from "zod";
 import { PostCollection } from "./post";

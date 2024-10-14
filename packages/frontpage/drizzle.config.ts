@@ -17,6 +17,8 @@ if (URL.endsWith(".turso.io") && !AUTH_TOKEN) {
   throw new Error("TURSO_AUTH_TOKEN must be set when connecting to turso.io");
 }
 
+console.log("Databse URL: ", URL);
+
 export default defineConfig({
   dialect: "turso",
   schema: "./lib/schema.ts",
