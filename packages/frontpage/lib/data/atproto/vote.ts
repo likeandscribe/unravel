@@ -1,14 +1,11 @@
 import "server-only";
 import { ensureUser } from "../user";
-import {
-  atprotoCreateRecord,
-  atprotoDeleteRecord,
-  createAtUriParser,
-} from "./record";
+import { atprotoCreateRecord, atprotoDeleteRecord } from "./record";
 import { z } from "zod";
 import { PostCollection } from "./post";
 import { CommentCollection } from "./comment";
 import { DID } from "./did";
+import { createAtUriParser } from "./uri";
 
 const VoteSubjectCollection = z.union([
   z.literal(PostCollection),

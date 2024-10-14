@@ -14,7 +14,7 @@ import {
 } from "./data/db/constants";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
-import { AtUri, atUriToString } from "./data/atproto/record";
+import { AtUri, atUriToString } from "./data/atproto/uri";
 
 const did = customType<{ data: DID }>({
   dataType() {

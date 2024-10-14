@@ -9,7 +9,7 @@ import { getPostsFromCids } from "./post";
 import { invariant } from "@/lib/utils";
 import { ensureUser } from "../user";
 import { DID } from "../atproto/did";
-import { AtUri } from "../atproto/record";
+import { AtUri } from "../atproto/uri";
 import { z } from "zod";
 
 declare const tag: unique symbol;
