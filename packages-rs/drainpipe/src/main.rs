@@ -156,6 +156,7 @@ async fn main() {
         dotenv_flow::from_filename(env_path).ok();
     }
 
+    let relay_url = std::env::var("RELAY_URL").unwrap_or("wss://bsky.network".into());
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
     let conn = db::db_connect(&database_url).expect("Failed to connect to db");
     let mut ctx = Context {
@@ -183,8 +184,8 @@ async fn main() {
         let cursor = db::get_seq(&mut ctx.db_connection).expect("Failed to get sequence");
         let connect_result = {
             let mut ws_request = format!(
-                "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
-                cursor
+                "{}/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
+                relay_url, cursor
             )
             .into_client_request()
             .unwrap();
@@ -195,11 +196,9 @@ async fn main() {
                 ),
             );
 
-            tokio_tungstenite::connect_async(format!(
-                "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
-                cursor
-            ))
-            .await
+            println!("Connecting to {}", ws_request.uri());
+
+            tokio_tungstenite::connect_async(ws_request).await
         };
         match connect_result {
             Ok((mut socket, _response)) => loop {

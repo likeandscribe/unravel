@@ -1,4 +1,3 @@
-version: '3.9'
 name: frontpage-local-infra
 services:
   caddy:
@@ -61,6 +60,18 @@ services:
       - type: bind
         source: ./plc/db
         target: /var/lib/postgresql/data
+
+  drainpipe:
+    container_name: drainpipe
+    build:
+      dockerfile: ./packages-rs/drainpipe/Dockerfile
+      context: ../../../
+    environment:
+      FRONTPAGE_CONSUMER_URL: http://host.docker.internal:3000/api/receive_hook
+      FRONTPAGE_CONSUMER_SECRET: secret
+      RELAY_URL: ws://pds:3000
+    volumes:
+      - ./drainpipe:/drainpipedata
 
 volumes:
   caddy_data:
