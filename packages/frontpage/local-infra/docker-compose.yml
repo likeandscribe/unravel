@@ -1,0 +1,61 @@
+version: '3.9'
+name: frontpage-local-infra
+services:
+  # caddy:
+  #   container_name: caddy
+  #   image: caddy:2
+  #   network_mode: host
+  #   depends_on:
+  #     - pds
+  #   restart: unless-stopped
+  #   volumes:
+  #     - type: bind
+  #       source: .caddy/data
+  #       target: /data
+  #     - type: bind
+  #       source: ./caddy/etc/caddy
+  #       target: /etc/caddy
+
+  pds:
+    container_name: pds
+    image: ghcr.io/bluesky-social/pds:0.4
+    restart: unless-stopped
+    ports:
+      - '4001:3000'
+    volumes:
+      - type: bind
+        source: ./pds
+        target: /pds
+    env_file:
+      - ./pds.env
+
+  plc:
+    image: ghcr.io/bluesky-social/did-method-plc:plc-f2ab7516bac5bc0f3f86842fa94e996bd1b3815b
+    container_name: plc
+    restart: unless-stopped
+    ports:
+      - '4000:8080'
+    depends_on:
+      - plc_db
+    environment:
+      DEBUG_MODE: 1
+      LOG_ENABLED: "true"
+      LOG_LEVEL: "debug"
+      LOG_DESTINATION: 1
+      DB_CREDS_JSON: &DB_CREDS_JSON '{"username":"pg","password":"password","host":"plc_db","port":5432}'
+      DB_MIGRATE_CREDS_JSON: *DB_CREDS_JSON
+      PLC_VERSION: 0.0.1
+      PORT: 8080
+
+  plc_db:
+    image: postgres:14.4-alpine
+    container_name: plc_db
+    environment:
+      - POSTGRES_USER=pg
+      - POSTGRES_PASSWORD=password
+    ports:
+      - '5433:5432'
+    volumes:
+      - type: bind
+        source: ./plc/db
+        target: /var/lib/postgresql/data
