@@ -8,6 +8,8 @@ import * as dbPost from "@/lib/data/db/post";
 import { CommentCollection, getComment } from "@/lib/data/atproto/comment";
 import { VoteRecord } from "@/lib/data/atproto/vote";
 import { getPdsUrl } from "@/lib/data/atproto/did";
+import { unauthed_createNotification } from "@/lib/data/db/notification";
+import { atUriToString } from "@/lib/data/atproto/uri";
 
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
@@ -97,6 +99,23 @@ export async function POST(request: Request) {
             createdAt: new Date(comment.createdAt),
             parentCommentId: parentComment?.id ?? null,
           });
+
+          const userToNotify = parentComment
+            ? parentComment.authorDid
+            : post.authorDid;
+          // Only notify a user if they are not the author of the post/comment
+          if (userToNotify !== repo) {
+            await unauthed_createNotification({
+              did: userToNotify,
+              reason: parentComment ? "commentReply" : "postComment",
+              reasonCid: comment.cid,
+              reasonUri: {
+                authority: repo,
+                collection: CommentCollection,
+                rkey,
+              },
+            });
+          }
         } else if (op.action === "delete") {
           await tx
             .update(schema.Comment)
@@ -142,7 +161,7 @@ export async function POST(request: Request) {
 
           if (!subject) {
             throw new Error(
-              `Subject not found with uri: ${hydratedVoteRecordValue.subject.uri.value}`,
+              `Subject not found with uri: ${atUriToString(hydratedVoteRecordValue.subject.uri)}`,
             );
           }
 
