@@ -1,0 +1,40 @@
+{
+	storage file_system /data/
+	debug
+	pki {
+		ca unravel {
+			name "Unravel"
+		}
+	}
+}
+
+acme.dev.unravel.fyi {
+	tls {
+		issuer internal {
+			ca unravel
+		}
+	}
+	acme_server {
+		ca unravel
+	}
+}
+
+plc.dev.unravel.fyi {
+	tls {
+		issuer internal {
+			ca unravel
+		}
+	}
+
+	reverse_proxy http://plc:8080
+}
+
+*.dev.unravel.fyi, pds.dev.unravel.fyi {
+	tls {
+		issuer internal {
+			ca unravel
+		}
+	}
+
+	reverse_proxy http://pds:3000
+}

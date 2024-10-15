@@ -4,7 +4,6 @@ set -o nounset
 set -o pipefail
 
 source "$(dirname "$0")/../pds.env"
-PDS_HOSTNAME=localhost:4001
 
 # curl a URL and fail if the request fails.
 function curl_cmd_get {
@@ -41,11 +40,11 @@ PASSWORD="$(openssl rand -base64 30 | tr -d "=+/" | cut -c1-24)"
 INVITE_CODE="$(curl_cmd_post \
   --user "admin:${PDS_ADMIN_PASSWORD}" \
   --data '{"useCount": 1}' \
-  "http://${PDS_HOSTNAME}/xrpc/com.atproto.server.createInviteCode" | jq --raw-output '.code'
+  "https://${PDS_HOSTNAME}/xrpc/com.atproto.server.createInviteCode" | jq --raw-output '.code'
 )"
 RESULT="$(curl_cmd_post_nofail \
   --data "{\"email\":\"${EMAIL}\", \"handle\":\"${HANDLE}\", \"password\":\"${PASSWORD}\", \"inviteCode\":\"${INVITE_CODE}\"}" \
-  "http://${PDS_HOSTNAME}/xrpc/com.atproto.server.createAccount"
+  "https://${PDS_HOSTNAME}/xrpc/com.atproto.server.createAccount"
 )"
 
 DID="$(echo $RESULT | jq --raw-output '.did')"

@@ -1,20 +1,22 @@
 version: '3.9'
 name: frontpage-local-infra
 services:
-  # caddy:
-  #   container_name: caddy
-  #   image: caddy:2
-  #   network_mode: host
-  #   depends_on:
-  #     - pds
-  #   restart: unless-stopped
-  #   volumes:
-  #     - type: bind
-  #       source: .caddy/data
-  #       target: /data
-  #     - type: bind
-  #       source: ./caddy/etc/caddy
-  #       target: /etc/caddy
+  caddy:
+    container_name: caddy
+    image: caddy:2
+    depends_on:
+      - pds
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
 
   pds:
     container_name: pds
@@ -59,3 +61,7 @@ services:
       - type: bind
         source: ./plc/db
         target: /var/lib/postgresql/data
+
+volumes:
+  caddy_data:
+  caddy_config:
