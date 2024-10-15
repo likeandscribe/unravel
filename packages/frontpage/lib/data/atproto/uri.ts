@@ -24,7 +24,6 @@ export const AtUri = z.string().transform((value, ctx) => {
     authority,
     collection: collection.replace("/", ""),
     rkey: rkey.replace("/", ""),
-    value,
   };
 });
 
