@@ -2,7 +2,7 @@ import { deleteAuthCookie, getSession, signOut } from "@/lib/auth";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/lib/components/ui/button";
-import { isAdmin, isBetaUser } from "@/lib/data/user";
+import { isAdmin } from "@/lib/data/user";
 import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "./_components/theme-toggle";
 import {
@@ -34,7 +34,6 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
-  const isInBeta = await isBetaUser();
   return (
     <div className="container mx-auto px-4 md:px-6 pt-4 md:py-12 max-w-3xl">
       <div className="flex place-content-between items-center mb-8">
@@ -54,37 +53,6 @@ export default async function Layout({
           </Suspense>
         </div>
       </div>
-
-      {session ? (
-        <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-900/50 dark:text-slate-300 p-4 mb-4 gap-2 rounded-md">
-          <span>
-            {isInBeta ? (
-              <>
-                Thanks for joining the beta! There will be bugs! Please the
-                report them to{" "}
-                <a
-                  href={`https://bsky.app/profile/${FRONTPAGE_ATPROTO_HANDLE}`}
-                  className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-                >
-                  @frontpage.fyi <OpenInNewWindowIcon className="inline" />
-                </a>
-              </>
-            ) : (
-              <>You&apos;re not currently part of the beta</>
-            )}
-          </span>
-
-          {!isInBeta && (
-            <Button
-              asChild
-              variant="ghost"
-              className="text-indigo-600 dark:text-indigo-400"
-            >
-              <Link href="/invite-only">Learn more</Link>
-            </Button>
-          )}
-        </div>
-      ) : null}
 
       <main className="mb-6">{children}</main>
 

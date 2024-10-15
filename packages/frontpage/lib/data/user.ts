@@ -37,33 +37,6 @@ export async function ensureUser() {
   return user;
 }
 
-export const ensureIsInBeta = cache(async () => {
-  const user = await ensureUser();
-
-  if (
-    await db.query.BetaUser.findFirst({
-      where: eq(schema.BetaUser.did, user.did),
-    })
-  ) {
-    return;
-  }
-
-  redirect("/invite-only");
-});
-
-export const isBetaUser = cache(async () => {
-  const user = await getUser();
-  if (!user) {
-    return false;
-  }
-
-  return Boolean(
-    await db.query.BetaUser.findFirst({
-      where: eq(schema.BetaUser.did, user.did),
-    }),
-  );
-});
-
 export const isAdmin = cache(async () => {
   const user = await ensureUser();
   if (!user) {

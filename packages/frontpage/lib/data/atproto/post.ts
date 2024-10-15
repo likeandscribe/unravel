@@ -1,5 +1,4 @@
 import "server-only";
-import { ensureIsInBeta } from "../user";
 import {
   atprotoCreateRecord,
   atprotoDeleteRecord,
@@ -25,7 +24,6 @@ type PostInput = {
 };
 
 export async function createPost({ title, url }: PostInput) {
-  await ensureIsInBeta();
   const record = { title, url, createdAt: new Date().toISOString() };
   PostRecord.parse(record);
 
@@ -40,8 +38,6 @@ export async function createPost({ title, url }: PostInput) {
 }
 
 export async function deletePost(rkey: string) {
-  await ensureIsInBeta();
-
   await atprotoDeleteRecord({
     rkey,
     collection: PostCollection,

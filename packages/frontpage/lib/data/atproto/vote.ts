@@ -1,5 +1,5 @@
 import "server-only";
-import { ensureIsInBeta, ensureUser } from "../user";
+import { ensureUser } from "../user";
 import {
   atprotoCreateRecord,
   atprotoDeleteRecord,
@@ -37,7 +37,6 @@ export async function createVote({
   subjectAuthorDid,
 }: VoteInput) {
   await ensureUser();
-  await ensureIsInBeta();
   const uri = `at://${subjectAuthorDid}/${subjectCollection}/${subjectRkey}`;
 
   const record = {
@@ -58,7 +57,6 @@ export async function createVote({
 
 export async function deleteVote(rkey: string) {
   await ensureUser();
-  await ensureIsInBeta();
 
   await atprotoDeleteRecord({
     collection: "fyi.unravel.frontpage.vote",
