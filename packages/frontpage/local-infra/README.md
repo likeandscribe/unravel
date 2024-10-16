@@ -16,7 +16,7 @@ Docker compose file that runs the required peices of infrastructure for frontpag
 ## Setup
 
 - `docker-compose up`
-- Install the Unravel CA root certificate in your system's trust store. You can find it in the `frontpage-local-infra_caddy_data` volume at `/data/caddy/pki/authorities/local/root.crt`
+- Install the Unravel CA root certificate in your system's trust store. You can find it in the `frontpage-local-infra_caddy_data` volume at `/data/caddy/pki/authorities/unravel/root.crt`
 - Go about your business
 
 > ![IMPORTANT]

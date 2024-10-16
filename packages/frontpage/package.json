@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS=--use-openssl-ca next dev --turbo",
+    "dev": "NODE_OPTIONS=--use-openssl-ca next dev --hostname=0.0.0.0 --turbo",
     "dev-1pw": "NODE_OPTIONS=--use-openssl-ca op run --env-file=\"./.env.1pw\" -- next dev --turbo",
     "build": "NODE_OPTIONS=--use-openssl-ca next build",
     "start": "NODE_OPTIONS=--use-openssl-ca next start",

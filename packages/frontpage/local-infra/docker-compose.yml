@@ -72,6 +72,8 @@ services:
       RELAY_URL: ws://pds:3000
     volumes:
       - ./drainpipe:/drainpipedata
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   turso_dev:
     container_name: turso_dev
@@ -80,6 +82,14 @@ services:
       - '4002:8080'
     volumes:
       - ./turso/db.sqlite:/var/lib/sqld
+
+  tunnel:
+    container_name: cloudflared_tunnel
+    image: cloudflare/cloudflared
+    restart: unless-stopped
+    command: tunnel --url http://host.docker.internal:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   caddy_data:
