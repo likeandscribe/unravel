@@ -10,7 +10,7 @@ use diesel::{
 };
 use futures::{StreamExt as _, TryFutureExt};
 use serde::Serialize;
-use std::{path::PathBuf, thread, time::Duration};
+use std::{path::PathBuf, process::ExitCode, time::Duration};
 use tokio_tungstenite::tungstenite::{client::IntoClientRequest, protocol::Message};
 
 mod db;
@@ -147,7 +147,7 @@ struct Context {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> ExitCode {
     // Load environment variables from .env.local and .env when ran with cargo run
     if let Some(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR").ok() {
         let env_path: PathBuf = [&manifest_dir, ".env.local"].iter().collect();
@@ -156,6 +156,7 @@ async fn main() {
         dotenv_flow::from_filename(env_path).ok();
     }
 
+    let relay_url = std::env::var("RELAY_URL").unwrap_or("wss://bsky.network".into());
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
     let conn = db::db_connect(&database_url).expect("Failed to connect to db");
     let mut ctx = Context {
@@ -179,15 +180,24 @@ async fn main() {
         });
     }
 
-    loop {
-        let cursor = db::get_seq(&mut ctx.db_connection).expect("Failed to get sequence");
+    for attempt_number in 0..5 {
+        tokio::time::sleep(Duration::from_secs(attempt_number)).await; // Exponential backoff
+
         let connect_result = {
+            let query_string = match db::get_seq(&mut ctx.db_connection) {
+                Ok(cursor) => format!("?cursor={}", cursor),
+                Err(_) => {
+                    eprintln!("Failed to get sequence number. Starting from the beginning.");
+                    "".into()
+                }
+            };
             let mut ws_request = format!(
-                "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
-                cursor
+                "{}/xrpc/com.atproto.sync.subscribeRepos{}",
+                relay_url, query_string
             )
             .into_client_request()
             .unwrap();
+
             ws_request.headers_mut().insert(
                 "User-Agent",
                 reqwest::header::HeaderValue::from_static(
@@ -195,12 +205,11 @@ async fn main() {
                 ),
             );
 
-            tokio_tungstenite::connect_async(format!(
-                "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
-                cursor
-            ))
-            .await
+            println!("Connecting to {}", ws_request.uri());
+
+            tokio_tungstenite::connect_async(ws_request).await
         };
+
         match connect_result {
             Ok((mut socket, _response)) => loop {
                 match socket.next().await {
@@ -243,11 +252,15 @@ async fn main() {
             },
             Err(error) => {
                 eprintln!(
-                    "Error connecting to bgs.bsky-sandbox.dev. Waiting to reconnect: {error:?}"
+                    "Error connecting to {}. Waiting to reconnect: {error:?}",
+                    relay_url
                 );
-                thread::sleep(Duration::from_millis(500));
+                tokio::time::sleep(Duration::from_millis(500)).await;
                 continue;
             }
         }
     }
+
+    eprintln!("Max retries exceeded. Exiting.");
+    ExitCode::FAILURE
 }

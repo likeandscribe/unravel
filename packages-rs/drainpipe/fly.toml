@@ -22,3 +22,6 @@ processes = ['app']
 
 [[vm]]
 size = 'shared-cpu-1x'
+
+[env]
+FRONTPAGE_CONSUMER_URL = "https://frontpage.fyi/api/receive_hook"

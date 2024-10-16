@@ -1,0 +1,96 @@
+name: frontpage-local-infra
+services:
+  caddy:
+    container_name: caddy
+    image: caddy:2
+    depends_on:
+      - pds
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+  pds:
+    container_name: pds
+    image: ghcr.io/bluesky-social/pds:0.4
+    restart: unless-stopped
+    ports:
+      - '4001:3000'
+    volumes:
+      - pds:/pds
+    env_file:
+      - ./pds.env
+
+  plc:
+    image: ghcr.io/bluesky-social/did-method-plc:plc-f2ab7516bac5bc0f3f86842fa94e996bd1b3815b
+    container_name: plc
+    restart: unless-stopped
+    ports:
+      - '4000:8080'
+    depends_on:
+      - plc_db
+    environment:
+      DEBUG_MODE: 1
+      LOG_ENABLED: "true"
+      LOG_LEVEL: "debug"
+      LOG_DESTINATION: 1
+      DB_CREDS_JSON: &DB_CREDS_JSON '{"username":"pg","password":"password","host":"plc_db","port":5432}'
+      DB_MIGRATE_CREDS_JSON: *DB_CREDS_JSON
+      PLC_VERSION: 0.0.1
+      PORT: 8080
+
+  plc_db:
+    image: postgres:14.4-alpine
+    container_name: plc_db
+    environment:
+      - POSTGRES_USER=pg
+      - POSTGRES_PASSWORD=password
+    ports:
+      - '5433:5432'
+    volumes:
+      - plc:/var/lib/postgresql/data
+
+  drainpipe:
+    container_name: drainpipe
+    build:
+      dockerfile: ./packages-rs/drainpipe/Dockerfile
+      context: ../../../
+    environment:
+      FRONTPAGE_CONSUMER_URL: http://host.docker.internal:3000/api/receive_hook
+      FRONTPAGE_CONSUMER_SECRET: secret
+      RELAY_URL: ws://pds:3000
+    volumes:
+      - drainpipe:/drainpipedata
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  turso_dev:
+    container_name: turso_dev
+    build: ./turso
+    ports:
+      - '4002:8080'
+    volumes:
+      - turso:/var/lib/sqld
+
+  tunnel:
+    container_name: cloudflared_tunnel
+    image: cloudflare/cloudflared
+    restart: unless-stopped
+    command: tunnel --url http://host.docker.internal:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  caddy_data:
+  caddy_config:
+  turso:
+  pds:
+  plc:
+  drainpipe:

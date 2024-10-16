@@ -22,7 +22,7 @@ export const revalidate = 60 * 60; // 1 hour
 
 export async function GET(_req: Request, { params }: { params: Params }) {
   const { post } = await getPostPageData(params);
-  const { avatar } = await getBlueskyProfile(post.authorDid);
+  const profile = await getBlueskyProfile(post.authorDid);
 
   return frontpageOgImageResponse(
     <OgWrapper
@@ -48,14 +48,25 @@ export async function GET(_req: Request, { params }: { params: Params }) {
         {post.title}
       </OgBox>
       <OgBottomBar>
-        <img
-          src={avatar}
-          width={48}
-          height={48}
-          style={{
-            borderRadius: "100%",
-          }}
-        />
+        {profile ? (
+          <img
+            src={profile.avatar}
+            width={48}
+            height={48}
+            style={{
+              borderRadius: "100%",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "100%",
+              backgroundColor: "#00000073",
+            }}
+          />
+        )}
         <OgBox style={{ alignItems: "center", gap: 4 }}>
           <OgVoteIcon />
           <OgBox>
