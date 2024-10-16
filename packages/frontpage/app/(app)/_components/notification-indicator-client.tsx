@@ -3,7 +3,7 @@
 import useSWR from "swr";
 
 async function fetchNotificationCount() {
-  const response = await fetch("/api/notifications/count");
+  const response = await fetch("/api/notification-count");
   if (!response.ok) {
     throw new Error("Failed to fetch notification count");
   }
@@ -17,6 +17,7 @@ async function fetchNotificationCount() {
 export function NotificationIndicatorCount() {
   const { data: count } = useSWR("notifications", fetchNotificationCount, {
     suspense: true,
+    revalidateOnMount: false,
   });
 
   if (count === 0) return null;

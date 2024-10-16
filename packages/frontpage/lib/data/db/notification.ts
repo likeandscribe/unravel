@@ -3,7 +3,15 @@ import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
-import { and, eq, lt, desc, isNull, count } from "drizzle-orm";
+import {
+  and,
+  eq,
+  lt,
+  desc,
+  isNull,
+  count,
+  ExtractTablesWithRelations,
+} from "drizzle-orm";
 import { getCommentsFromCids } from "./comment";
 import { getPostsFromCids } from "./post";
 import { invariant } from "@/lib/utils";
@@ -11,6 +19,8 @@ import { ensureUser } from "../user";
 import { DID } from "../atproto/did";
 import { AtUri } from "../atproto/uri";
 import { z } from "zod";
+import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
+import { ResultSet } from "@libsql/client";
 
 declare const tag: unique symbol;
 export type Cursor = { readonly [tag]: "Cursor" };
@@ -156,13 +166,16 @@ type CreateNotificationInput = {
   reasonCid: string;
 };
 
-export async function unauthed_createNotification({
-  did,
-  reason,
-  reasonUri,
-  reasonCid,
-}: CreateNotificationInput) {
-  await db.insert(schema.Notification).values({
+export async function unauthed_createNotification(
+  tx: SQLiteTransaction<
+    "async",
+    ResultSet,
+    typeof schema,
+    ExtractTablesWithRelations<typeof schema>
+  >,
+  { did, reason, reasonUri, reasonCid }: CreateNotificationInput,
+) {
+  await tx.insert(schema.Notification).values({
     did,
     reason,
     reasonCid,
