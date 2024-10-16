@@ -120,7 +120,9 @@ async function LiveComment({
             <TimeAgo createdAt={comment.createdAt} side="bottom" />
           </Link>
         </div>
-        <p className="whitespace-pre-wrap">{comment.body}</p>
+        <p className="whitespace-pre-wrap text-ellipsis overflow-x-hidden">
+          {comment.body}
+        </p>
       </CommentClientWrapperWithToolbar>
 
       {comment.children?.map((comment) => (
