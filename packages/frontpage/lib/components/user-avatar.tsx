@@ -5,7 +5,7 @@ import { DID } from "../data/atproto/did";
 
 const userAvatarSizes = {
   small: 22,
-  smedium: 50,
+  smedium: 36,
   medium: 100,
   large: 150,
 };

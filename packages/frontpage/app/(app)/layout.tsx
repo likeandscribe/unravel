@@ -48,6 +48,7 @@ export default async function Layout({
               <Link href="/post/new">New</Link>
             </Button>
           ) : null}
+          <ThemeToggle />
           <Suspense>
             <LoginOrLogout />
           </Suspense>
@@ -66,9 +67,6 @@ export default async function Layout({
             @unravel.fyi <OpenInNewWindowIcon className="inline" />
           </a>
         </p>
-        <div>
-          <ThemeToggle />
-        </div>
       </footer>
     </div>
   );
@@ -132,5 +130,9 @@ async function LoginOrLogout() {
     );
   }
 
-  return <Link href="/login">Login</Link>;
+  return (
+    <Button variant="outline" asChild>
+      <Link href="/login">Login</Link>
+    </Button>
+  );
 }
