@@ -252,7 +252,8 @@ async fn main() -> ExitCode {
             },
             Err(error) => {
                 eprintln!(
-                    "Error connecting to bgs.bsky-sandbox.dev. Waiting to reconnect: {error:?}"
+                    "Error connecting to {}. Waiting to reconnect: {error:?}",
+                    relay_url
                 );
                 tokio::time::sleep(Duration::from_millis(500)).await;
                 continue;
