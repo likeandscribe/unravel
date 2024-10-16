@@ -1,5 +1,4 @@
 import "server-only";
-import { ensureIsInBeta } from "../user";
 import {
   atprotoCreateRecord,
   createAtUriParser,
@@ -35,7 +34,6 @@ type CommentInput = {
 };
 
 export async function createComment({ parent, post, content }: CommentInput) {
-  await ensureIsInBeta();
   // Collapse newlines into a single \n\n and trim whitespace
   const sanitizedContent = content.replace(/\n\n+/g, "\n\n").trim();
   const record = {
@@ -66,8 +64,6 @@ export async function createComment({ parent, post, content }: CommentInput) {
 }
 
 export async function deleteComment(rkey: string) {
-  await ensureIsInBeta();
-
   await atprotoDeleteRecord({
     rkey,
     collection: CommentCollection,

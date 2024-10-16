@@ -119,6 +119,9 @@ export const CommentVote = sqliteTable(
   }),
 );
 
+/**
+ * @deprecated
+ */
 export const BetaUser = sqliteTable("beta_users", {
   id: integer("id").primaryKey(),
   createdAt: dateIsoText("created_at").notNull(),
