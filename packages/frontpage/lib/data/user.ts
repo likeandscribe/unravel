@@ -55,6 +55,9 @@ const ProfileResponse = z.object({
   handle: z.string(),
 });
 
+/**
+ * Returns null if the profile is not found (happens only really in local development)
+ */
 export const getBlueskyProfile = cache(async (did: DID) => {
   const json = await fetch(
     `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${did}`,
@@ -65,7 +68,7 @@ export const getBlueskyProfile = cache(async (did: DID) => {
     },
   ).then((res) => res.json());
 
-  return ProfileResponse.parse(json);
+  return ProfileResponse.safeParse(json)?.data ?? null;
 });
 
 export const getTotalSubmissions = cache(async (did: DID) => {

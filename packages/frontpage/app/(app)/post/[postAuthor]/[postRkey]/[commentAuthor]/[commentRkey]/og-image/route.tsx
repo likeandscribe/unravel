@@ -12,6 +12,7 @@ import { CommentPageParams, getCommentPageData } from "../_lib/page-data";
 import { getBlueskyProfile } from "@/lib/data/user";
 import { shouldHideComment } from "@/lib/data/db/comment";
 import { notFound } from "next/navigation";
+import { getVerifiedHandle } from "@/lib/data/atproto/identity";
 
 export const dynamic = "force-static";
 export const revalidate = 60 * 60; // 1 hour
@@ -25,7 +26,10 @@ export async function GET(
     notFound();
   }
 
-  const { avatar, handle } = await getBlueskyProfile(comment.authorDid);
+  const [handle, profile] = await Promise.all([
+    getVerifiedHandle(comment.authorDid),
+    getBlueskyProfile(comment.authorDid),
+  ]);
 
   return frontpageOgImageResponse(
     <OgWrapper
@@ -61,14 +65,25 @@ export async function GET(
         </OgBox>
       </OgBox>
       <OgBottomBar>
-        <img
-          src={avatar}
-          width={48}
-          height={48}
-          style={{
-            borderRadius: "100%",
-          }}
-        />
+        {profile ? (
+          <img
+            src={profile.avatar}
+            width={48}
+            height={48}
+            style={{
+              borderRadius: "100%",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "100%",
+              backgroundColor: "#00000073",
+            }}
+          />
+        )}
         <OgBox style={{ alignItems: "center", gap: 4 }}>
           <OgVoteIcon />
           <OgBox>

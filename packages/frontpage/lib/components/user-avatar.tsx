@@ -45,12 +45,15 @@ async function AvatarImage({
   did,
   size: sizeVariant = "small",
 }: UserAvatarProps) {
-  const { avatar } = await getBlueskyProfile(did);
+  const profile = await getBlueskyProfile(did);
+  if (!profile) {
+    return <AvatarFallback size={sizeVariant} />;
+  }
   const size = userAvatarSizes[sizeVariant];
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={avatar}
+      src={profile.avatar}
       alt=""
       width={size}
       height={size}
