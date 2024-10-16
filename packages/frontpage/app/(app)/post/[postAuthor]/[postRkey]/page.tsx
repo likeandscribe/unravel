@@ -53,7 +53,7 @@ export default async function Post(props: { params: Promise<PostPageParams> }) {
           </AlertDescription>
         </Alert>
       )}
-      <div className="grid gap-6">
+      <div className="flex flex-col gap-6">
         {comments.map((comment) => (
           <Comment
             key={comment.id}
