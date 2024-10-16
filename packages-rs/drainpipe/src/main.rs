@@ -10,7 +10,7 @@ use diesel::{
 };
 use futures::{StreamExt as _, TryFutureExt};
 use serde::Serialize;
-use std::{path::PathBuf, thread, time::Duration};
+use std::{path::PathBuf, process::ExitCode, time::Duration};
 use tokio_tungstenite::tungstenite::{client::IntoClientRequest, protocol::Message};
 
 mod db;
@@ -147,7 +147,7 @@ struct Context {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> ExitCode {
     // Load environment variables from .env.local and .env when ran with cargo run
     if let Some(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR").ok() {
         let env_path: PathBuf = [&manifest_dir, ".env.local"].iter().collect();
@@ -180,15 +180,24 @@ async fn main() {
         });
     }
 
-    loop {
-        let cursor = db::get_seq(&mut ctx.db_connection).expect("Failed to get sequence");
+    for attempt_number in 0..5 {
+        tokio::time::sleep(Duration::from_secs(attempt_number)).await; // Exponential backoff
+
         let connect_result = {
+            let query_string = match db::get_seq(&mut ctx.db_connection) {
+                Ok(cursor) => format!("?cursor={}", cursor),
+                Err(_) => {
+                    eprintln!("Failed to get sequence number. Starting from the beginning.");
+                    "".into()
+                }
+            };
             let mut ws_request = format!(
-                "{}/xrpc/com.atproto.sync.subscribeRepos?cursor={}",
-                relay_url, cursor
+                "{}/xrpc/com.atproto.sync.subscribeRepos{}",
+                relay_url, query_string
             )
             .into_client_request()
             .unwrap();
+
             ws_request.headers_mut().insert(
                 "User-Agent",
                 reqwest::header::HeaderValue::from_static(
@@ -200,6 +209,7 @@ async fn main() {
 
             tokio_tungstenite::connect_async(ws_request).await
         };
+
         match connect_result {
             Ok((mut socket, _response)) => loop {
                 match socket.next().await {
@@ -244,9 +254,12 @@ async fn main() {
                 eprintln!(
                     "Error connecting to bgs.bsky-sandbox.dev. Waiting to reconnect: {error:?}"
                 );
-                thread::sleep(Duration::from_millis(500));
+                tokio::time::sleep(Duration::from_millis(500)).await;
                 continue;
             }
         }
     }
+
+    eprintln!("Max retries exceeded. Exiting.");
+    ExitCode::FAILURE
 }
