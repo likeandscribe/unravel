@@ -16,7 +16,8 @@ export function parseDid(s: string): DID | null {
 }
 
 export const getDidDoc = cache(async (did: DID) => {
-  const response = await fetch(`https://plc.directory/${did}`, {
+  const url = process.env.PLC_DIRECTORY_URL ?? "https://plc.directory";
+  const response = await fetch(`${url}/${did}`, {
     next: {
       // TODO: Also revalidate this when we receive an identity change event
       // That would allow us to extend the revalidation time to 1 day

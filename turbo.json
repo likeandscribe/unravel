@@ -20,7 +20,8 @@
         "VERCEL_GIT_COMMIT_SHA",
         "SENTRY_PROJECT",
         "SENTRY_ORG",
-        "NEXT_PUBLIC_SENTRY_DSN"
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "PLC_DIRECTORY_URL"
       ]
     },
     "type-check": {},
