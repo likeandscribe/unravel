@@ -187,7 +187,7 @@ async fn main() -> ExitCode {
             let query_string = match db::get_seq(&mut ctx.db_connection) {
                 Ok(cursor) => format!("?cursor={}", cursor),
                 Err(_) => {
-                    eprintln!("Failed to get sequence number. Starting from the beginning.");
+                    eprintln!("Failed to get sequence number. Starting from now.");
                     "".into()
                 }
             };
