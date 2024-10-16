@@ -39,7 +39,7 @@ turso.dev.unravel.fyi {
 	reverse_proxy http://turso_dev:8080
 }
 
-*.dev.unravel.fyi, pds.dev.unravel.fyi {
+*.pds.dev.unravel.fyi, pds.dev.unravel.fyi {
 	tls {
 		issuer internal {
 			ca unravel
