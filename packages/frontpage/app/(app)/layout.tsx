@@ -22,6 +22,7 @@ import { UserAvatar } from "@/lib/components/user-avatar";
 import { FRONTPAGE_ATPROTO_HANDLE } from "@/lib/constants";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { NotificationIndicator } from "./_components/notification-indicator";
 
 export default async function Layout({
   children,
@@ -77,15 +78,25 @@ async function LoginOrLogout() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger>
-          {did ? (
-            <UserAvatar did={did} size="smedium" />
-          ) : (
-            <span>{handle}</span>
-          )}
+          <NotificationIndicator>
+            {did ? (
+              <UserAvatar did={did} size="smedium" />
+            ) : (
+              <span>{handle}</span>
+            )}
+          </NotificationIndicator>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" side="bottom" align="end">
           <DropdownMenuLabel className="truncate">{handle}</DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/notifications">
+              Notifications
+              <NotificationIndicator>
+                <div />
+              </NotificationIndicator>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href={`/profile/${handle}`} className="cursor-pointer">
               Profile

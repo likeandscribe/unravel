@@ -105,7 +105,7 @@ export async function POST(request: Request) {
             : post.authorDid;
           // Only notify a user if they are not the author of the post/comment
           if (userToNotify !== repo) {
-            await unauthed_createNotification({
+            await unauthed_createNotification(tx, {
               did: userToNotify,
               reason: parentComment ? "commentReply" : "postComment",
               reasonCid: comment.cid,
