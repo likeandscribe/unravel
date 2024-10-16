@@ -77,11 +77,11 @@ services:
 
   turso_dev:
     container_name: turso_dev
-    image: ghcr.io/tursodatabase/libsql-server:v0.24.23
+    build: ./turso
     ports:
       - '4002:8080'
     volumes:
-      - ./turso/db.sqlite:/var/lib/sqld
+      - turso:/var/lib/sqld
 
   tunnel:
     container_name: cloudflared_tunnel
@@ -94,3 +94,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  turso:
