@@ -24,9 +24,7 @@ services:
     ports:
       - '4001:3000'
     volumes:
-      - type: bind
-        source: ./pds
-        target: /pds
+      - pds:/pds
     env_file:
       - ./pds.env
 
@@ -57,9 +55,7 @@ services:
     ports:
       - '5433:5432'
     volumes:
-      - type: bind
-        source: ./plc/db
-        target: /var/lib/postgresql/data
+      - plc:/var/lib/postgresql/data
 
   drainpipe:
     container_name: drainpipe
@@ -71,7 +67,7 @@ services:
       FRONTPAGE_CONSUMER_SECRET: secret
       RELAY_URL: ws://pds:3000
     volumes:
-      - ./drainpipe:/drainpipedata
+      - drainpipe:/drainpipedata
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -95,3 +91,6 @@ volumes:
   caddy_data:
   caddy_config:
   turso:
+  pds:
+  plc:
+  drainpipe:
