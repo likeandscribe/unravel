@@ -12,11 +12,13 @@ Docker compose file that runs the required peices of infrastructure for frontpag
 - [Drainpipe](../../../packages-rs/drainpipe/README.md) (pushes data from the PDS to the Frontpage Next.js app)
 - Turso sqlite server (http://localhost:4002 && https://turso.dev.unravel.fyi)
 - [Caddy](https://caddyserver.com/) reverse proxy (it provides the above services over HTTPS)
+- [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/) (a public https tunnel to the local Frontpage Next.js app)
 
 ## Setup
 
 - `docker-compose up`
 - Install the Unravel CA root certificate in your system's trust store. You can find it in the `frontpage-local-infra_caddy_data` volume at `/data/caddy/pki/authorities/unravel/root.crt`
+- Grab the auto generated `cloudflared` tunnel URL from the logs of the `cloudflared` container
 - Go about your business
 
 > ![IMPORTANT]
