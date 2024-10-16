@@ -5,10 +5,16 @@ import { defineConfig } from "drizzle-kit";
 loadEnvConfig(process.cwd());
 
 const URL = process.env.TURSO_CONNECTION_URL!;
-const AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN!;
+const AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN;
 
-if (!URL || !AUTH_TOKEN) {
-  throw new Error("TURSO_CONNECTION_URL and TURSO_AUTH_TOKEN must be set");
+if (!URL) {
+  throw new Error("TURSO_CONNECTION_URL must be set");
+}
+
+console.log("Connecting to", URL);
+
+if (URL.endsWith(".turso.io") && !AUTH_TOKEN) {
+  throw new Error("TURSO_AUTH_TOKEN must be set when connecting to turso.io");
 }
 
 export default defineConfig({

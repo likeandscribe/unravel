@@ -73,6 +73,14 @@ services:
     volumes:
       - ./drainpipe:/drainpipedata
 
+  turso_dev:
+    container_name: turso_dev
+    image: ghcr.io/tursodatabase/libsql-server:v0.24.23
+    ports:
+      - '4002:8080'
+    volumes:
+      - ./turso/db.sqlite:/var/lib/sqld
+
 volumes:
   caddy_data:
   caddy_config:

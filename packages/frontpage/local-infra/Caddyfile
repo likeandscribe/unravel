@@ -29,6 +29,16 @@ plc.dev.unravel.fyi {
 	reverse_proxy http://plc:8080
 }
 
+turso.dev.unravel.fyi {
+	tls {
+		issuer internal {
+			ca unravel
+		}
+	}
+
+	reverse_proxy http://turso_dev:8080
+}
+
 *.dev.unravel.fyi, pds.dev.unravel.fyi {
 	tls {
 		issuer internal {
