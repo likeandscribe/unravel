@@ -250,14 +250,12 @@ export function NewComment({
           length={input.length}
           maxLength={MAX_COMMENT_LENGTH}
         />
-        <Button
-          className="flex flex-row gap-2"
-          disabled={isPending || input.length > MAX_COMMENT_LENGTH}
-        >
-          {isPending ? <Spinner /> : <ChatBubbleIcon className="w-4 h-4" />}{" "}
-          Post
-        </Button>
-        {extraButton}
+        <div className="flex gap-2">
+          {extraButton}
+          <Button type="submit" disabled={isPending}>
+            {isPending ? <Spinner /> : "Post"}
+          </Button>
+        </div>
       </div>
     </form>
   );
