@@ -2,7 +2,7 @@
 
 Docker compose file that runs the required peices of infrastructure for frontpage locally.
 
-> ![NOTE]
+> [!NOTE]
 > Does not include the frontpage service itself, you should run that with `pnpm run dev`
 
 ## What's inside
@@ -22,7 +22,7 @@ Docker compose file that runs the required peices of infrastructure for frontpag
 - Create a test account with `./scripts/create-account.sh <email> <handle>`
 - Go about your business
 
-> ![IMPORTANT]
+> [!IMPORTANT]
 > When running Node.js based apps make sure you're setting the `NODE_OPTIONS` environment variable to `--use-openssl-ca` to tell Node.js to use the system's trust store. The scripts inside of Frontpage's `package.json` already do this for you.
 
 ## Troubleshooting
