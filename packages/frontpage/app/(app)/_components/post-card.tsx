@@ -14,6 +14,7 @@ import { EllipsisDropdown } from "./ellipsis-dropdown";
 import { revalidatePath } from "next/cache";
 import { ReportDialogDropdownButton } from "./report-dialog";
 import { DeleteButton } from "./delete-button";
+import { ShareDropdownButton } from "./share-button";
 
 type PostProps = {
   id: number;
@@ -121,6 +122,7 @@ export async function PostCard({
           {user ? (
             <div className="ml-auto">
               <EllipsisDropdown>
+                <ShareDropdownButton path={postHref} />
                 <ReportDialogDropdownButton
                   reportAction={reportPostAction.bind(null, {
                     rkey,
