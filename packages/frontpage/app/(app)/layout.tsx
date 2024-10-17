@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/lib/components/ui/button";
 import { isAdmin } from "@/lib/data/user";
-import { OpenInNewWindowIcon } from "@radix-ui/react-icons";
-import { ThemeToggle } from "./_components/theme-toggle";
+import { BellIcon, OpenInNewWindowIcon } from "@radix-ui/react-icons";
+import { ThemeToggleMenuGroup } from "./_components/theme-toggle";
 import {
   getDidFromHandleOrDid,
   getVerifiedHandle,
@@ -44,7 +44,6 @@ export default async function Layout({
               <Link href="/post/new">New</Link>
             </Button>
           ) : null}
-          <ThemeToggle />
           <Suspense>
             <LoginOrLogout />
           </Suspense>
@@ -76,63 +75,63 @@ async function LoginOrLogout() {
       getVerifiedHandle(session.user.did),
     ]);
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger>
-          <NotificationIndicator>
+      <>
+        <NotificationIndicator>
+          <Button asChild variant="outline" size="icon">
+            <Link href="/notifications">
+              <BellIcon />
+            </Link>
+          </Button>
+        </NotificationIndicator>
+        <DropdownMenu>
+          <DropdownMenuTrigger>
             {did ? (
               <UserAvatar did={did} size="smedium" />
             ) : (
               <span>{handle}</span>
             )}
-          </NotificationIndicator>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" side="bottom" align="end">
-          <DropdownMenuLabel className="truncate">{handle}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/notifications">
-              Notifications
-              <NotificationIndicator>
-                <div />
-              </NotificationIndicator>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={`/profile/${handle}`} className="cursor-pointer">
-              Profile
-            </Link>
-          </DropdownMenuItem>
-          <Suspense fallback={null}>
-            {isAdmin().then((isAdmin) =>
-              isAdmin ? (
-                <DropdownMenuItem asChild>
-                  <Link href="/moderation" className="cursor-pointer">
-                    Moderation
-                  </Link>
-                </DropdownMenuItem>
-              ) : null,
-            )}
-          </Suspense>
-          <DropdownMenuSeparator />
-          <form
-            action={async () => {
-              "use server";
-              await signOut();
-              deleteAuthCookie(await cookies());
-              revalidatePath("/", "layout");
-            }}
-          >
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" side="bottom" align="end">
+            <DropdownMenuLabel className="truncate">{handle}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <button
-                type="submit"
-                className="w-full text-start cursor-pointer"
-              >
-                Logout
-              </button>
+              <Link href={`/profile/${handle}`} className="cursor-pointer">
+                Profile
+              </Link>
             </DropdownMenuItem>
-          </form>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <Suspense fallback={null}>
+              {isAdmin().then((isAdmin) =>
+                isAdmin ? (
+                  <DropdownMenuItem asChild>
+                    <Link href="/moderation" className="cursor-pointer">
+                      Moderation
+                    </Link>
+                  </DropdownMenuItem>
+                ) : null,
+              )}
+            </Suspense>
+            <ThemeToggleMenuGroup />
+            <DropdownMenuSeparator />
+            <form
+              action={async () => {
+                "use server";
+                await signOut();
+                deleteAuthCookie(await cookies());
+                revalidatePath("/", "layout");
+              }}
+            >
+              <DropdownMenuItem asChild>
+                <button
+                  type="submit"
+                  className="w-full text-start cursor-pointer"
+                >
+                  Logout
+                </button>
+              </DropdownMenuItem>
+            </form>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </>
     );
   }
 
