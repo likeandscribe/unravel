@@ -23,6 +23,11 @@ const sourceSans = Source_Sans_3({
 
 export const metadata: Metadata = {
   title: "Frontpage - federated link aggregator",
+  openGraph: {
+    title: "Frontpage",
+    description: "Your frontpage to the internet.",
+    type: "website",
+  },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
