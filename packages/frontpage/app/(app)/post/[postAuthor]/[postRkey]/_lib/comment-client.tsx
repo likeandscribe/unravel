@@ -43,6 +43,7 @@ import { ReportDialogDropdownButton } from "@/app/(app)/_components/report-dialo
 import { DeleteButton } from "@/app/(app)/_components/delete-button";
 import { cva, VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { ShareDropdownButton } from "@/app/(app)/_components/share-button";
 
 const commentVariants = cva(undefined, {
   variants: {
@@ -67,6 +68,7 @@ export type CommentClientProps = CommentVariantProps &
     postAuthorDid: DID;
     initialVoteState: VoteButtonState;
     hasAuthored: boolean;
+    commentHref: string;
     children: React.ReactNode;
   };
 
@@ -81,6 +83,7 @@ export function CommentClientWrapperWithToolbar({
   hasAuthored,
   children,
   level,
+  commentHref,
 }: CommentClientProps) {
   const [showNewComment, setShowNewComment] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
@@ -116,6 +119,7 @@ export function CommentClientWrapperWithToolbar({
           </SimpleTooltip>
           <SimpleTooltip content="action-menu" side="bottom">
             <EllipsisDropdown>
+              <ShareDropdownButton path={commentHref} />
               <ReportDialogDropdownButton
                 reportAction={reportCommentAction.bind(null, {
                   authorDid: authorDid,

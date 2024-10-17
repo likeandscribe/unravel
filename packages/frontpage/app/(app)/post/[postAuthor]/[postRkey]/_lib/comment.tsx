@@ -57,10 +57,12 @@ async function LiveComment({
   const hasAuthored = user?.did === comment.authorDid;
 
   const childCommentLevel = getChildCommentLevel(level);
+  const commentHref = `/post/${postAuthorParam}/${postRkey}/${handle}/${comment.rkey}`;
 
   return (
     <>
       <CommentClientWrapperWithToolbar
+        commentHref={commentHref}
         level={level}
         postRkey={postRkey}
         postAuthorDid={postAuthorDid}
@@ -84,7 +86,7 @@ async function LiveComment({
             </Link>
           </UserHoverCard>
           <Link
-            href={`/post/${postAuthorParam}/${postRkey}/${handle}/${comment.rkey}`}
+            href={commentHref}
             className="text-gray-500 text-xs dark:text-gray-400 hover:underline"
           >
             <TimeAgo createdAt={comment.createdAt} side="bottom" />
