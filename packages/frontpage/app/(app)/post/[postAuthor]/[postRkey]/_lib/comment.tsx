@@ -18,7 +18,7 @@ type CommentProps = {
   comment: CommentModel;
   postAuthorParam: string;
   postRkey: string;
-  level: CommentLevel;
+  level?: CommentLevel;
 };
 
 export function Comment({ comment, level, ...props }: CommentProps) {
