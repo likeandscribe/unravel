@@ -14,6 +14,8 @@ Docker compose file that runs the required peices of infrastructure for frontpag
 - [Caddy](https://caddyserver.com/) reverse proxy (it provides the above services over HTTPS)
 - [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/) (a public https tunnel to the local Frontpage Next.js app)
 
+![Diagram of the local dev environment architecture](https://github.com/user-attachments/assets/720afae8-c9e8-4648-b22d-ae47daccb599)
+
 ## Setup
 
 - `docker-compose up`
