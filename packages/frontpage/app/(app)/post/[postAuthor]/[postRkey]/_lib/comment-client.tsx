@@ -41,17 +41,34 @@ import type { CommentModel } from "@/lib/data/db/comment";
 import { EllipsisDropdown } from "@/app/(app)/_components/ellipsis-dropdown";
 import { ReportDialogDropdownButton } from "@/app/(app)/_components/report-dialog";
 import { DeleteButton } from "@/app/(app)/_components/delete-button";
+import { cva, VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
-export type CommentClientProps = Pick<
-  CommentModel,
-  "rkey" | "cid" | "id" | "authorDid"
-> & {
-  postRkey: string;
-  postAuthorDid: DID;
-  initialVoteState: VoteButtonState;
-  hasAuthored: boolean;
-  children: React.ReactNode;
-};
+const commentVariants = cva(undefined, {
+  variants: {
+    level: {
+      0: "",
+      1: "pl-8",
+      2: "pl-16",
+      3: "pl-24",
+    },
+  },
+  defaultVariants: {
+    level: 0,
+  },
+});
+
+type CommentVariantProps = VariantProps<typeof commentVariants>;
+export type CommentLevel = CommentVariantProps["level"];
+
+export type CommentClientProps = CommentVariantProps &
+  Pick<CommentModel, "rkey" | "cid" | "id" | "authorDid"> & {
+    postRkey: string;
+    postAuthorDid: DID;
+    initialVoteState: VoteButtonState;
+    hasAuthored: boolean;
+    children: React.ReactNode;
+  };
 
 export function CommentClientWrapperWithToolbar({
   id,
@@ -63,13 +80,14 @@ export function CommentClientWrapperWithToolbar({
   initialVoteState,
   hasAuthored,
   children,
+  level,
 }: CommentClientProps) {
   const [showNewComment, setShowNewComment] = useState(false);
   const commentRef = useRef<HTMLDivElement>(null);
   const newCommentTextAreaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   return (
-    <>
+    <NestComment level={level}>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
       <div className="flex flex-col gap-2 p-1" tabIndex={0} ref={commentRef}>
         {children}
@@ -176,7 +194,23 @@ export function CommentClientWrapperWithToolbar({
           }
         />
       ) : null}
-    </>
+    </NestComment>
+  );
+}
+
+export function NestComment({
+  children,
+  level,
+  className,
+}: {
+  children: React.ReactNode;
+  level: CommentLevel;
+  className?: string;
+}) {
+  return (
+    <article className={cn(className, commentVariants({ level }))}>
+      {children}
+    </article>
   );
 }
 
