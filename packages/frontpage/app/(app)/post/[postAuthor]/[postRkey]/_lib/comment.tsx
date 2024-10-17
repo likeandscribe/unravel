@@ -1,5 +1,9 @@
 import { getUser } from "@/lib/data/user";
-import { CommentClientWrapperWithToolbar } from "./comment-client";
+import {
+  CommentClientWrapperWithToolbar,
+  CommentLevel,
+  NestComment,
+} from "./comment-client";
 import { CommentModel } from "@/lib/data/db/comment";
 import { TimeAgo } from "@/lib/components/time-ago";
 import { AvatarFallback, UserAvatar } from "@/lib/components/user-avatar";
@@ -9,27 +13,12 @@ import {
   getVerifiedHandle,
 } from "@/lib/data/atproto/identity";
 import { UserHoverCard } from "@/lib/components/user-hover-card";
-import { VariantProps, cva } from "class-variance-authority";
-import { cn } from "@/lib/utils";
 
-const commentVariants = cva(undefined, {
-  variants: {
-    level: {
-      0: "",
-      1: "pl-8",
-      2: "pl-16",
-      3: "pl-24",
-    },
-  },
-  defaultVariants: {
-    level: 0,
-  },
-});
-
-type CommentProps = VariantProps<typeof commentVariants> & {
+type CommentProps = {
   comment: CommentModel;
   postAuthorParam: string;
   postRkey: string;
+  level: CommentLevel;
 };
 
 export function Comment({ comment, level, ...props }: CommentProps) {
@@ -41,31 +30,11 @@ export function Comment({ comment, level, ...props }: CommentProps) {
     return null;
   }
 
-  return (
-    <NestComment level={level}>
-      {comment.status === "live" ? (
-        <LiveComment {...props} level={level} comment={comment} />
-      ) : (
-        <DeletedComment {...props} level={level} comment={comment} />
-      )}
-    </NestComment>
-  );
-}
+  if (comment.status === "live") {
+    return <LiveComment {...props} level={level} comment={comment} />;
+  }
 
-function NestComment({
-  children,
-  level,
-  className,
-}: {
-  children: React.ReactNode;
-  level: CommentProps["level"];
-  className?: string;
-}) {
-  return (
-    <article className={cn(className, commentVariants({ level }))}>
-      {children}
-    </article>
-  );
+  return <DeletedComment {...props} level={level} comment={comment} />;
 }
 
 async function LiveComment({
@@ -92,6 +61,7 @@ async function LiveComment({
   return (
     <>
       <CommentClientWrapperWithToolbar
+        level={level}
         postRkey={postRkey}
         postAuthorDid={postAuthorDid}
         hasAuthored={hasAuthored}
