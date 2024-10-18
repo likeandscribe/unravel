@@ -27,13 +27,15 @@ export const AtUri = z.string().transform((value, ctx) => {
   };
 });
 
-export const atUriToString = (uri: z.infer<typeof AtUri>) =>
+export type AtUriType = z.infer<typeof AtUri>;
+
+export const atUriToString = (uri: AtUriType) =>
   `at://${[uri.authority, uri.collection, uri.rkey].join("/")}`;
 
 export function createAtUriParser<TCollection extends z.ZodType>(
   collectionSchema: TCollection,
 ): z.ZodType<
-  Prettify<z.infer<typeof AtUri> & { collection: z.infer<TCollection> }>,
+  Prettify<AtUriType & { collection: z.infer<TCollection> }>,
   z.ZodTypeDef,
   string
 > {

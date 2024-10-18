@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { eq, sql, count, desc, and, isNull, or, inArray } from "drizzle-orm";
+import { eq, sql, count, desc, and, isNull, or } from "drizzle-orm";
 import * as schema from "@/lib/schema";
 import { getBlueskyProfile, getUser, isAdmin } from "../user";
 import * as atprotoPost from "../atproto/post";
@@ -332,12 +332,3 @@ export const getPostFromComment = cache(
     return { postRkey: join.posts.rkey, postAuthor: join.posts.authorDid };
   },
 );
-
-export const getPostsFromCids = cache(async (cids: string[]) => {
-  const posts = await db
-    .select()
-    .from(schema.Post)
-    .where(and(inArray(schema.Post.cid, cids), eq(schema.Post.status, "live")));
-
-  return posts;
-});

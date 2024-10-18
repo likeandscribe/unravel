@@ -13,22 +13,10 @@ import {
   MAX_POST_URL_LENGTH,
 } from "./data/db/constants";
 import { sql } from "drizzle-orm";
-import { z } from "zod";
-import { AtUri, atUriToString } from "./data/atproto/uri";
 
 const did = customType<{ data: DID }>({
   dataType() {
     return "text";
-  },
-});
-
-const uri = customType<{ data: z.infer<typeof AtUri> }>({
-  dataType() {
-    return "text";
-  },
-  toDriver: atUriToString,
-  fromDriver(value) {
-    return AtUri.parse(value);
   },
 });
 
@@ -231,9 +219,11 @@ export const Report = sqliteTable("reports", {
 export const Notification = sqliteTable("notifications", {
   id: integer("id").primaryKey(),
   did: did("did").notNull(),
-  createdAt: dateIsoText("created_at").notNull(),
+  createdAt: dateIsoText("created_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
   readAt: dateIsoText("read_at"),
   reason: text("reason", { enum: ["postComment", "commentReply"] }).notNull(),
-  reasonCid: text("reason_cid").notNull(),
-  reasonUri: uri("reason_uri").notNull(),
+  postId: integer("post_id").references(() => Post.id),
+  commentId: integer("comment_id").references(() => Comment.id),
 });

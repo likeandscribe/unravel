@@ -10,6 +10,7 @@ import { VoteRecord } from "@/lib/data/atproto/vote";
 import { getPdsUrl } from "@/lib/data/atproto/did";
 import { unauthed_createNotification } from "@/lib/data/db/notification";
 import { atUriToString } from "@/lib/data/atproto/uri";
+import { invariant } from "@/lib/utils";
 
 export async function POST(request: Request) {
   const auth = request.headers.get("Authorization");
@@ -90,15 +91,20 @@ export async function POST(request: Request) {
             );
           }
           //TODO: move this to db folder
-          await tx.insert(schema.Comment).values({
-            cid: comment.cid,
-            rkey,
-            body: comment.content,
-            postId: post.id,
-            authorDid: repo,
-            createdAt: new Date(comment.createdAt),
-            parentCommentId: parentComment?.id ?? null,
-          });
+          const [newComment] = await tx
+            .insert(schema.Comment)
+            .values({
+              cid: comment.cid,
+              rkey,
+              body: comment.content,
+              postId: post.id,
+              authorDid: repo,
+              createdAt: new Date(comment.createdAt),
+              parentCommentId: parentComment?.id ?? null,
+            })
+            .returning({ id: schema.Comment.id });
+
+          invariant(newComment, "New comment should be returned");
 
           const userToNotify = parentComment
             ? parentComment.authorDid
@@ -107,16 +113,16 @@ export async function POST(request: Request) {
           if (userToNotify !== repo) {
             await unauthed_createNotification(tx, {
               did: userToNotify,
-              reason: parentComment ? "commentReply" : "postComment",
-              reasonCid: comment.cid,
-              reasonUri: {
-                authority: repo,
-                collection: CommentCollection,
-                rkey,
-              },
+              ...(parentComment
+                ? { reason: "commentReply", commentId: parentComment.id }
+                : {
+                    reason: "postComment",
+                    postId: post.id,
+                  }),
             });
           }
         } else if (op.action === "delete") {
+          // TODO: delete related notifications
           await tx
             .update(schema.Comment)
             .set({ status: "deleted" })

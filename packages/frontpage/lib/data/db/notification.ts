@@ -12,13 +12,9 @@ import {
   count,
   ExtractTablesWithRelations,
 } from "drizzle-orm";
-import { getCommentsFromCids } from "./comment";
-import { getPostsFromCids } from "./post";
 import { invariant } from "@/lib/utils";
 import { ensureUser } from "../user";
 import { DID } from "../atproto/did";
-import { AtUri } from "../atproto/uri";
-import { z } from "zod";
 import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
 import { ResultSet } from "@libsql/client";
 
@@ -38,7 +34,7 @@ export const getNotifications = cache(
   async (limit: number, cursor: Cursor | null) => {
     const user = await ensureUser();
 
-    const notifications = await db
+    const joins = await db
       .select()
       .from(schema.Notification)
       .where(
@@ -49,43 +45,27 @@ export const getNotifications = cache(
             : undefined,
         ),
       )
+      .leftJoin(schema.Post, and(eq(schema.Post.id, schema.Notification.id)))
+      .leftJoin(schema.Comment, eq(schema.Comment.id, schema.Notification.id))
       .orderBy(desc(schema.Notification.createdAt))
       .limit(limit);
 
-    const postCids: string[] = [];
-    const commentCids: string[] = [];
-    for (const notification of notifications) {
-      if (notification.reason === "postComment") {
-        postCids.push(notification.reasonCid);
-      }
-      if (notification.reason === "commentReply") {
-        commentCids.push(notification.reasonCid);
-      }
-    }
-
-    const [posts, comments] = await Promise.all([
-      getPostsFromCids(postCids),
-      getCommentsFromCids(commentCids),
-    ]);
-
     const newCursor =
-      notifications.length > 0
-        ? createCursor(notifications.at(-1)!.createdAt)
+      joins.length > 0
+        ? createCursor(joins.at(-1)!.notifications.createdAt)
         : null;
 
     return {
       cursor: newCursor,
-      notifications: notifications.map((notification) => {
+      notifications: joins.map((notification) => {
         const sharedAttributes = {
-          createdAt: notification.createdAt,
-          read: !!notification.readAt,
-          id: notification.id,
+          createdAt: notification.notifications.createdAt,
+          read: !!notification.notifications.readAt,
+          id: notification.notifications.id,
         };
 
-        if (notification.reason === "postComment") {
-          const post = posts.find(
-            (post) => post.cid === notification.reasonCid,
-          );
+        if (notification.notifications.reason === "postComment") {
+          const post = notification.posts;
           invariant(post, "Post should exist if it's in the notification");
           return {
             type: "postComment" as const,
@@ -94,10 +74,8 @@ export const getNotifications = cache(
           };
         }
 
-        if (notification.reason === "commentReply") {
-          const comment = comments.find(
-            (comment) => comment.cid === notification.reasonCid,
-          );
+        if (notification.notifications.reason === "commentReply") {
+          const comment = notification.comments;
           invariant(
             comment,
             "Comment should exist if it's in the notification",
@@ -109,7 +87,7 @@ export const getNotifications = cache(
           };
         }
 
-        const _exhaustiveCheck: never = notification.reason;
+        const _exhaustiveCheck: never = notification.notifications.reason;
         throw new Error("Unknown notification reason");
       }),
     };
@@ -159,12 +137,17 @@ export async function markAllNotificationsRead() {
     );
 }
 
-type CreateNotificationInput = {
-  did: DID;
-  reason: "postComment" | "commentReply";
-  reasonUri: z.infer<typeof AtUri>;
-  reasonCid: string;
-};
+type CreateNotificationInput =
+  | {
+      did: DID;
+      reason: "postComment";
+      postId: number;
+    }
+  | {
+      did: DID;
+      reason: "commentReply";
+      commentId: number;
+    };
 
 export async function unauthed_createNotification(
   tx: SQLiteTransaction<
@@ -173,13 +156,19 @@ export async function unauthed_createNotification(
     typeof schema,
     ExtractTablesWithRelations<typeof schema>
   >,
-  { did, reason, reasonUri, reasonCid }: CreateNotificationInput,
+  input: CreateNotificationInput,
 ) {
+  let postId = null;
+  let commentId = null;
+  if (input.reason === "postComment") {
+    postId = input.postId;
+  } else if (input.reason === "commentReply") {
+    commentId = input.commentId;
+  }
   await tx.insert(schema.Notification).values({
-    did,
-    reason,
-    reasonCid,
-    createdAt: new Date(),
-    reasonUri,
+    did: input.did,
+    reason: input.reason,
+    postId,
+    commentId,
   });
 }
