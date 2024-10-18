@@ -17,6 +17,7 @@ export async function generateMetadata(props: {
 
   return {
     title: post.title,
+    description: "Discuss this post on Frontpage.",
     alternates: {
       canonical: `https://frontpage.fyi${path}`,
     },
