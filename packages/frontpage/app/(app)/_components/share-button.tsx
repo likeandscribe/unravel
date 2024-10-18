@@ -3,13 +3,17 @@
 import { DropdownMenuItem } from "@/lib/components/ui/dropdown-menu";
 import { toast } from "@/lib/components/ui/use-toast";
 import { Share1Icon, Link1Icon } from "@radix-ui/react-icons";
-
-const isMobile =
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent,
-  );
+import { useSyncExternalStore } from "react";
 
 export function ShareDropdownButton({ path }: { path: string }) {
+  const isMobile = useSyncExternalStore(
+    () => () => {}, // Empty subscribe because we never need to update
+    () =>
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      ),
+    () => false,
+  );
   return (
     <DropdownMenuItem
       onSelect={() => {
