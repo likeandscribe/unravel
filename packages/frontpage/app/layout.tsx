@@ -28,6 +28,7 @@ export const metadata: Metadata = {
     title: "Frontpage",
     description: "Your frontpage to the internet.",
     type: "website",
+    siteName: "frontpage.fyi",
   },
 };
 

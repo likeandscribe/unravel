@@ -41,9 +41,10 @@ export async function generateMetadata(props: {
   ]);
   return {
     title: `@${handle} on Frontpage`,
+    description: `@${handle}'s profile on Frontpage`,
     openGraph: {
       title: `@${handle}`,
-      description: `@${handle} profile on Frontpage`,
+      description: `@${handle}'s profile on Frontpage`,
       type: "profile",
       images: profile?.avatar,
     },
