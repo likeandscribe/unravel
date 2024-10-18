@@ -39,14 +39,18 @@ export async function generateMetadata(props: {
     getVerifiedHandle(did),
     getBlueskyProfile(did),
   ]);
+  const description = `@${handle}'s profile on Frontpage`;
   return {
     title: `@${handle} on Frontpage`,
-    description: `@${handle}'s profile on Frontpage`,
+    description: description,
     openGraph: {
       title: `@${handle}`,
-      description: `@${handle}'s profile on Frontpage`,
+      description: description,
       type: "profile",
       images: profile?.avatar,
+    },
+    twitter: {
+      card: "summary",
     },
   };
 }
