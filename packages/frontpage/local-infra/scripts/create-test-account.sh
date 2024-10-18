@@ -54,7 +54,7 @@ fi
 echo
 echo "Account created successfully!"
 echo "-----------------------------"
-echo "Handle   : ${USERNAME}.pds.dev.unravel.fyi"
+echo "Handle   : ${USERNAME}.${PDS_HOSTNAME}"
 echo "DID      : ${DID}"
 echo "Password : ${PASSWORD}"
 echo "-----------------------------"
