@@ -20,30 +20,26 @@ function curl_cmd_post_nofail {
   curl --silent --show-error --request POST --header "Content-Type: application/json" "$@"
 }
 
-EMAIL="${1:-}"
-HANDLE="${2:-}"
+USERNAME="${1:-}"
 
-if [[ "${EMAIL}" == "" ]]; then
-  read -p "Enter an email address (e.g. alice@${PDS_HOSTNAME}): " EMAIL
-fi
-if [[ "${HANDLE}" == "" ]]; then
-  read -p "Enter a handle (e.g. alice.${PDS_HOSTNAME}): " HANDLE
+if [[ "${USERNAME}" == "" ]]; then
+  read -p "Enter a username: " USERNAME
 fi
 
-if [[ "${EMAIL}" == "" || "${HANDLE}" == "" ]]; then
-  echo "ERROR: missing EMAIL and/or HANDLE parameters." >/dev/stderr
-  echo "Usage: $0 ${SUBCOMMAND} <EMAIL> <HANDLE>" >/dev/stderr
+if [[ "${USERNAME}" == "" ]]; then
+  echo "ERROR: missing USERNAME parameter." >/dev/stderr
+  echo "Usage: $0 ${SUBCOMMAND} <USERNAME>" >/dev/stderr
   exit 1
 fi
 
-PASSWORD="$(openssl rand -base64 30 | tr -d "=+/" | cut -c1-24)"
+PASSWORD="password"
 INVITE_CODE="$(curl_cmd_post \
   --user "admin:${PDS_ADMIN_PASSWORD}" \
   --data '{"useCount": 1}' \
   "https://${PDS_HOSTNAME}/xrpc/com.atproto.server.createInviteCode" | jq --raw-output '.code'
 )"
 RESULT="$(curl_cmd_post_nofail \
-  --data "{\"email\":\"${EMAIL}\", \"handle\":\"${HANDLE}\", \"password\":\"${PASSWORD}\", \"inviteCode\":\"${INVITE_CODE}\"}" \
+  --data "{\"email\":\"${USERNAME}@${PDS_HOSTNAME}\", \"handle\":\"${USERNAME}.${PDS_HOSTNAME}\", \"password\":\"${PASSWORD}\", \"inviteCode\":\"${INVITE_CODE}\"}" \
   "https://${PDS_HOSTNAME}/xrpc/com.atproto.server.createAccount"
 )"
 
@@ -58,9 +54,10 @@ fi
 echo
 echo "Account created successfully!"
 echo "-----------------------------"
-echo "Handle   : ${HANDLE}"
+echo "Handle   : ${USERNAME}.${PDS_HOSTNAME}"
 echo "DID      : ${DID}"
 echo "Password : ${PASSWORD}"
 echo "-----------------------------"
-echo "Save this password, it will not be displayed again."
+echo "This is a test account with an insecure password."
+echo "Make sure it's only used for development."
 echo
