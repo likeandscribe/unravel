@@ -58,5 +58,6 @@ echo "Handle   : ${USERNAME}.pds.dev.unravel.fyi"
 echo "DID      : ${DID}"
 echo "Password : ${PASSWORD}"
 echo "-----------------------------"
-echo "Save this password, it will not be displayed again."
+echo "This is a test account with an insecure password."
+echo "Make sure it's only used for development."
 echo
