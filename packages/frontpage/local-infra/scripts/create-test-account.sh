@@ -39,7 +39,7 @@ INVITE_CODE="$(curl_cmd_post \
   "https://${PDS_HOSTNAME}/xrpc/com.atproto.server.createInviteCode" | jq --raw-output '.code'
 )"
 RESULT="$(curl_cmd_post_nofail \
-  --data "{\"email\":\"${USERNAME}@pds.dev.unravel.fyi\", \"handle\":\"${USERNAME}.pds.dev.unravel.fyi\", \"password\":\"${PASSWORD}\", \"inviteCode\":\"${INVITE_CODE}\"}" \
+  --data "{\"email\":\"${USERNAME}@${PDS_HOSTNAME}\", \"handle\":\"${USERNAME}.${PDS_HOSTNAME}\", \"password\":\"${PASSWORD}\", \"inviteCode\":\"${INVITE_CODE}\"}" \
   "https://${PDS_HOSTNAME}/xrpc/com.atproto.server.createAccount"
 )"
 
