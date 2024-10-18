@@ -63,15 +63,11 @@ export default async function Profile(props: { params: Promise<Params> }) {
     notFound();
   }
 
-  const [userPosts, userComments, bskyProfile] = await Promise.all([
+  const [userPosts, userComments, userHandle] = await Promise.all([
     getUserPosts(did),
     getUserComments(did),
-    getBlueskyProfile(did),
+    getVerifiedHandle(did),
   ]);
-
-  if (!bskyProfile) {
-    notFound();
-  }
 
   const overview = [
     ...userPosts.map((p) => ({ ...p, type: "post" as const })),
@@ -85,7 +81,9 @@ export default async function Profile(props: { params: Promise<Params> }) {
       <div className="flex items-center space-x-4 mb-4">
         <UserAvatar did={did} size="medium" />
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="md:text-2xl font-bold">{bskyProfile.handle}</h1>
+          <h1 className="md:text-2xl font-bold">
+            {userHandle ?? "Invalid handle"}
+          </h1>
           <EllipsisDropdown>
             <ReportDialogDropdownButton
               reportAction={reportUserAction.bind(null, { did })}
