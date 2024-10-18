@@ -22,11 +22,6 @@ import { UserAvatar } from "@/lib/components/user-avatar";
 import { FRONTPAGE_ATPROTO_HANDLE } from "@/lib/constants";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-  icons: "/frontpage-logo.svg",
-};
 
 export default async function Layout({
   children,

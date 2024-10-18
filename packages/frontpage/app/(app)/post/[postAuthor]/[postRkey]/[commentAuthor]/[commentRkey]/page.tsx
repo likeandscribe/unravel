@@ -21,7 +21,12 @@ export async function generateMetadata(props: {
   const path = `/post/${params.postAuthor}/${params.postRkey}/${params.commentAuthor}/${params.commentRkey}`;
 
   return {
-    title: `${post.title} - ${comment.status === "live" ? `@${handle}: "${truncateText(comment.body, 15)}..."` : "Deleted comment"}`,
+    title:
+      comment.status === "live"
+        ? `@${handle}'s comment on "${truncateText(post.title, 15)}"`
+        : "Deleted comment",
+    description:
+      comment.status === "live" ? truncateText(comment.body, 47) : null,
     alternates: {
       canonical: `https://frontpage.fyi${path}`,
     },

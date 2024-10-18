@@ -14,14 +14,46 @@ import { getBlueskyProfile } from "@/lib/data/user";
 import { getUserComments } from "@/lib/data/db/comment";
 import { Comment } from "../../post/[postAuthor]/[postRkey]/_lib/comment";
 import { Suspense } from "react";
-import { getDidFromHandleOrDid } from "@/lib/data/atproto/identity";
+import {
+  getDidFromHandleOrDid,
+  getVerifiedHandle,
+} from "@/lib/data/atproto/identity";
 import { EllipsisDropdown } from "../../_components/ellipsis-dropdown";
 import { ReportDialogDropdownButton } from "../../_components/report-dialog";
 import { reportUserAction } from "@/lib/components/user-hover-card";
+import { Metadata } from "next";
 
 type Params = {
   user: string;
 };
+
+export async function generateMetadata(props: {
+  params: Promise<Params>;
+}): Promise<Metadata> {
+  const params = await props.params;
+  const did = await getDidFromHandleOrDid(params.user);
+  if (!did) {
+    notFound();
+  }
+  const [handle, profile] = await Promise.all([
+    getVerifiedHandle(did),
+    getBlueskyProfile(did),
+  ]);
+  const description = `@${handle}'s profile on Frontpage`;
+  return {
+    title: `@${handle} on Frontpage`,
+    description: description,
+    openGraph: {
+      title: `@${handle}`,
+      description: description,
+      type: "profile",
+      images: profile?.avatar,
+    },
+    twitter: {
+      card: "summary",
+    },
+  };
+}
 
 export default async function Profile(props: { params: Promise<Params> }) {
   const params = await props.params;
